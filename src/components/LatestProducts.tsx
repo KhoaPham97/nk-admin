@@ -6,7 +6,7 @@ const LatestProducts = () => {
     (state) => state.productReducer.newProducts
   );
 
-  return <ProductList title="Hàng mới về" products={newProducts} />;
+  return <ProductList title="Phụ tùng xe điện" products={newProducts} />;
 };
 
 export default LatestProducts;

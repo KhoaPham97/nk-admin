@@ -6,7 +6,7 @@ const TrendingProducts = () => {
     (state) => state.productReducer.featuredProducts
   );
 
-  return <ProductList title="Sản phẩm nổi bật" products={featuredProducts} />;
+  return <ProductList title="Phụ tùng xe đạp" products={featuredProducts} />;
 };
 
 export default TrendingProducts;
