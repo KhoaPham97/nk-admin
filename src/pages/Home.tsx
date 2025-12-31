@@ -1,17 +1,17 @@
 import { FC, useEffect } from "react";
 
-import HeroSection from "../components/HeroSection";
-import Features from "../components/Features";
+// import HeroSection from "../components/HeroSection";
+// import Features from "../components/Features";
 import TrendingProducts from "../components/TrendingProducts";
 import { useAppDispatch } from "../redux/hooks";
 import {
-  updateNewList,
+  // updateNewList,
   updateFeaturedList,
 } from "../redux/features/productSlice";
-import { getUserInfo } from "../redux/features/authSlice";
-import { Product } from "../models/Product";
-import LatestProducts from "../components/LatestProducts";
-import Banner from "../components/Banner";
+// import { getUserInfo } from "../redux/features/authSlice";
+// import { Product } from "../models/Product";
+// import LatestProducts from "../components/LatestProducts";
+// import Banner from "../components/Banner";
 import { API_ENDPOINTS } from "../api";
 
 const Home: FC = () => {

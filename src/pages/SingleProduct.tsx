@@ -9,15 +9,12 @@ import toast from "react-hot-toast";
 import { AiOutlineShoppingCart } from "react-icons/ai";
 import { FaHandHoldingDollar } from "react-icons/fa6";
 import ProductList from "../components/ProductList";
-import Reviews from "../components/Reviews";
+// import Reviews from "../components/Reviews";
 import useAuth from "../hooks/useAuth";
 import { MdFavoriteBorder } from "react-icons/md";
 import { addToWishlist } from "../redux/features/productSlice";
 import { updateLoading } from "../redux/features/homeSlice";
 import { API_ENDPOINTS } from "../api";
-
-const lorem =
-  "It is important to take care of the patient, to be followed by the patient, but it will happen at such a time that there is a lot of work and pain. For to come to the smallest detail, no one should practice any kind of work unless he derives some benefit from it. Do not be angry with the pain in the reprimand in the pleasure he wants to be a hair from the pain in the hope that there is no breeding. Unless they are blinded by lust, they do not come forth; they are in fault who abandon their duties and soften their hearts, that is, their labors.";
 
 const SingleProduct: FC = () => {
   const dispatch = useAppDispatch();
@@ -55,7 +52,7 @@ const SingleProduct: FC = () => {
   }, [productID, dispatch]);
 
   useEffect(() => {
-    const fetchPreferences = (cat: string) => {
+    const fetchPreferences = () => {
       fetch(
         `${API_ENDPOINTS.PRODUCTS_CATEGORY_ID.replace(
           ":id",
@@ -74,7 +71,7 @@ const SingleProduct: FC = () => {
           setSimilar(filtered);
         });
     };
-    if (sCategory && sCategory !== "") fetchPreferences(sCategory);
+    if (sCategory && sCategory !== "") fetchPreferences();
   }, [productID, sCategory]);
 
   const addCart = () => {
@@ -133,7 +130,6 @@ const SingleProduct: FC = () => {
       </div>
     );
   }
-  console.log("product", product);
 
   return (
     <div className="container mx-auto pt-8 dark:text-white">

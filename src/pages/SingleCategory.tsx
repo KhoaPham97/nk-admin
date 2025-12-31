@@ -9,7 +9,7 @@ import PaginatedProducts from "../components/PaginatedProducts";
 import { API_ENDPOINTS } from "../api";
 import { useLocation } from "react-router";
 
-const SingleCategory: FC = (props) => {
+const SingleCategory: FC = () => {
   const dispatch = useAppDispatch();
   const { slug } = useParams();
   const [productList, setProductList] = useState<Product[]>([]);

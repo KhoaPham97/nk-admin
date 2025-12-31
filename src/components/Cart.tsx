@@ -1,12 +1,11 @@
 import { FC, useState } from "react";
 import { RxCross1 } from "react-icons/rx";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import { useSelector } from "react-redux";
 
-import { emptyCart, setCartState } from "../redux/features/cartSlice";
+import { setCartState } from "../redux/features/cartSlice";
 import CartRow from "./CartRow";
 import { API_ENDPOINTS } from "../api";
-import toast from "react-hot-toast";
+// import toast from "react-hot-toast";
 
 const Cart: FC = () => {
   const dispatch = useAppDispatch();

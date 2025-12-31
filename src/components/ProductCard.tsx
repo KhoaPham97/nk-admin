@@ -1,6 +1,6 @@
 import { FC } from "react";
 import { Product } from "../models/Product";
-import RatingStar from "./RatingStar";
+// import RatingStar from "./RatingStar";
 import { addToCart } from "../redux/features/cartSlice";
 import { useAppDispatch } from "../redux/hooks";
 import toast from "react-hot-toast";
