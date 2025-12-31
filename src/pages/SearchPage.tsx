@@ -48,7 +48,12 @@ const SearchPage: FC = () => {
         };
 
         if (productsData.products && productsData.products.length > 0) {
-          setProducts(productsData.products);
+          let formatP = productsData.products.map((i: any) => ({
+            ...i,
+            id: i._id,
+          }));
+          setProducts(formatP);
+
           setCategoryResults([]);
         } else {
           const categoriesResponse = await fetch(

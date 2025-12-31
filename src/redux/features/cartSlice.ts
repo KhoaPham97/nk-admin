@@ -55,6 +55,9 @@ export const cartSlice = createSlice({
     emptyCart: (state) => {
       return { ...state, cartItems: [] };
     },
+    addListCart: (state, action) => {
+      return { ...state, cartItems: action.payload };
+    },
   },
 });
 
@@ -64,5 +67,6 @@ export const {
   setCartState,
   reduceFromCart,
   emptyCart,
+  addListCart,
 } = cartSlice.actions;
 export default cartSlice.reducer;

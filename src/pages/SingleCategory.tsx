@@ -23,7 +23,8 @@ const SingleCategory: FC = (props) => {
         .then((res) => res.json())
         .then((data) => {
           const { products } = data;
-          setProductList(products);
+          let formatP = products.map((i: any) => ({ ...i, id: i._id }));
+          setProductList(formatP);
           dispatch(updateLoading(false));
         });
     };

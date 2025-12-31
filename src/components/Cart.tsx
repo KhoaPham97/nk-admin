@@ -1,14 +1,18 @@
 import { FC, useState } from "react";
 import { RxCross1 } from "react-icons/rx";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
+import { useSelector } from "react-redux";
+
 import { emptyCart, setCartState } from "../redux/features/cartSlice";
 import CartRow from "./CartRow";
+import { API_ENDPOINTS } from "../api";
 import toast from "react-hot-toast";
 
 const Cart: FC = () => {
   const dispatch = useAppDispatch();
   const isOpen = useAppSelector((state) => state.cartReducer.cartOpen);
   const items = useAppSelector((state) => state.cartReducer.cartItems);
+
   const [checkout, setCheckout] = useState(false);
 
   const calculateTotal = () => {
@@ -24,12 +28,28 @@ const Cart: FC = () => {
     });
     return total;
   };
+  let a = useAppSelector((state) => state.authReducer);
+  console.log(a);
 
-  const handleOrder = () => {
-    dispatch(setCartState(false));
-    dispatch(emptyCart());
-    setCheckout(false);
-    toast.success("your order has been confirmed", { duration: 3000 });
+  const handleOrder = async () => {
+    // dispatch(setCartState(false));
+    // dispatch(emptyCart());
+    // setCheckout(false);
+    // toast.success("your order has been confirmed", { duration: 3000 });
+    let id: any = localStorage.getItem("id");
+    await fetch(`${API_ENDPOINTS.CARTUSER.replace(":id", id)}`, {
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      method: "POST",
+      body: JSON.stringify(items),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("data", data);
+      });
+    console.log(items);
   };
 
   if (isOpen) {
@@ -52,14 +72,14 @@ const Cart: FC = () => {
                 className="w-1/2 border border-gray-500 rounded cursor-pointer text-center py-1"
                 onClick={() => setCheckout(false)}
               >
-                Cancel
+                Huỷ
               </span>
               <span
                 className="w-1/2 border border-gray-500 rounded cursor-pointer text-center py-1"
                 onClick={handleOrder}
                 data-test="confirm-order-btn"
               >
-                Confirm
+                Xác nhận
               </span>
             </div>
           </div>
@@ -69,7 +89,7 @@ const Cart: FC = () => {
             data-test="cart-container"
           >
             <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-2xl">Your Cart</h3>
+              <h3 className="font-semibold text-2xl">Giỏ hàng</h3>
               <RxCross1
                 className="text-[24px] cursor-pointer hover:opacity-70"
                 onClick={() => dispatch(setCartState(false))}
@@ -82,7 +102,7 @@ const Cart: FC = () => {
               ) : (
                 <div className="flex flex-col justify-center items-center p-4">
                   <img src="/emptyCart.jpg" alt="empty" className="w-40" />
-                  <p className="text-center text-xl my-2">Your cart is empty</p>
+                  <p className="text-center text-xl my-2">Giỏ hàng trống</p>
                 </div>
               )}
             </div>
@@ -103,7 +123,7 @@ const Cart: FC = () => {
                   onClick={() => setCheckout(true)}
                   className="w-full text-center text-white bg-blue-500 py-2 my-4 rounded font-bold text-xl hover:bg-blue-700"
                 >
-                  CHECKOUT
+                  Hoàn tất{" "}
                 </button>
               </>
             )}

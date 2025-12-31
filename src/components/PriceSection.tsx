@@ -7,7 +7,6 @@ const PriceSection: FC<{ price: any; discountPercentage: number }> = ({
 }) => {
   const result = useDiscount({ price, discount: discountPercentage });
   const discount = parseFloat(discountPercentage.toString());
-  console.log(price, Math.floor(discount) === 0);
   price = Intl.NumberFormat("vi-VN", {
     style: "currency",
     currency: "VND",

@@ -6,12 +6,14 @@ import {
   MdOutlineLogout,
 } from "react-icons/md";
 import { doLogout } from "../redux/features/authSlice";
+import { emptyCart } from "../redux/features/cartSlice";
+
 import { Link } from "react-router-dom";
 
 const CustomPopup: FC = () => {
   const dispatch = useAppDispatch();
   const [isVisible, setVisible] = useState(false);
-  const username = useAppSelector((state) => state.authReducer.username);
+  const userInfo: any = useAppSelector((state) => state.authReducer.userInfo);
 
   const handlePopup = () => {
     setVisible((v) => !v);
@@ -19,6 +21,7 @@ const CustomPopup: FC = () => {
 
   const handleLogout = () => {
     dispatch(doLogout());
+    dispatch(emptyCart());
     hidePopup();
   };
 
@@ -33,7 +36,7 @@ const CustomPopup: FC = () => {
         onClick={handlePopup}
         data-test="username-popup"
       >
-        {username}
+        {userInfo?.username}
       </div>
       {isVisible && (
         <div

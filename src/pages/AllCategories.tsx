@@ -19,21 +19,19 @@ const AllCategories: FC = () => {
       fetch(`${API_ENDPOINTS.PRODUCTS_CATEGORIES}`)
         .then((res) => res.json())
         .then((data) => {
-          name;
           dispatch(addCategories(data.categorys));
           dispatch(updateLoading(false));
         });
     };
     if (allCategories.length === 0) fetchCategories();
   }, [allCategories, dispatch]);
-  console.log("allCategories", allCategories);
 
   return (
     <div className="container mx-auto min-h-[83vh] p-4 ">
-      <span className="text-lg dark:text-white">Categories</span>
+      <span className="text-lg dark:text-white">Danh mục</span>
       {isLoading ? (
         <div className="flex items-center justify-center">
-          <div className="animate-spin mt-32 rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900 dark:border-white"></div>
+          <div className="animate-spin mt-32 rounded-fƒƒull h-12 w-12 border-t-2 border-b-2 border-gray-900 dark:border-white"></div>
         </div>
       ) : (
         <div className="grid xl:grid-cols-6 lg:grid-cols-4 md:grid-cols-3 sm:grid-cols-2 gap-2 my-2">

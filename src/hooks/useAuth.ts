@@ -3,7 +3,8 @@ import { useAppSelector, useAppDispatch } from "../redux/hooks";
 
 const useAuth = () => {
   const dispatch = useAppDispatch();
-  const isLoggedIn = useAppSelector((state) => state.authReducer.isLoggedIn);
+  const checkLogin = useAppSelector((state) => state.authReducer.userInfo);
+  const isLoggedIn = Object.keys(checkLogin).length > 0;
 
   const requireAuth = (action: () => void) => {
     if (!isLoggedIn) {

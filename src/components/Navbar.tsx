@@ -17,7 +17,7 @@ const Navbar: FC = () => {
   const cartCount = useAppSelector(
     (state) => state.cartReducer.cartItems.length
   );
-  const username = useAppSelector((state) => state.authReducer.username);
+  const userInfo: any = useAppSelector((state) => state.authReducer.userInfo);
   const isDarkMode = useAppSelector((state) => state.homeReducer.isDarkMode);
   const { requireAuth } = useAuth();
 
@@ -43,7 +43,7 @@ const Navbar: FC = () => {
             className="text-4xl font-bold dark:text-white"
             data-test="main-logo"
           >
-            Nhật Khang E-Bike
+            Phụ tùng Thu Anh
           </Link>
 
           <div className="hidden sm:block">
@@ -66,7 +66,7 @@ const Navbar: FC = () => {
               Danh mục
             </Link>
             <div className="flex items-center">
-              {username !== "" ? (
+              {Object.keys(userInfo).length > 0 ? (
                 <img
                   src="https://robohash.org/Terry.png?set=set4"
                   alt="avatar"
@@ -76,7 +76,7 @@ const Navbar: FC = () => {
                 <FaUser className="text-gray-500 text-2xl dark:text-white" />
               )}
               <div className="text-gray-500 text-2xl">
-                {username !== "" ? (
+                {Object.keys(userInfo).length > 0 ? (
                   <CustomPopup />
                 ) : (
                   <span
@@ -173,7 +173,7 @@ const Navbar: FC = () => {
               </Link>
 
               <div className="flex items-center gap-3">
-                {username !== "" ? (
+                {userInfo?.length > 0 && userInfo?.username !== "" ? (
                   <img
                     src="https://robohash.org/Terry.png?set=set4"
                     alt="avatar"
@@ -183,7 +183,7 @@ const Navbar: FC = () => {
                   <FaUser className="text-gray-500 text-3xl dark:text-white" />
                 )}
                 <div className="text-2xl font-bold dark:text-white">
-                  {username !== "" ? (
+                  {userInfo.lenght > 0 && userInfo?.username !== "" ? (
                     <CustomPopup />
                   ) : (
                     <span

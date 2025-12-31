@@ -22,7 +22,7 @@ const lorem =
 const SingleProduct: FC = () => {
   const dispatch = useAppDispatch();
   const { productID } = useParams();
-  const [product, setProduct] = useState<Product>();
+  const [product, setProduct]: any = useState();
   const [imgs, setImgs] = useState<string[]>();
   const [selectedImg, setSelectedImg] = useState<string>();
   const [sCategory, setScategory] = useState<string>();
@@ -42,7 +42,9 @@ const SingleProduct: FC = () => {
         .then((res) => res.json())
         .then((data) => {
           const { thumbnail, images, category } = data;
-          setProduct(data);
+          const pro = { ...data };
+          pro.id = data._id;
+          setProduct(pro);
           setImgs(images);
           setScategory(category);
           setSelectedImg(thumbnail);
@@ -54,12 +56,20 @@ const SingleProduct: FC = () => {
 
   useEffect(() => {
     const fetchPreferences = (cat: string) => {
-      fetch(`${API_ENDPOINTS.PRODUCTS_CATEGORY_ID.replace(":id", cat)}`)
+      fetch(
+        `${API_ENDPOINTS.PRODUCTS_CATEGORY_ID.replace(
+          ":id",
+          product?.categoryId
+        )}`
+      )
         .then((res) => res.json())
         .then((data) => {
-          const _products: Product[] = data.products;
-          const filtered = _products.filter((product) => {
-            if (productID && product.id !== parseInt(productID)) return product;
+          const _products = data.products.map((i: any) => ({
+            ...i,
+            id: i._id,
+          }));
+          const filtered = _products.filter((product: any) => {
+            if (productID && product.id !== productID) return product;
           });
           setSimilar(filtered);
         });
@@ -123,6 +133,7 @@ const SingleProduct: FC = () => {
       </div>
     );
   }
+  console.log("product", product);
 
   return (
     <div className="container mx-auto pt-8 dark:text-white">
@@ -133,7 +144,7 @@ const SingleProduct: FC = () => {
         className="hover:text-gray-600"
       >
         {" "}
-        ← Back{" "}
+        ← Quay lại{" "}
       </button>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 px-4 ">
         <div className="space-y-2">
@@ -167,24 +178,22 @@ const SingleProduct: FC = () => {
           <table className="mt-2">
             <tbody>
               <tr>
-                <td className="pr-2 font-bold">Brand</td>
+                <td className="pr-2 font-bold">Thương hiệu</td>
                 <td>{product?.brand}</td>
               </tr>
               <tr>
-                <td className="pr-2 font-bold">Category</td>
+                <td className="pr-2 font-bold">Phân loại</td>
                 <td>{product?.category}</td>
               </tr>
               <tr>
-                <td className="pr-2 font-bold">Stock</td>
+                <td className="pr-2 font-bold">Tồn kho</td>
                 <td>{product?.stock}</td>
               </tr>
             </tbody>
           </table>
           <div className="mt-2">
-            <h2 className="font-bold">About the product</h2>
-            <p className="leading-5">
-              {product?.description} {lorem}
-            </p>
+            <h2 className="font-bold">Mô tả sản phẩm</h2>
+            <p className="leading-5">{product?.description}</p>
           </div>
           <div className="flex flex-wrap items-center mt-4 mb-2">
             <button
@@ -213,10 +222,10 @@ const SingleProduct: FC = () => {
             </button>
           </div>
         </div>
-        {product && <Reviews id={product?.id} />}
+        {/* {product && <Reviews id={product?.id} />} */}
       </div>
       <hr className="mt-4" />
-      <ProductList title="Similar Products" products={similar} />
+      <ProductList title="Sản phẩm tương tự" products={similar} />
       <br />
     </div>
   );

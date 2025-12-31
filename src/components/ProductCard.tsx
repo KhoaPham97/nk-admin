@@ -53,7 +53,7 @@ const ProductCard: FC<Product> = ({
       </div>
       <div className="px-4 pt-4">
         <p className="text-gray-500 text-[14px] font-medium dark:text-white">
-          {category}
+          {category ?? "Phụ kiện khác"}
         </p>
         <Link
           className="font-semibold hover:underline dark:text-white overflow-hidden text-ellipsis whitespace-nowrap block"
@@ -63,9 +63,9 @@ const ProductCard: FC<Product> = ({
           {title}
         </Link>
       </div>
-      <div className="px-4">
+      {/* <div className="px-4">
         <RatingStar rating={rating} />
-      </div>
+      </div> */}
       <div className="flex flex-wrap items-center justify-between px-4 pb-4">
         {discountPercentage && (
           <PriceSection discountPercentage={discountPercentage} price={price} />

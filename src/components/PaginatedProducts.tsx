@@ -52,7 +52,7 @@ const PaginatedProducts: FC<Props> = ({
   let visibleProducts: any = [];
   products.slice(0, itemsPerPage).forEach((product: any) => {
     visibleProducts.push({
-      id: product._id,
+      id: product.id,
       title: product.title,
       images: product.images,
       price: product.price,

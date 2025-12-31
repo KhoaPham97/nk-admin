@@ -4,15 +4,14 @@ import { AuthSlice } from "../../models/AuthSlice";
 interface LoginProps {
   username: string;
   password: string;
+  id: string;
+  userInfo: any[];
 }
 
 const initialState: AuthSlice = {
-  isLoggedIn:
-    localStorage.getItem("username") !== null &&
-    localStorage.getItem("username") !== undefined &&
-    localStorage.getItem("username") !== "",
   modalOpen: false,
   username: localStorage.getItem("username") ?? "",
+  userInfo: [],
 };
 
 export const authSlice = createSlice({
@@ -23,27 +22,25 @@ export const authSlice = createSlice({
       return { ...state, modalOpen: action.payload };
     },
     doLogin: (state, action: PayloadAction<LoginProps>) => {
-      if (
-        action.payload.username === "atuny0" &&
-        action.payload.password === "9uQFF1Lh"
-      ) {
-        localStorage.setItem("username", "atuny0");
+      if (action.payload.userInfo) {
         return {
           ...state,
-          username: "atuny0",
           modalOpen: false,
-          isLoggedIn: true,
+          userInfo: action.payload.userInfo,
         };
       } else {
         return state;
       }
     },
     doLogout: (state) => {
-      localStorage.removeItem("username");
-      return { ...state, username: "", isLoggedIn: false };
+      return { ...state, userInfo: [] };
+    },
+    getUserInfo: (state) => {
+      return { ...state };
     },
   },
 });
 
-export const { updateModal, doLogin, doLogout } = authSlice.actions;
+export const { updateModal, doLogin, doLogout, getUserInfo } =
+  authSlice.actions;
 export default authSlice.reducer;
