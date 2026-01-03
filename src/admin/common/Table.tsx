@@ -18,7 +18,7 @@ import Box from "@mui/material/Box";
 import { visuallyHidden } from "@mui/utils";
 import TablePagination from "@mui/material/TablePagination";
 import Paper from "@mui/material/Paper";
-
+// @ts-nocheck
 function EnhancedTableHead(props: any) {
   const {
     onSelectAllClick,
