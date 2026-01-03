@@ -1,3 +1,4 @@
+import React from "react";
 import { Provider } from "react-redux";
 import "./App.css";
 import { store } from "./redux/store";
@@ -18,10 +19,16 @@ import BannerPopup from "./components/BannerPopup";
 import AllCategories from "./pages/AllCategories";
 import SingleCategory from "./pages/SingleCategory";
 import SearchPage from "./pages/SearchPage";
-
-function App() {
-  return (
-    <Provider store={store}>
+import { useAppSelector } from "./redux/hooks";
+import BasicExample from "./admin/AppAdmin";
+const CheckAccount = () => {
+  const userInfo: any = useAppSelector((state) => state.authReducer.userInfo);
+  return userInfo.role === "admin" ? (
+    <>
+      <BasicExample />
+    </>
+  ) : (
+    <React.Fragment>
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
@@ -30,6 +37,7 @@ function App() {
         <Route path="/categories" element={<AllCategories />} />
         <Route path="/product/:productID" element={<SingleProduct />} />
         <Route path="/category/:slug" element={<SingleCategory />} />
+
         <Route path="/wishlist" element={<ProtectedRoute />}>
           <Route path="/wishlist" element={<Wishlist />} />
         </Route>
@@ -43,6 +51,15 @@ function App() {
       <LoginModal />
       <ScrollToTopButton />
       <BannerPopup />
+    </React.Fragment>
+  );
+};
+function App() {
+  // const info: any = useAppSelector((state) => state.authReducer.userInfo);
+
+  return (
+    <Provider store={store}>
+      <CheckAccount />
     </Provider>
   );
 }
