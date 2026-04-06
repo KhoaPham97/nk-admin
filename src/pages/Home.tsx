@@ -13,14 +13,17 @@ import {
 import LatestProducts from "../components/LatestProducts";
 // import Banner from "../components/Banner";
 import { API_ENDPOINTS } from "../api";
+import toast from "react-hot-toast";
 
 const Home: FC = () => {
   const dispatch = useAppDispatch();
   useEffect(() => {
     const fetchProducts = () => {
+      const toastId = toast.loading("Đang tải dữ liệu...");
       fetch(`${API_ENDPOINTS.PRODUCTS}`)
         .then((res) => res.json())
         .then(({ products }) => {
+          toast.dismiss(toastId);
           let productListBike: any = [];
           let productListEBike: any = [];
 
@@ -79,8 +82,10 @@ const Home: FC = () => {
           });
           dispatch(updateFeaturedList(productListBike));
           dispatch(updateNewList(productListEBike));
+          toast.success("Tải thành công");
         });
     };
+
     fetchProducts();
   }, [dispatch]);
 

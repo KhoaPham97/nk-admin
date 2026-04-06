@@ -23,6 +23,10 @@ export const authSlice = createSlice({
     },
     doLogin: (state, action: PayloadAction<LoginProps>) => {
       if (action.payload.userInfo) {
+        localStorage.setItem(
+          "userInfo",
+          JSON.stringify(action.payload.userInfo)
+        );
         return {
           ...state,
           modalOpen: false,
@@ -33,6 +37,7 @@ export const authSlice = createSlice({
       }
     },
     doLogout: (state) => {
+      localStorage.deleteItem("userInfo");
       return { ...state, userInfo: [] };
     },
     getUserInfo: (state) => {

@@ -43,7 +43,7 @@ const Navbar: FC = () => {
             className="text-4xl font-bold dark:text-white"
             data-test="main-logo"
           >
-            TA BIKE
+            NHẬT KHANG BIKE
           </Link>
 
           <div className="hidden sm:block">

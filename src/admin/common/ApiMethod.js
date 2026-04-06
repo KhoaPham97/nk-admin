@@ -13,23 +13,9 @@ export const getRequest = async ({ url, params = {} }) => {
   }
 };
 
-//  OR =====> In case of Redux Thunk  <======
-//  export const getRequest = async ({ url, params = {}, thunkApi }) => {
-//    try {
-toast.loading("Loading...");
-
-//      const res = await axios.get(url, { params });
-//      return res.data;
-//    } catch (err) {
-//      return thunkApi.rejectWithValue(err);
-//      return err;
-//    };
-//  };
-
 export const postRequest = async ({ url, data = {}, params = {} }) => {
   try {
     toast.loading("Loading...");
-
     const res = await axios.post(url, data, { params });
     toast.success(res.statusText);
     return res.data;
