@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Karla&family=Lato&family=Lora:wght@700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Karla&family=Lato&family=Lora:wght@700&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -19,4 +19,25 @@
 
 .popup-exit-active {
   @apply transition-opacity duration-300 opacity-0;
+}
+
+/* Container của sản phẩm */
+.product-card {
+  position: relative;
+}
+
+/* Nhãn Sold Out */
+.sold-out-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background-color: #ef4444; /* Màu đỏ hiện đại */
+  color: white;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  border-radius: 4px;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }

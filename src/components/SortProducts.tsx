@@ -38,8 +38,8 @@ const SortProducts: FC<Props> = ({ products, onChange }) => {
       onChange={(e) => sortProducts(e.target.value)}
     >
       <option value="default">Mặc định</option>
-      <option value="asc">Giá Thấp-Cao</option>
-      <option value="desc">Giá Cao-Thấp</option>
+      <option value="asc">Giá tăng dần</option>
+      <option value="desc">Giá giảm dần</option>
     </select>
   );
 };

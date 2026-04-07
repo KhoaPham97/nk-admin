@@ -17,10 +17,10 @@ const ProductCard: FC<Product> = ({
   category,
   rating,
   discountPercentage,
+  qty,
 }) => {
   const dispatch = useAppDispatch();
   const { requireAuth } = useAuth();
-
   const addCart = () => {
     requireAuth(() => {
       dispatch(
@@ -32,6 +32,7 @@ const ProductCard: FC<Product> = ({
           rating,
           thumbnail,
           discountPercentage,
+          qty,
         })
       );
       toast.success("item added to cart successfully", {
@@ -41,7 +42,10 @@ const ProductCard: FC<Product> = ({
   };
 
   return (
-    <div className="border border-gray-200 " data-test="product-card">
+    <div
+      className="border border-gray-200 product-card"
+      data-test="product-card"
+    >
       <div className="text-center border-b border-gray-200">
         <Link to={{ pathname: `/product/${id}` }}>
           <img
@@ -52,9 +56,9 @@ const ProductCard: FC<Product> = ({
         </Link>
       </div>
       <div className="px-4 pt-4">
-        <p className="text-gray-500 text-[14px] font-medium dark:text-white">
+        {/* <p className="text-gray-500 text-[14px] font-medium dark:text-white">
           {category ?? "Phụ kiện khác"}
-        </p>
+        </p> */}
         <Link
           className="font-semibold hover:underline dark:text-white overflow-hidden text-ellipsis whitespace-nowrap block"
           to={{ pathname: `/product/${id}` }}
@@ -70,15 +74,19 @@ const ProductCard: FC<Product> = ({
         {discountPercentage && (
           <PriceSection discountPercentage={discountPercentage} price={price} />
         )}
-        <button
-          type="button"
-          className="flex items-center space-x-2 hover:bg-blue-500 text-white py-2 px-4 rounded bg-pink-500"
-          onClick={addCart}
-          data-test="add-cart-btn"
-          title="Thêm vào giỏ hàng"
-        >
-          <AiOutlineShoppingCart />
-        </button>
+        {qty && qty > 0 ? (
+          <button
+            type="button"
+            className="flex items-center space-x-2 hover:bg-blue-500 text-white py-2 px-4 rounded bg-pink-500"
+            onClick={addCart}
+            data-test="add-cart-btn"
+            title="Thêm vào giỏ hàng"
+          >
+            <AiOutlineShoppingCart />
+          </button>
+        ) : (
+          <p className="sold-out-badge">Tạm hết hàng</p>
+        )}
       </div>
     </div>
   );

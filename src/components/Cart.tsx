@@ -27,8 +27,6 @@ const Cart: FC = () => {
     });
     return total;
   };
-  let a = useAppSelector((state) => state.authReducer);
-  console.log(a);
 
   const handleOrder = async () => {
     // dispatch(setCartState(false));
@@ -45,10 +43,7 @@ const Cart: FC = () => {
       body: JSON.stringify(items),
     })
       .then((res) => res.json())
-      .then((data) => {
-        console.log("data", data);
-      });
-    console.log(items);
+      .then((data) => {});
   };
 
   if (isOpen) {

@@ -10,4 +10,5 @@ export interface Product {
   brand?: string;
   stock?: number;
   discountPercentage?: number;
+  qty?: number;
 }

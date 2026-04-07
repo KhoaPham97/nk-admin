@@ -39,6 +39,7 @@ const Home: FC = () => {
                 description: product.description,
                 category: product.category,
                 discountPercentage: 0.1,
+                qty: product.qty ?? 0,
               });
             } else {
               productListEBike.push({
@@ -51,35 +52,16 @@ const Home: FC = () => {
                 description: product.description,
                 category: product.category,
                 discountPercentage: 0.1,
+                qty: product.qty ?? 0,
               });
             }
           });
-          productListBike = productListBike.sort((a: any, b: any) => {
-            const nameA = a.title.toUpperCase(); // ignore upper and lowercase
-            const nameB = b.title.toUpperCase(); // ignore upper and lowercase
-
-            if (nameA < nameB) {
-              return -1;
-            }
-            if (nameA > nameB) {
-              return 1;
-            }
-            // names must be equal
-            return 0;
-          });
-          productListEBike = productListEBike.sort((a: any, b: any) => {
-            const nameA = a.title.toUpperCase(); // ignore upper and lowercase
-            const nameB = b.title.toUpperCase(); // ignore upper and lowercase
-
-            if (nameA < nameB) {
-              return -1;
-            }
-            if (nameA > nameB) {
-              return 1;
-            }
-            // names must be equal
-            return 0;
-          });
+          productListBike = productListBike.sort((a: any, b: any) =>
+            a.title.localeCompare(b.title)
+          );
+          productListEBike = productListEBike.sort((a: any, b: any) =>
+            a.title.localeCompare(b.title)
+          );
           dispatch(updateFeaturedList(productListBike));
           dispatch(updateNewList(productListEBike));
           toast.success("Tải thành công");
