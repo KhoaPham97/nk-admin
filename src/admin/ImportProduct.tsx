@@ -125,7 +125,7 @@ const ImportProduct = () => {
         fld = (
           <>
             <img
-              src={"/src/assets/" + o.thumbnail?.toString()}
+              src={"/images/" + o.thumbnail?.toString()}
               style={{ height: 80, width: 80 }}
               alt="Red dot"
             />
