@@ -6,8 +6,9 @@ import { Category } from "../../models/Category";
 const initialState: ProductSlice = {
   allProducts: [],
   categories: [],
-  newProducts: [],
-  featuredProducts: [],
+  ebikeProducts: [],
+  bikeProducts: [],
+  threeWheeleProducts: [],
   wishlist: [],
 };
 
@@ -15,11 +16,14 @@ export const productSlice = createSlice({
   name: "productSlice",
   initialState,
   reducers: {
-    updateNewList: (state, action: PayloadAction<Product[]>) => {
-      return { ...state, newProducts: action.payload };
+    updateEbikeList: (state, action: PayloadAction<Product[]>) => {
+      return { ...state, ebikeProducts: action.payload };
     },
-    updateFeaturedList: (state, action: PayloadAction<Product[]>) => {
-      return { ...state, featuredProducts: action.payload };
+    updateBikeList: (state, action: PayloadAction<Product[]>) => {
+      return { ...state, bikeProducts: action.payload };
+    },
+    updateThreeWheeleList: (state, action: PayloadAction<Product[]>) => {
+      return { ...state, threeWheeleProducts: action.payload };
     },
     addToWishlist: (state, action: PayloadAction<Product>) => {
       const { wishlist } = state;
@@ -38,8 +42,9 @@ export const productSlice = createSlice({
 });
 
 export const {
-  updateNewList,
-  updateFeaturedList,
+  updateEbikeList,
+  updateBikeList,
+  updateThreeWheeleList,
   addToWishlist,
   addCategories,
   addProducts,

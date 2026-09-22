@@ -58,7 +58,7 @@ const ImportProduct = () => {
         console.log("error: " + error);
       }
       try {
-        getRequest({ url: "/products" }).then((res) => {
+        getRequest({ url: "/products?type=all" }).then((res) => {
           let header: any = [];
           let p = res.products?.map((i: any, idx: any) => {
             if (header.length === 0) {
@@ -125,28 +125,25 @@ const ImportProduct = () => {
         fld = (
           <>
             <img
-              src={o.thumbnail}
+              src={"/src/assets/" + o.thumbnail?.toString()}
               style={{ height: 80, width: 80 }}
               alt="Red dot"
             />
-            {/* <input
-                type="file"
-                name="myImage"
-                accept="image/*, .heic"
-                onChange={async (e) => {
-                  let cloneData = [...data];
-                  console.log(e.target.files[0]);
-                  const result = await toBase64(e.target.files[0]);
-                  cloneData[i].image = result;
-                  setData(cloneData);
-                }}
-              /> */}
+            <TextField
+              id=""
+              label=""
+              value={o?.[k.key] ?? ""}
+              onChange={(e): any => {
+                let cloneData: any = [...data];
+                cloneData[i][k.key] = e.target.value;
+                setData(cloneData);
+              }}
+            />
             <InputFileUpload
               onChange={async (e: any) => {
                 let cloneData: any = [...data];
-                console.log(e.target.files[0]);
-                const result = await toBase64(e.target.files[0]);
-                cloneData[i].thumbnail = result;
+                cloneData[i].thumbnail = e.target.files[0].name;
+                console.log("e.target.files[0]", e.target.files[0].name);
                 setData(cloneData);
               }}
               accept="image/*, .heic"
@@ -243,6 +240,18 @@ const ImportProduct = () => {
       })
     );
   };
+  // const download = () => {
+  //   data.map((i: any) => {
+  //     if (i.thumbnail.length > 0) {
+  //       console.log("i.thumbnail", i.thumbnail);
+  //       var element = document.createElement("a");
+  //       var file = new Blob([i.thumbnail], { type: "image/*" });
+  //       element.href = URL.createObjectURL(file);
+  //       element.download = i._id + ".jpg)";
+  //       element.click();
+  //     }
+  //   });
+  // };
 
   return (
     <div>

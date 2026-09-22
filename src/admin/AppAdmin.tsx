@@ -18,18 +18,18 @@ import { Toaster } from "react-hot-toast";
 export default function BasicExample() {
   return (
     <React.Fragment>
-      <Layout>
-        <Toaster />
-        <Routes>
-          <Route path="/import-category" element={<ImportCategory />} />
-          <Route path="/import-product" element={<ImportProduct />} />
+      {/* <Layout> */}
+      <Toaster />
+      <Routes>
+        <Route path="/import-category" element={<ImportCategory />} />
+        <Route path="/import-product" element={<ImportProduct />} />
 
-          {/* <Route index element={<Home />} />
+        {/* <Route index element={<Home />} />
           <Route path="blogs" element={<Blogs />} />
           <Route path="contact" element={<Contact />} />
           <Route path="*" element={<NoPage />} /> */}
-        </Routes>
-      </Layout>
+      </Routes>
+      {/* </Layout> */}
     </React.Fragment>
   );
 }

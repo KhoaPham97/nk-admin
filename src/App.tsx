@@ -19,20 +19,18 @@ import BannerPopup from "./components/BannerPopup";
 import AllCategories from "./pages/AllCategories";
 import SingleCategory from "./pages/SingleCategory";
 import SearchPage from "./pages/SearchPage";
-import { useAppSelector } from "./redux/hooks";
+import LazyloadProducts from "./pages/LazyloadProducts";
 import BasicExample from "./admin/AppAdmin";
 const CheckAccount = () => {
-  const userInfo: any = useAppSelector((state) => state.authReducer.userInfo);
-  return userInfo.role === "admin" ? (
-    <>
-      <BasicExample />
-    </>
-  ) : (
+  return (
     <React.Fragment>
       <Navbar />
+      {/* <div className="body"> */}
+      <BasicExample />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/search" element={<SearchPage />} />
+        <Route path="/list-product/:type" element={<LazyloadProducts />} />
         <Route path="/products" element={<AllProducts />} />
         <Route path="/categories" element={<AllCategories />} />
         <Route path="/product/:productID" element={<SingleProduct />} />
@@ -46,6 +44,7 @@ const CheckAccount = () => {
         </Route>
       </Routes>
       <Toaster position="bottom-center" reverseOrder={false} />
+      {/* </div> */}
       <Footer />
       <Cart />
       <LoginModal />

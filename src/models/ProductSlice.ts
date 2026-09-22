@@ -3,8 +3,9 @@ import { Product } from "./Product";
 
 export interface ProductSlice {
   allProducts: Product[];
-  newProducts: Product[];
-  featuredProducts: Product[];
+  ebikeProducts: Product[];
+  bikeProducts: Product[];
+  threeWheeleProducts: Product[];
   wishlist: Product[];
   categories: Category[];
 }

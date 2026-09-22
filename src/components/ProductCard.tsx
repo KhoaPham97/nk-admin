@@ -33,7 +33,7 @@ const ProductCard: FC<Product> = ({
           thumbnail,
           discountPercentage,
           qty,
-        })
+        }),
       );
       toast.success("item added to cart successfully", {
         duration: 3000,
@@ -49,7 +49,7 @@ const ProductCard: FC<Product> = ({
       <div className="text-center border-b border-gray-200">
         <Link to={{ pathname: `/product/${id}` }}>
           <img
-            src={thumbnail}
+            src={"/src/assets/" + thumbnail?.toString()}
             alt={title}
             className="inline-block h-60 transition-transform duration-200 hover:scale-110"
           />
@@ -71,10 +71,10 @@ const ProductCard: FC<Product> = ({
         <RatingStar rating={rating} />
       </div> */}
       <div className="flex flex-wrap items-center justify-between px-4 pb-4">
-        {discountPercentage && (
+        {/* {discountPercentage && (
           <PriceSection discountPercentage={discountPercentage} price={price} />
-        )}
-        {qty && qty > 0 ? (
+        )} */}
+        {/* {qty && qty > 0 ? (
           <button
             type="button"
             className="flex items-center space-x-2 hover:bg-blue-500 text-white py-2 px-4 rounded bg-pink-500"
@@ -86,7 +86,9 @@ const ProductCard: FC<Product> = ({
           </button>
         ) : (
           <p className="sold-out-badge">Tạm hết hàng</p>
-        )}
+          
+          
+        )} */}
       </div>
     </div>
   );
