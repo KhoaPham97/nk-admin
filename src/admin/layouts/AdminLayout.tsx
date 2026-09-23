@@ -45,11 +45,11 @@ const AdminLayout = () => {
       >
         {/* HEADER */}
 
-        {/* <AdminHeader
+        <AdminHeader
           drawerWidth={DRAWER_WIDTH}
           onMenuClick={handleDrawerToggle}
           isMobile={isMobile}
-        /> */}
+        />
 
         {/* CONTENT */}
 

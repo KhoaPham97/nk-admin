@@ -232,7 +232,7 @@ function LazyloadProducts() {
           </button>
 
           {/* Tiêu đề */}
-          <h2 className="py-2 text-center font-lora text-4xl font-medium dark:text-white">
+          <h2 className="py-2 text-center font-lora text-xl font-medium dark:text-white sm:text-2xl md:text-4xl">
             {type === "1"
               ? "Phụ tùng xe đạp"
               : type === "2"

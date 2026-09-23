@@ -1,29 +1,47 @@
 import React from "react";
 import { Route, Routes } from "react-router-dom";
-import Layout from "./Layout";
-import ImportCategory from "./ImportCategory";
-import Products from "./pages/Products";
-import AdminLayout from "./layouts/AdminLayout";
-import Categories from "./pages/Categories";
-import Dashboard from "./pages/Dashboard";
 
-// This site has 3 pages, all of which are rendered
-// dynamically in the browser (not server rendered).
-//
-// Although the page does not ever refresh, notice how
-// React Router keeps the URL up to date as you navigate
-// through the site. This preserves the browser history,
-// making sure things like the back button and bookmarks
-// work properly.
+import AdminLayout from "./layouts/AdminLayout";
+import AdminProtectedRoute from "./AdminProtectedRoute";
+
+import AdminLogin from "./pages/AdminLogin";
+
+import Dashboard from "./pages/Dashboard";
+import Products from "./pages/Products";
+import Categories from "./pages/Categories";
+import CreateProduct from "./pages/CreateProduct";
+
+import Customers from "./pages/Customers";
+import CustomerDetail from "./pages/CustomerDetail";
+
+import CreateOrder from "./pages/CreateOrder";
+import Orders from "./pages/Orders";
+import InvoiceDetail from "./pages/InvoiceDetail";
+import Inventory from "./pages/Inventory";
+import InventoryImport from "./pages/InventoryImport";
 
 export default function BasicExample() {
   return (
-    <React.Fragment>
-      {/* <Layout> */}
+    <Routes>
+      {/* ==========================================
+          LOGIN
+          Không cần đăng nhập
+      ========================================== */}
 
-      <Routes>
+      <Route path="/admin/login" element={<AdminLogin />} />
+
+      {/* ==========================================
+          ADMIN
+          BẮT BUỘC ĐĂNG NHẬP
+      ========================================== */}
+
+      <Route element={<AdminProtectedRoute />}>
         <Route path="/admin" element={<AdminLayout />}>
+          {/* /admin */}
+
           <Route index element={<Dashboard />} />
+
+          {/* PRODUCTS */}
 
           <Route path="products" element={<Products />} />
 
@@ -32,13 +50,32 @@ export default function BasicExample() {
           <Route path="products/electric" element={<Products />} />
 
           <Route path="products/tricycle" element={<Products />} />
+
+          <Route path="products/create" element={<CreateProduct />} />
+
+          {/* CATEGORY */}
+
           <Route path="categories" element={<Categories />} />
+
+          {/* CUSTOMERS */}
+
+          <Route path="customers" element={<Customers />} />
+
+          <Route path="customers/:id" element={<CustomerDetail />} />
+
+          {/* ORDERS */}
+
+          <Route path="orders" element={<Orders />} />
+
+          <Route path="orders/create" element={<CreateOrder />} />
+
+          {/* INVOICE */}
+
+          <Route path="invoices/:id" element={<InvoiceDetail />} />
+          <Route path="inventory" element={<Inventory />} />
+          <Route path="inventory/import" element={<InventoryImport />} />
         </Route>
-      </Routes>
-      {/* </Layout> */}
-    </React.Fragment>
+      </Route>
+    </Routes>
   );
 }
-
-// You can think of these components as "pages"
-// in your app.

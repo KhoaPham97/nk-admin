@@ -16,4 +16,6 @@ export const API_ENDPOINTS = {
   PRODUCTS_CATEGORY_ID_PRODUCTS_ID_PRODUCTS: `${BASE_URL}/products/category/:id/products/:id/products`,
   USER: `${BASE_URL}/user/:id`,
   CARTUSER: `${BASE_URL}/user/:id/move-cart-to-db`,
+  CUSTOMERS: `${BASE_URL}/customers`,
+  ORDER: `${BASE_URL}/order`,
 };

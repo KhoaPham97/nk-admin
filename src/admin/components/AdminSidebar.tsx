@@ -20,7 +20,8 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import StorefrontIcon from "@mui/icons-material/Storefront";
 import AddBoxIcon from "@mui/icons-material/AddBox";
 import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
-
+import PostAddIcon from "@mui/icons-material/PostAdd";
+import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
 import { useLocation, useNavigate } from "react-router-dom";
 
 interface Props {
@@ -59,21 +60,32 @@ const AdminSidebar = ({
           icon: <Inventory2Icon />,
           path: "/admin/products",
         },
+
+        // ⭐ THÊM SẢN PHẨM
+        {
+          label: "Nhập sản phẩm",
+          icon: <PostAddIcon />,
+          path: "/admin/products/create",
+        },
+
         {
           label: "Phụ tùng xe đạp",
           icon: <StorefrontIcon />,
           path: "/admin/products/bicycle",
         },
+
         {
           label: "Phụ tùng xe điện",
           icon: <StorefrontIcon />,
           path: "/admin/products/electric",
         },
+
         {
           label: "Phụ tùng xe ba gác",
           icon: <StorefrontIcon />,
           path: "/admin/products/tricycle",
         },
+
         {
           label: "Danh mục",
           icon: <CategoryIcon />,
@@ -90,11 +102,13 @@ const AdminSidebar = ({
           icon: <Inventory2Icon />,
           path: "/admin/inventory",
         },
+
         {
           label: "Nhập kho",
           icon: <AddBoxIcon />,
           path: "/admin/inventory/import",
         },
+
         {
           label: "Xuất kho",
           icon: <RemoveCircleOutlineIcon />,
@@ -110,6 +124,11 @@ const AdminSidebar = ({
           label: "Đơn hàng",
           icon: <ShoppingCartIcon />,
           path: "/admin/orders",
+        },
+        {
+          label: "Tạo đơn hàng",
+          path: "/admin/orders/create",
+          icon: <AddShoppingCartIcon />,
         },
         {
           label: "Khách hàng",
@@ -172,7 +191,12 @@ const AdminSidebar = ({
         }}
       >
         {menuGroups.map((group) => (
-          <Box key={group.title} sx={{ mb: 1.5 }}>
+          <Box
+            key={group.title}
+            sx={{
+              mb: 1.5,
+            }}
+          >
             <Typography
               sx={{
                 px: 2.5,
@@ -191,7 +215,7 @@ const AdminSidebar = ({
                 const active =
                   item.path === "/admin"
                     ? location.pathname === "/admin"
-                    : location.pathname.startsWith(item.path);
+                    : location.pathname === item.path;
 
                 return (
                   <ListItemButton
