@@ -21,6 +21,7 @@ import SingleCategory from "./pages/SingleCategory";
 import SearchPage from "./pages/SearchPage";
 import LazyloadProducts from "./pages/LazyloadProducts";
 import BasicExample from "./admin/AppAdmin";
+
 const CheckAccount = () => {
   return (
     <React.Fragment>

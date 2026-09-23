@@ -2,7 +2,10 @@ import React from "react";
 import { Route, Routes } from "react-router-dom";
 import Layout from "./Layout";
 import ImportCategory from "./ImportCategory";
-import ImportProduct from "./ImportProduct";
+import Products from "./pages/Products";
+import AdminLayout from "./layouts/AdminLayout";
+import Categories from "./pages/Categories";
+import Dashboard from "./pages/Dashboard";
 
 // This site has 3 pages, all of which are rendered
 // dynamically in the browser (not server rendered).
@@ -17,14 +20,20 @@ export default function BasicExample() {
   return (
     <React.Fragment>
       {/* <Layout> */}
-      <Routes>
-        <Route path="/import-category" element={<ImportCategory />} />
-        <Route path="/import-product" element={<ImportProduct />} />
 
-        {/* <Route index element={<Home />} />
-          <Route path="blogs" element={<Blogs />} />
-          <Route path="contact" element={<Contact />} />
-          <Route path="*" element={<NoPage />} /> */}
+      <Routes>
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<Dashboard />} />
+
+          <Route path="products" element={<Products />} />
+
+          <Route path="products/bicycle" element={<Products />} />
+
+          <Route path="products/electric" element={<Products />} />
+
+          <Route path="products/tricycle" element={<Products />} />
+          <Route path="categories" element={<Categories />} />
+        </Route>
       </Routes>
       {/* </Layout> */}
     </React.Fragment>
