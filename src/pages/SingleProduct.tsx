@@ -134,13 +134,13 @@ const SingleProduct: FC = () => {
   return (
     <div className="container mx-auto pt-8 dark:text-white">
       <button
-        onClick={() => {
-          navigate(-1);
-        }}
-        className="hover:text-gray-600"
+        type="button"
+        onClick={() => navigate(-1)}
+        className=" mb-5 inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all duration-200 hover:-translate-x-1 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-900 hover:shadow active:scale-95 dark:border-gray-700 dark:bg-slate-800 dark:text-gray-200 dark:hover:bg-slate-700 dark:hover:text-white "
       >
         {" "}
-        ← Quay lại{" "}
+        <span className="text-lg leading-none">←</span>{" "}
+        <span>Quay lại</span>{" "}
       </button>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 px-4 ">
         <div className="space-y-2">

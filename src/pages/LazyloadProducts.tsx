@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import ProductCard from "../components/ProductCard";
 import { API_ENDPOINTS } from "../api";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
 function LazyloadProducts() {
   const { type } = useParams();
@@ -10,6 +10,7 @@ function LazyloadProducts() {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const navigate = useNavigate();
 
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
@@ -196,9 +197,42 @@ function LazyloadProducts() {
 
   return (
     <>
-      <div className="container mt-8 mx-auto px-4 dark:bg-slate-800">
-        <div className="sm:flex items-center justify-between">
-          <h2 className="text-4xl font-medium font-lora dark:text-white py-2">
+      <div className="container mx-auto mt-8 px-4 dark:bg-slate-800">
+        {/* Header */}
+        <div className="relative mb-6 flex items-center justify-center">
+          {/* Nút quay lại */}
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="
+        absolute left-0
+        inline-flex items-center gap-2
+        rounded-lg
+        border border-gray-200
+        bg-white
+        px-4 py-2
+        text-sm font-medium text-gray-700
+        shadow-sm
+        transition-all duration-200
+        hover:-translate-x-1
+        hover:border-gray-300
+        hover:bg-gray-50
+        hover:text-gray-900
+        hover:shadow
+        active:scale-95
+        dark:border-gray-700
+        dark:bg-slate-800
+        dark:text-gray-200
+        dark:hover:bg-slate-700
+        dark:hover:text-white
+      "
+          >
+            <span className="text-lg leading-none">←</span>
+            <span>Quay lại</span>
+          </button>
+
+          {/* Tiêu đề */}
+          <h2 className="py-2 text-center font-lora text-4xl font-medium dark:text-white">
             {type === "1"
               ? "Phụ tùng xe đạp"
               : type === "2"
