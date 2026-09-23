@@ -56,8 +56,8 @@ const SingleProduct: FC = () => {
       fetch(
         `${API_ENDPOINTS.PRODUCTS_CATEGORY_ID.replace(
           ":id",
-          product?.categoryId
-        )}`
+          product?.categoryId,
+        )}`,
       )
         .then((res) => res.json())
         .then((data) => {
@@ -86,7 +86,7 @@ const SingleProduct: FC = () => {
             rating: product.rating,
             thumbnail: product.thumbnail,
             discountPercentage: product.discountPercentage,
-          })
+          }),
         );
       toast.success("item added to cart successfully", {
         duration: 3000,
@@ -106,7 +106,7 @@ const SingleProduct: FC = () => {
             rating: product.rating,
             thumbnail: product.thumbnail,
             discountPercentage: product.discountPercentage,
-          })
+          }),
         );
       dispatch(setCartState(true));
     });
@@ -144,7 +144,17 @@ const SingleProduct: FC = () => {
       </button>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 px-4 ">
         <div className="space-y-2">
-          <img src={selectedImg} alt="selected" className="h-80" />
+          <img
+            src={
+              selectedImg ? `/images/${selectedImg}` : "/images/no-image.jpg"
+            }
+            alt={"Sản phẩm"}
+            width={240}
+            height={240}
+            loading="lazy"
+            decoding="async"
+            className="inline-block h-60 w-auto object-contain transition-transform duration-200 hover:scale-110"
+          />
           <div className="flex space-x-1 items-center">
             {imgs &&
               imgs.map((_img) => (

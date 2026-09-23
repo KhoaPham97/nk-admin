@@ -4,8 +4,6 @@ import Layout from "./Layout";
 import ImportCategory from "./ImportCategory";
 import ImportProduct from "./ImportProduct";
 
-import { Toaster } from "react-hot-toast";
-
 // This site has 3 pages, all of which are rendered
 // dynamically in the browser (not server rendered).
 //
@@ -19,7 +17,6 @@ export default function BasicExample() {
   return (
     <React.Fragment>
       {/* <Layout> */}
-      <Toaster />
       <Routes>
         <Route path="/import-category" element={<ImportCategory />} />
         <Route path="/import-product" element={<ImportProduct />} />
