@@ -20,28 +20,73 @@ import { API_ENDPOINTS } from "../../api";
 
 const API_URL = API_ENDPOINTS || "";
 
+// =========================================================
+// TYPE NAME
+// =========================================================
+
+const TYPE_NAME = {
+  1: "Phụ tùng xe đạp",
+  2: "Phụ tùng xe điện",
+  3: "Phụ tùng xe ba gác",
+};
+
+// =========================================================
+// VARIANT
+// =========================================================
+
 const emptyVariant = () => ({
   name: "",
   price: "",
   qty: 0,
 });
 
+// =========================================================
+// INITIAL FORM
+// =========================================================
+
 const initialForm = {
   title: "",
+
+  // =======================================================
+  // TYPE
+  //
+  // 1 = Phụ tùng xe đạp
+  // 2 = Phụ tùng xe điện
+  // 3 = Phụ tùng xe ba gác
+  // =======================================================
+
+  type: "1",
+
   price: "",
+
   rating: 5,
+
   originalPrice: "",
+
   thumbnail: "",
+
   images: [],
+
   detail: "",
+
   description: "",
+
   qty: 0,
+
   stock: "0",
+
   brand: "",
+
   categoryId: "",
+
   category: "",
+
   variants: [],
 };
+
+// =========================================================
+// CREATE PRODUCT
+// =========================================================
 
 export default function CreateProduct() {
   const [form, setForm] = useState(initialForm);
@@ -50,11 +95,9 @@ export default function CreateProduct() {
 
   const [saving, setSaving] = useState(false);
 
-  /*
-   * ============================
-   * LOAD CATEGORY
-   * ============================
-   */
+  // =======================================================
+  // LOAD CATEGORY
+  // =======================================================
 
   useEffect(() => {
     loadCategories();
@@ -64,32 +107,51 @@ export default function CreateProduct() {
     try {
       const res = await axios.get(`${API_URL.PRODUCTS_CATEGORIES}`);
 
-      setCategories(res.data?.categorys || res.data?.data || []);
+      const list = res.data?.categorys || res.data?.data || [];
+
+      setCategories(Array.isArray(list) ? list : []);
     } catch (error) {
       console.error("Load categories error:", error);
+
+      alert("Không thể tải danh mục sản phẩm");
     }
   };
 
-  /*
-   * ============================
-   * HANDLE FORM
-   * ============================
-   */
+  // =======================================================
+  // HANDLE FORM
+  // =======================================================
 
   const handleChange = (field) => (event) => {
     const value = event.target.value;
 
     setForm((prev) => ({
       ...prev,
+
       [field]: value,
     }));
   };
 
-  /*
-   * ============================
-   * CATEGORY
-   * ============================
-   */
+  // =======================================================
+  // TYPE
+  // =======================================================
+
+  const handleTypeChange = (event) => {
+    const value = String(event.target.value);
+
+    if (!["1", "2", "3"].includes(value)) {
+      return;
+    }
+
+    setForm((prev) => ({
+      ...prev,
+
+      type: value,
+    }));
+  };
+
+  // =======================================================
+  // CATEGORY
+  // =======================================================
 
   const handleCategoryChange = (event) => {
     const categoryId = event.target.value;
@@ -100,20 +162,28 @@ export default function CreateProduct() {
 
     setForm((prev) => ({
       ...prev,
+
       categoryId,
+
       category: category?.name || category?.title || "",
     }));
+
+    // =====================================================
+    // IMPORTANT
+    //
+    // Category KHÔNG tự động thay đổi type.
+    // Type được chọn độc lập ở Select phía trên.
+    // =====================================================
   };
 
-  /*
-   * ============================
-   * VARIANTS
-   * ============================
-   */
+  // =======================================================
+  // VARIANTS
+  // =======================================================
 
   const addVariant = () => {
     setForm((prev) => ({
       ...prev,
+
       variants: [...prev.variants, emptyVariant()],
     }));
   };
@@ -121,6 +191,7 @@ export default function CreateProduct() {
   const removeVariant = (index) => {
     setForm((prev) => ({
       ...prev,
+
       variants: prev.variants.filter((_, i) => i !== index),
     }));
   };
@@ -131,21 +202,21 @@ export default function CreateProduct() {
 
       variants[index] = {
         ...variants[index],
-        [field]: field === "qty" ? Number(value) : value,
+
+        [field]: field === "qty" ? Number(value) || 0 : value,
       };
 
       return {
         ...prev,
+
         variants,
       };
     });
   };
 
-  /*
-   * ============================
-   * TỔNG TỒN KHO
-   * ============================
-   */
+  // =======================================================
+  // TOTAL VARIANT QTY
+  // =======================================================
 
   const totalVariantQty = useMemo(() => {
     return form.variants.reduce(
@@ -154,43 +225,76 @@ export default function CreateProduct() {
     );
   }, [form.variants]);
 
-  /*
-   * Nếu có variants thì qty
-   * tự động bằng tổng variants
-   */
+  // =======================================================
+  // AUTO UPDATE QTY / STOCK
+  // =======================================================
 
   useEffect(() => {
     if (form.variants.length > 0) {
       setForm((prev) => ({
         ...prev,
+
         qty: totalVariantQty,
+
         stock: String(totalVariantQty),
       }));
     }
-  }, [totalVariantQty]);
+  }, [totalVariantQty, form.variants.length]);
 
-  /*
-   * ============================
-   * VALIDATE
-   * ============================
-   */
+  // =======================================================
+  // GET TYPE NAME
+  // =======================================================
+
+  const getTypeName = (type) => {
+    return TYPE_NAME[String(type)] || "";
+  };
+
+  // =======================================================
+  // VALIDATE
+  // =======================================================
 
   const validate = () => {
+    // =====================================================
+    // TITLE
+    // =====================================================
+
     if (!form.title.trim()) {
       alert("Vui lòng nhập tên sản phẩm");
+
       return false;
     }
+
+    // =====================================================
+    // TYPE
+    // =====================================================
+
+    const productType = String(form.type || "");
+
+    if (!["1", "2", "3"].includes(productType)) {
+      alert("Vui lòng chọn loại sản phẩm");
+
+      return false;
+    }
+
+    // =====================================================
+    // CATEGORY
+    // =====================================================
 
     if (!form.categoryId) {
       alert("Vui lòng chọn danh mục");
+
       return false;
     }
+
+    // =====================================================
+    // VARIANTS
+    // =====================================================
 
     if (form.variants.length > 0) {
       for (let i = 0; i < form.variants.length; i++) {
         const variant = form.variants[i];
 
-        if (!variant.name.trim()) {
+        if (!String(variant.name || "").trim()) {
           alert(`Vui lòng nhập tên phân loại dòng ${i + 1}`);
 
           return false;
@@ -201,53 +305,132 @@ export default function CreateProduct() {
 
           return false;
         }
+
+        if (Number(variant.price || 0) < 0) {
+          alert(`Giá phân loại dòng ${i + 1} không hợp lệ`);
+
+          return false;
+        }
       }
     }
 
     return true;
   };
 
-  /*
-   * ============================
-   * SAVE
-   * ============================
-   */
+  // =======================================================
+  // SAVE PRODUCT
+  // =======================================================
 
   const handleSubmit = async () => {
-    if (!validate()) return;
+    if (!validate()) {
+      return;
+    }
 
     try {
       setSaving(true);
 
+      // ===================================================
+      // TYPE
+      // ===================================================
+
+      const productType = String(form.type);
+
+      // ===================================================
+      // QTY
+      // ===================================================
+
+      const finalQty =
+        form.variants.length > 0 ? totalVariantQty : Number(form.qty || 0);
+
+      // ===================================================
+      // STOCK
+      // ===================================================
+
+      const finalStock =
+        form.variants.length > 0
+          ? String(totalVariantQty)
+          : String(form.stock || "0");
+
+      // ===================================================
+      // PAYLOAD
+      // ===================================================
+
       const payload = {
+        // =================================================
+        // BASIC
+        // =================================================
+
         title: form.title.trim(),
+
+        // =================================================
+        // TYPE
+        //
+        // Luôn lưu String:
+        // "1"
+        // "2"
+        // "3"
+        // =================================================
+
+        type: productType,
+
+        // =================================================
+        // PRICE
+        // =================================================
 
         price: String(form.price || "0"),
 
+        originalPrice: String(form.originalPrice || ""),
+
+        // =================================================
+        // RATING
+        // =================================================
+
         rating: Number(form.rating || 0),
 
-        originalPrice: String(form.originalPrice || ""),
+        // =================================================
+        // IMAGES
+        // =================================================
 
         thumbnail: form.thumbnail || "",
 
         images: form.images || [],
 
+        // =================================================
+        // CONTENT
+        // =================================================
+
         detail: form.detail || "",
 
         description: form.description || "",
 
-        qty: Number(form.qty || 0),
+        // =================================================
+        // QTY
+        // =================================================
 
-        stock: String(form.stock || "0"),
+        qty: finalQty,
+
+        stock: finalStock,
+
+        // =================================================
+        // BRAND
+        // =================================================
 
         brand: form.brand || "",
+
+        // =================================================
+        // CATEGORY
+        // =================================================
 
         categoryId: form.categoryId,
 
         category: form.category || "",
 
+        // =================================================
+        // VARIANTS
+        // =================================================
+
         variants: form.variants.map((variant) => ({
-          name: variant.name.trim(),
+          name: String(variant.name || "").trim(),
 
           price: String(variant.price || "0"),
 
@@ -255,56 +438,99 @@ export default function CreateProduct() {
         })),
       };
 
-      const response = await axios.post(`${API_URL}/api/products`, payload);
+      console.log("CREATE PRODUCT PAYLOAD:", payload);
+
+      // ===================================================
+      // API CREATE
+      // ===================================================
+
+      const response = await axios.post(API_URL.PRODUCTS, payload);
 
       console.log("Create product:", response.data);
 
       alert("Thêm sản phẩm thành công!");
 
-      setForm(initialForm);
+      // ===================================================
+      // RESET
+      // ===================================================
+
+      setForm({
+        ...initialForm,
+
+        type: productType,
+      });
     } catch (error) {
       console.error("Create product error:", error);
 
-      alert(error.response?.data?.message || "Không thể thêm sản phẩm");
+      alert(
+        error?.response?.data?.message ||
+          error?.response?.data?.error ||
+          "Không thể thêm sản phẩm",
+      );
     } finally {
       setSaving(false);
     }
   };
 
-  /*
-   * ============================
-   * RESET
-   * ============================
-   */
+  // =======================================================
+  // RESET
+  // =======================================================
 
   const handleReset = () => {
     const confirmReset = window.confirm(
       "Bạn có chắc muốn xóa dữ liệu đang nhập?",
     );
 
-    if (confirmReset) {
-      setForm(initialForm);
+    if (!confirmReset) {
+      return;
     }
+
+    setForm({
+      ...initialForm,
+
+      type: "1",
+    });
   };
+
+  // =======================================================
+  // RENDER
+  // =======================================================
 
   return (
     <Box
       sx={{
         minHeight: "100vh",
+
         background: "#f5f6f8",
+
         p: {
           xs: 2,
           md: 3,
         },
       }}
     >
-      {/* ================= HEADER ================= */}
+      {/* =====================================================
+          HEADER
+      ===================================================== */}
 
       <Box
         sx={{
           display: "flex",
+
           justifyContent: "space-between",
-          alignItems: "center",
+
+          alignItems: {
+            xs: "flex-start",
+            md: "center",
+          },
+
+          flexDirection: {
+            xs: "column",
+            md: "row",
+          },
+
+          gap: 2,
+
           mb: 3,
         }}
       >
@@ -321,10 +547,11 @@ export default function CreateProduct() {
         <Box
           sx={{
             display: "flex",
+
             gap: 1,
           }}
         >
-          <Button variant="outlined" onClick={handleReset}>
+          <Button variant="outlined" onClick={handleReset} disabled={saving}>
             Hủy
           </Button>
 
@@ -339,7 +566,9 @@ export default function CreateProduct() {
         </Box>
       </Box>
 
-      {/* ================= THÔNG TIN ================= */}
+      {/* =====================================================
+          THÔNG TIN SẢN PHẨM
+      ===================================================== */}
 
       <Card sx={{ mb: 3 }}>
         <CardContent>
@@ -348,7 +577,9 @@ export default function CreateProduct() {
           </Typography>
 
           <Grid container spacing={2}>
-            {/* TÊN */}
+            {/* =================================================
+                TÊN
+            ================================================= */}
 
             <Grid item xs={12} md={8}>
               <TextField
@@ -360,7 +591,9 @@ export default function CreateProduct() {
               />
             </Grid>
 
-            {/* THƯƠNG HIỆU */}
+            {/* =================================================
+                THƯƠNG HIỆU
+            ================================================= */}
 
             <Grid item xs={12} md={4}>
               <TextField
@@ -371,12 +604,43 @@ export default function CreateProduct() {
               />
             </Grid>
 
-            {/* DANH MỤC */}
+            {/* =================================================
+                LOẠI SẢN PHẨM
+            ================================================= */}
 
             <Grid item xs={12} md={6}>
               <TextField
                 select
                 fullWidth
+                required
+                label="Loại sản phẩm *"
+                value={form.type}
+                onChange={handleTypeChange}
+                helperText={
+                  form.type
+                    ? `Đang chọn: ${getTypeName(form.type)}`
+                    : "Vui lòng chọn loại sản phẩm"
+                }
+              >
+                <MenuItem value="">Chọn loại sản phẩm</MenuItem>
+
+                <MenuItem value="1">1 - Phụ tùng xe đạp</MenuItem>
+
+                <MenuItem value="2">2 - Phụ tùng xe điện</MenuItem>
+
+                <MenuItem value="3">3 - Phụ tùng xe ba gác</MenuItem>
+              </TextField>
+            </Grid>
+
+            {/* =================================================
+                DANH MỤC
+            ================================================= */}
+
+            <Grid item xs={12} md={6}>
+              <TextField
+                select
+                fullWidth
+                required
                 label="Danh mục *"
                 value={form.categoryId}
                 onChange={handleCategoryChange}
@@ -391,7 +655,9 @@ export default function CreateProduct() {
               </TextField>
             </Grid>
 
-            {/* GIÁ BÁN */}
+            {/* =================================================
+                GIÁ BÁN
+            ================================================= */}
 
             <Grid item xs={12} md={3}>
               <TextField
@@ -400,10 +666,15 @@ export default function CreateProduct() {
                 value={form.price}
                 onChange={handleChange("price")}
                 type="number"
+                inputProps={{
+                  min: 0,
+                }}
               />
             </Grid>
 
-            {/* GIÁ GỐC */}
+            {/* =================================================
+                GIÁ GỐC
+            ================================================= */}
 
             <Grid item xs={12} md={3}>
               <TextField
@@ -412,10 +683,15 @@ export default function CreateProduct() {
                 value={form.originalPrice}
                 onChange={handleChange("originalPrice")}
                 type="number"
+                inputProps={{
+                  min: 0,
+                }}
               />
             </Grid>
 
-            {/* RATING */}
+            {/* =================================================
+                RATING
+            ================================================= */}
 
             <Grid item xs={12} md={3}>
               <TextField
@@ -432,7 +708,9 @@ export default function CreateProduct() {
               />
             </Grid>
 
-            {/* SỐ LƯỢNG */}
+            {/* =================================================
+                SỐ LƯỢNG
+            ================================================= */}
 
             <Grid item xs={12} md={3}>
               <TextField
@@ -442,10 +720,15 @@ export default function CreateProduct() {
                 onChange={handleChange("qty")}
                 type="number"
                 disabled={form.variants.length > 0}
+                inputProps={{
+                  min: 0,
+                }}
               />
             </Grid>
 
-            {/* STOCK */}
+            {/* =================================================
+                STOCK
+            ================================================= */}
 
             <Grid item xs={12} md={3}>
               <TextField
@@ -457,7 +740,9 @@ export default function CreateProduct() {
               />
             </Grid>
 
-            {/* THUMBNAIL */}
+            {/* =================================================
+                THUMBNAIL
+            ================================================= */}
 
             <Grid item xs={12}>
               <TextField
@@ -469,7 +754,9 @@ export default function CreateProduct() {
               />
             </Grid>
 
-            {/* IMAGES */}
+            {/* =================================================
+                IMAGES
+            ================================================= */}
 
             <Grid item xs={12}>
               <TextField
@@ -484,6 +771,7 @@ export default function CreateProduct() {
 
                   setForm((prev) => ({
                     ...prev,
+
                     images,
                   }));
                 }}
@@ -491,20 +779,47 @@ export default function CreateProduct() {
                 minRows={3}
                 placeholder={"/images/a.jpg\n/images/b.jpg"}
               />
+
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{
+                  display: "block",
+
+                  mt: 0.5,
+                }}
+              >
+                Mỗi hình ảnh nhập một dòng
+              </Typography>
             </Grid>
           </Grid>
         </CardContent>
       </Card>
 
-      {/* ================= VARIANTS ================= */}
+      {/* =====================================================
+          VARIANTS
+      ===================================================== */}
 
       <Card sx={{ mb: 3 }}>
         <CardContent>
           <Box
             sx={{
               display: "flex",
+
               justifyContent: "space-between",
-              alignItems: "center",
+
+              alignItems: {
+                xs: "flex-start",
+                md: "center",
+              },
+
+              flexDirection: {
+                xs: "column",
+                md: "row",
+              },
+
+              gap: 2,
+
               mb: 2,
             }}
           >
@@ -525,8 +840,11 @@ export default function CreateProduct() {
             <Box
               sx={{
                 p: 3,
+
                 textAlign: "center",
+
                 background: "#f8f9fa",
+
                 borderRadius: 2,
               }}
             >
@@ -547,6 +865,8 @@ export default function CreateProduct() {
                     mb: 1,
                   }}
                 >
+                  {/* TÊN */}
+
                   <Grid item xs={12} md={5}>
                     <TextField
                       fullWidth
@@ -560,6 +880,8 @@ export default function CreateProduct() {
                     />
                   </Grid>
 
+                  {/* GIÁ */}
+
                   <Grid item xs={12} md={3}>
                     <TextField
                       fullWidth
@@ -570,8 +892,13 @@ export default function CreateProduct() {
                         updateVariant(index, "price", e.target.value)
                       }
                       type="number"
+                      inputProps={{
+                        min: 0,
+                      }}
                     />
                   </Grid>
+
+                  {/* SỐ LƯỢNG */}
 
                   <Grid item xs={10} md={3}>
                     <TextField
@@ -589,13 +916,17 @@ export default function CreateProduct() {
                     />
                   </Grid>
 
+                  {/* DELETE */}
+
                   <Grid
                     item
                     xs={2}
                     md={1}
                     sx={{
                       display: "flex",
+
                       alignItems: "center",
+
                       justifyContent: "center",
                     }}
                   >
@@ -609,13 +940,20 @@ export default function CreateProduct() {
                 </Grid>
               ))}
 
+              {/* TOTAL */}
+
               <Box
                 sx={{
                   mt: 2,
+
                   p: 2,
+
                   background: "#f5f6f8",
+
                   borderRadius: 2,
+
                   display: "flex",
+
                   justifyContent: "space-between",
                 }}
               >
@@ -630,13 +968,17 @@ export default function CreateProduct() {
         </CardContent>
       </Card>
 
-      {/* ================= MÔ TẢ ================= */}
+      {/* =====================================================
+          MÔ TẢ
+      ===================================================== */}
 
       <Card sx={{ mb: 3 }}>
         <CardContent>
           <Typography fontWeight={700} mb={2}>
             Nội dung sản phẩm
           </Typography>
+
+          {/* MÔ TẢ */}
 
           <TextField
             fullWidth
@@ -645,7 +987,10 @@ export default function CreateProduct() {
             onChange={handleChange("description")}
             multiline
             minRows={4}
+            placeholder="Nhập mô tả ngắn về sản phẩm..."
           />
+
+          {/* CHI TIẾT */}
 
           <TextField
             fullWidth
@@ -654,22 +999,30 @@ export default function CreateProduct() {
             onChange={handleChange("detail")}
             multiline
             minRows={4}
-            sx={{ mt: 2 }}
+            sx={{
+              mt: 2,
+            }}
+            placeholder="Nhập thông tin chi tiết sản phẩm..."
           />
         </CardContent>
       </Card>
 
-      {/* ================= FOOTER ================= */}
+      {/* =====================================================
+          FOOTER
+      ===================================================== */}
 
       <Box
         sx={{
           display: "flex",
+
           justifyContent: "flex-end",
+
           gap: 2,
+
           pb: 3,
         }}
       >
-        <Button variant="outlined" onClick={handleReset}>
+        <Button variant="outlined" onClick={handleReset} disabled={saving}>
           Hủy
         </Button>
 

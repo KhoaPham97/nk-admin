@@ -18,6 +18,7 @@ import {
   Grid,
   Autocomplete,
   Alert,
+  MenuItem,
 } from "@mui/material";
 
 import SearchIcon from "@mui/icons-material/Search";
@@ -192,6 +193,9 @@ const Products = () => {
     return {
       ...product,
 
+      // Luôn đưa type về string
+      type: product.type ? String(product.type) : "",
+
       price: Number(product.price) || 0,
 
       originalPrice: Number(product.originalPrice) || 0,
@@ -217,11 +221,6 @@ const Products = () => {
       const res = await getRequest({
         url: "/categorys",
       });
-
-      // API:
-      // {
-      //   categorys: [...]
-      // }
 
       const list = Array.isArray(res?.categorys) ? res.categorys : [];
 
@@ -272,12 +271,12 @@ const Products = () => {
         limit,
       };
 
-      // type
+      // Type chỉ dùng để FILTER danh sách
+      // Không dùng type này để ghi đè khi save
       if (type) {
         params.type = type;
       }
 
-      // search
       if (search.trim()) {
         params.search = search.trim();
       }
@@ -448,6 +447,8 @@ const Products = () => {
     });
 
     setDirty(true);
+
+    setSaveMessage("");
   };
 
   // =====================================================
@@ -474,6 +475,8 @@ const Products = () => {
     });
 
     setDirty(true);
+
+    setSaveMessage("");
   };
 
   // =====================================================
@@ -496,24 +499,46 @@ const Products = () => {
 
       setDirty(true);
 
+      setSaveMessage("");
+
       return;
     }
 
+    // IMPORTANT:
+    // Category KHÔNG được tự động thay đổi type
     setSelectedProduct({
       ...selectedProduct,
 
       categoryId: category._id,
 
       category: category.name,
-
-      ...(category.type
-        ? {
-            type: category.type,
-          }
-        : {}),
     });
 
     setDirty(true);
+
+    setSaveMessage("");
+  };
+
+  // =====================================================
+  // CHANGE TYPE
+  // =====================================================
+
+  const changeProductType = (value: string) => {
+    if (!selectedProduct) {
+      return;
+    }
+
+    setSelectedProduct({
+      ...selectedProduct,
+
+      type: String(value),
+    });
+
+    setDirty(true);
+
+    setSaveMessage("");
+
+    setErrorMessage("");
   };
 
   // =====================================================
@@ -522,6 +547,18 @@ const Products = () => {
 
   const saveProduct = async () => {
     if (!selectedProduct) {
+      return;
+    }
+
+    // =================================================
+    // VALIDATE TYPE
+    // =================================================
+
+    const productType = String(selectedProduct.type || "");
+
+    if (!["1", "2", "3"].includes(productType)) {
+      setErrorMessage("Vui lòng chọn loại sản phẩm: 1, 2 hoặc 3");
+
       return;
     }
 
@@ -536,24 +573,25 @@ const Products = () => {
 
       const finalQty = calculateTotalQty(variants);
 
-      const productToSave = {
+      // =================================================
+      // PRODUCT TO SAVE
+      // =================================================
+
+      const productToSave: Product = {
         ...selectedProduct,
+
+        // Type lấy từ Select đang chọn
+        type: productType,
 
         variants,
 
         qty: finalQty,
-
-        ...(type
-          ? {
-              type,
-            }
-          : {}),
       };
 
       console.log("SAVE PRODUCT:", productToSave);
 
       await patchRequest({
-        url: "/product",
+        url: "/products",
 
         data: [productToSave],
       });
@@ -626,7 +664,7 @@ const Products = () => {
       return "";
     }
 
-    // Nếu là URL đầy đủ
+    // URL đầy đủ
     if (filename.startsWith("http://") || filename.startsWith("https://")) {
       return filename;
     }
@@ -922,9 +960,7 @@ const Products = () => {
               </List>
             )}
 
-            {/* =================================================
-                PAGINATION
-            ================================================= */}
+            {/* PAGINATION */}
 
             <Divider />
 
@@ -1056,6 +1092,8 @@ const Products = () => {
                   </Typography>
 
                   <Grid container spacing={2}>
+                    {/* TITLE */}
+
                     <Grid
                       size={{
                         xs: 12,
@@ -1070,6 +1108,8 @@ const Products = () => {
                         }
                       />
                     </Grid>
+
+                    {/* BRAND */}
 
                     <Grid
                       size={{
@@ -1087,6 +1127,8 @@ const Products = () => {
                       />
                     </Grid>
 
+                    {/* CODE */}
+
                     <Grid
                       size={{
                         xs: 12,
@@ -1103,9 +1145,45 @@ const Products = () => {
                       />
                     </Grid>
 
+                    {/* TYPE */}
+
                     <Grid
                       size={{
                         xs: 12,
+                        md: 6,
+                      }}
+                    >
+                      <TextField
+                        select
+                        fullWidth
+                        required
+                        label="Loại sản phẩm"
+                        value={selectedProduct.type || ""}
+                        onChange={(e) => changeProductType(e.target.value)}
+                        helperText={
+                          selectedProduct.type
+                            ? `Type: ${selectedProduct.type} - ${
+                                TYPE_NAME[selectedProduct.type] || ""
+                              }`
+                            : "Vui lòng chọn loại sản phẩm"
+                        }
+                      >
+                        <MenuItem value="">Chọn loại sản phẩm</MenuItem>
+
+                        <MenuItem value="1">1 - Phụ tùng xe đạp</MenuItem>
+
+                        <MenuItem value="2">2 - Phụ tùng xe điện</MenuItem>
+
+                        <MenuItem value="3">3 - Phụ tùng xe ba gác</MenuItem>
+                      </TextField>
+                    </Grid>
+
+                    {/* CATEGORY */}
+
+                    <Grid
+                      size={{
+                        xs: 12,
+                        md: 6,
                       }}
                     >
                       <Autocomplete
@@ -1121,6 +1199,8 @@ const Products = () => {
                         )}
                       />
                     </Grid>
+
+                    {/* PRICE */}
 
                     <Grid
                       size={{
@@ -1141,6 +1221,8 @@ const Products = () => {
                         }
                       />
                     </Grid>
+
+                    {/* OLD PRICE */}
 
                     <Grid
                       size={{
@@ -1244,6 +1326,8 @@ const Products = () => {
                           }}
                         >
                           <Grid container spacing={1.5} alignItems="center">
+                            {/* NAME */}
+
                             <Grid
                               size={{
                                 xs: 12,
@@ -1260,6 +1344,8 @@ const Products = () => {
                                 }
                               />
                             </Grid>
+
+                            {/* PRICE */}
 
                             <Grid
                               size={{
@@ -1279,6 +1365,8 @@ const Products = () => {
                                 }
                               />
                             </Grid>
+
+                            {/* QTY */}
 
                             <Grid
                               size={{
@@ -1301,6 +1389,8 @@ const Products = () => {
                                 }}
                               />
                             </Grid>
+
+                            {/* DELETE */}
 
                             <Grid
                               size={{
