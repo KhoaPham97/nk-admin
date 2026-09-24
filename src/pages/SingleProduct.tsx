@@ -12,6 +12,7 @@ import {
   FaChevronLeft,
   FaChevronRight,
   FaXmark,
+  FaCheck,
 } from "react-icons/fa6";
 import ProductList from "../components/ProductList";
 import useAuth from "../hooks/useAuth";
@@ -24,19 +25,47 @@ import { addToWishlist } from "../redux/features/productSlice";
 import { updateLoading } from "../redux/features/homeSlice";
 import { API_ENDPOINTS } from "../api";
 
+interface ProductVariant {
+  _id?: string;
+  id?: string;
+
+  name?: string;
+  value?: string;
+  label?: string;
+
+  price?: number | string;
+  qty?: number | string;
+
+  code?: string;
+  sku?: string;
+
+  thumbnail?: string;
+  image?: string;
+}
+
 const SingleProduct: FC = () => {
   const dispatch = useAppDispatch();
+
   const { productID } = useParams();
   const navigate = useNavigate();
 
   const [product, setProduct]: any = useState(null);
+
   const [imgs, setImgs] = useState<string[]>([]);
   const [selectedImg, setSelectedImg] = useState<string>();
+
   const [similar, setSimilar] = useState<Product[]>([]);
+
+  // =====================================================
+  // VARIANT
+  // =====================================================
+
+  const [selectedVariantIndex, setSelectedVariantIndex] = useState<number>(0);
 
   // =====================================================
   // ZOOM IMAGE
   // =====================================================
+
   const [isZooming, setIsZooming] = useState(false);
 
   const [zoomPosition, setZoomPosition] = useState({
@@ -53,6 +82,7 @@ const SingleProduct: FC = () => {
   // =====================================================
   // IMAGE URL
   // =====================================================
+
   const getImageUrl = (image?: string) => {
     if (!image) {
       return "/images/no-image.jpg";
@@ -72,6 +102,7 @@ const SingleProduct: FC = () => {
   // =====================================================
   // SCROLL TOP
   // =====================================================
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [productID]);
@@ -79,6 +110,7 @@ const SingleProduct: FC = () => {
   // =====================================================
   // GET PRODUCT
   // =====================================================
+
   useEffect(() => {
     const fetchProductDetails = async () => {
       try {
@@ -106,6 +138,12 @@ const SingleProduct: FC = () => {
         setImgs(productImages);
 
         setSelectedImg(data.thumbnail || productImages?.[0] || undefined);
+
+        // =================================================
+        // RESET VARIANT
+        // =================================================
+
+        setSelectedVariantIndex(0);
       } catch (error) {
         console.error("Lỗi lấy sản phẩm:", error);
 
@@ -123,6 +161,7 @@ const SingleProduct: FC = () => {
   // =====================================================
   // SIMILAR PRODUCTS
   // =====================================================
+
   useEffect(() => {
     const fetchPreferences = async () => {
       try {
@@ -156,8 +195,83 @@ const SingleProduct: FC = () => {
   }, [product?.categoryId, productID]);
 
   // =====================================================
+  // VARIANTS
+  // =====================================================
+
+  const variants: ProductVariant[] = Array.isArray(product?.variants)
+    ? product.variants
+    : [];
+
+  const hasVariants = variants.length > 0;
+
+  const selectedVariant = hasVariants
+    ? variants[selectedVariantIndex] || variants[0]
+    : null;
+
+  // =====================================================
+  // VARIANT NAME
+  // =====================================================
+
+  const getVariantName = (variant?: ProductVariant | null) => {
+    if (!variant) return "";
+
+    return (
+      variant.name ||
+      variant.label ||
+      variant.value ||
+      variant.code ||
+      variant.sku ||
+      ""
+    );
+  };
+
+  // =====================================================
+  // VARIANT PRICE
+  // =====================================================
+
+  const currentPrice = selectedVariant
+    ? Number(selectedVariant.price) || Number(product?.price) || 0
+    : Number(product?.price) || 0;
+
+  // =====================================================
+  // VARIANT QTY
+  // =====================================================
+
+  const currentQty = selectedVariant
+    ? Number(selectedVariant.qty) || 0
+    : Number(product?.qty) || 0;
+
+  const isInStock = currentQty > 0;
+
+  // =====================================================
+  // SELECT VARIANT
+  // =====================================================
+
+  const handleSelectVariant = (index: number) => {
+    const variant = variants[index];
+
+    if (!variant) return;
+
+    const qty = Number(variant.qty) || 0;
+
+    if (qty <= 0) {
+      toast.error(`Phân loại "${getVariantName(variant)}" hiện đã hết hàng`);
+
+      return;
+    }
+
+    setSelectedVariantIndex(index);
+
+    // Nếu variant có hình riêng
+    if (variant.image || variant.thumbnail) {
+      setSelectedImg(variant.image || variant.thumbnail);
+    }
+  };
+
+  // =====================================================
   // IMAGE ZOOM
   // =====================================================
+
   const handleImageMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
 
@@ -172,48 +286,105 @@ const SingleProduct: FC = () => {
   };
 
   // =====================================================
+  // CART PRODUCT
+  // =====================================================
+
+  const createCartProduct = () => {
+    if (!product) return null;
+
+    return {
+      id: product.id,
+
+      title: product.title,
+
+      category: product.category,
+
+      rating: product.rating,
+
+      thumbnail:
+        selectedVariant?.thumbnail ||
+        selectedVariant?.image ||
+        product.thumbnail,
+
+      discountPercentage: product.discountPercentage,
+
+      // ================================================
+      // GIÁ SAU KHI CHỌN VARIANT
+      // ================================================
+
+      price: currentPrice,
+
+      // ================================================
+      // VARIANT ĐƯỢC CHỌN
+      // ================================================
+
+      selectedVariant: selectedVariant
+        ? {
+            ...selectedVariant,
+            name: getVariantName(selectedVariant),
+            price: currentPrice,
+            qty: currentQty,
+          }
+        : null,
+    };
+  };
+
+  // =====================================================
   // ADD CART
   // =====================================================
+
   const addCart = () => {
     requireAuth(() => {
       if (!product) return;
 
-      dispatch(
-        addToCart({
-          id: product.id,
-          price: product.price,
-          title: product.title,
-          category: product.category,
-          rating: product.rating,
-          thumbnail: product.thumbnail,
-          discountPercentage: product.discountPercentage,
-        }),
-      );
+      if (!isInStock) {
+        toast.error("Sản phẩm hiện đã hết hàng");
 
-      toast.success("Đã thêm sản phẩm vào giỏ hàng", {
-        duration: 3000,
-      });
+        return;
+      }
+
+      const cartProduct = createCartProduct();
+
+      if (!cartProduct) return;
+
+      dispatch(addToCart(cartProduct));
+
+      if (selectedVariant) {
+        toast.success(
+          `Đã thêm "${product.title} - ${getVariantName(
+            selectedVariant,
+          )}" vào giỏ hàng`,
+          {
+            duration: 3000,
+          },
+        );
+      } else {
+        toast.success("Đã thêm sản phẩm vào giỏ hàng", {
+          duration: 3000,
+        });
+      }
     });
   };
 
   // =====================================================
   // BUY NOW
   // =====================================================
+
   const buyNow = () => {
     requireAuth(() => {
       if (!product) return;
 
-      dispatch(
-        addToCart({
-          id: product.id,
-          price: product.price,
-          title: product.title,
-          category: product.category,
-          rating: product.rating,
-          thumbnail: product.thumbnail,
-          discountPercentage: product.discountPercentage,
-        }),
-      );
+      if (!isInStock) {
+        toast.error("Sản phẩm hiện đã hết hàng");
+
+        return;
+      }
+
+      const cartProduct = createCartProduct();
+
+      if (!cartProduct) return;
+
+      dispatch(addToCart(cartProduct));
 
       dispatch(setCartState(true));
     });
@@ -222,6 +393,7 @@ const SingleProduct: FC = () => {
   // =====================================================
   // WISHLIST
   // =====================================================
+
   const addWishlist = () => {
     requireAuth(() => {
       if (!product) return;
@@ -237,6 +409,7 @@ const SingleProduct: FC = () => {
   // =====================================================
   // LOADING
   // =====================================================
+
   if (isLoading) {
     return (
       <div className="flex min-h-[80vh] items-center justify-center bg-gray-50 dark:bg-slate-900">
@@ -254,6 +427,7 @@ const SingleProduct: FC = () => {
   // =====================================================
   // NOT FOUND
   // =====================================================
+
   if (!product) {
     return (
       <div className="flex min-h-[70vh] items-center justify-center bg-gray-50 dark:bg-slate-900">
@@ -279,17 +453,14 @@ const SingleProduct: FC = () => {
     imgs.length > 0 ? imgs : product.thumbnail ? [product.thumbnail] : [];
 
   // =====================================================
-  // STOCK
+  // RENDER
   // =====================================================
-  const stock = Number(product.qty) || 0;
-
-  const isInStock = stock > 0;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
-      {/* =====================================================
+      {/* =================================================
           BREADCRUMB
-      ===================================================== */}
+      ================================================= */}
 
       <div className="mx-auto max-w-7xl px-4 pt-5">
         <div className="flex flex-wrap items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
@@ -311,9 +482,9 @@ const SingleProduct: FC = () => {
         </div>
       </div>
 
-      {/* =====================================================
+      {/* =================================================
           BACK BUTTON
-      ===================================================== */}
+      ================================================= */}
 
       <div className="mx-auto max-w-7xl px-4 pt-5">
         <button
@@ -326,9 +497,9 @@ const SingleProduct: FC = () => {
         </button>
       </div>
 
-      {/* =====================================================
+      {/* =================================================
           PRODUCT
-      ===================================================== */}
+      ================================================= */}
 
       <main className="mx-auto max-w-7xl px-4 pb-14 pt-5">
         <div className="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
@@ -339,9 +510,7 @@ const SingleProduct: FC = () => {
 
             <div className="border-b border-gray-100 p-5 dark:border-slate-700 lg:border-b-0 lg:border-r lg:p-8">
               <div className="flex flex-col gap-4 md:flex-row">
-                {/* =================================================
-                    THUMBNAILS
-                ================================================= */}
+                {/* THUMBNAILS */}
 
                 {imageList.length > 0 && (
                   <div className="order-2 flex gap-3 overflow-x-auto md:order-1 md:w-20 md:flex-col">
@@ -373,9 +542,7 @@ const SingleProduct: FC = () => {
                   </div>
                 )}
 
-                {/* =================================================
-                    MAIN IMAGE + ZOOM
-                ================================================= */}
+                {/* MAIN IMAGE */}
 
                 <div
                   className="group relative order-1 flex min-h-[380px] flex-1 cursor-zoom-in items-center justify-center overflow-hidden rounded-2xl bg-gray-50 dark:bg-slate-900 md:order-2"
@@ -411,14 +578,6 @@ const SingleProduct: FC = () => {
                       {imageList.length}
                     </div>
                   )}
-
-                  {/* ZOOM HINT */}
-
-                  {!isZooming && (
-                    <div className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-black/60 px-3 py-1.5 text-xs text-white opacity-0 transition group-hover:opacity-100">
-                      Di chuột để phóng to
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
@@ -452,7 +611,8 @@ const SingleProduct: FC = () => {
                     <RatingStar rating={product.rating} />
 
                     <span className="text-sm text-gray-500 dark:text-gray-400">
-                      {product.rating}/5
+                      {product.rating}
+                      /5
                     </span>
                   </div>
                 )}
@@ -464,14 +624,155 @@ const SingleProduct: FC = () => {
                 )}
               </div>
 
-              {/* PRICE */}
+              {/* =================================================
+                  VARIANTS
+              ================================================= */}
+
+              {hasVariants && (
+                <div className="mt-6">
+                  <div className="mb-3 flex items-center justify-between">
+                    <div>
+                      <h2 className="text-base font-bold text-gray-900 dark:text-white">
+                        Phân loại
+                      </h2>
+
+                      <p className="mt-0.5 text-xs text-gray-400">
+                        Vui lòng chọn phân loại
+                      </p>
+                    </div>
+
+                    <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
+                      {variants.length} loại
+                    </span>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2.5">
+                    {variants.map((variant, index) => {
+                      const variantQty = Number(variant.qty) || 0;
+
+                      const isSelected = index === selectedVariantIndex;
+
+                      const variantName = getVariantName(variant);
+
+                      return (
+                        <button
+                          key={
+                            variant._id ||
+                            variant.id ||
+                            variant.code ||
+                            variant.sku ||
+                            `${variantName}-${index}`
+                          }
+                          type="button"
+                          disabled={variantQty <= 0}
+                          onClick={() => handleSelectVariant(index)}
+                          className={`
+                              relative
+                              min-w-[100px]
+                              rounded-xl
+                              border-2
+                              px-4 py-3
+                              text-left
+                              transition-all
+                              ${
+                                isSelected
+                                  ? "border-blue-600 bg-blue-50 text-blue-700 shadow-sm dark:bg-blue-900/30 dark:text-blue-400"
+                                  : "border-gray-200 bg-white text-gray-700 hover:border-blue-400 dark:border-slate-600 dark:bg-slate-800 dark:text-gray-200"
+                              }
+                              ${
+                                variantQty <= 0
+                                  ? "cursor-not-allowed opacity-40"
+                                  : ""
+                              }
+                            `}
+                        >
+                          {/* CHECK */}
+
+                          {isSelected && variantQty > 0 && (
+                            <span className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white">
+                              <FaCheck className="text-[9px]" />
+                            </span>
+                          )}
+
+                          {/* NAME */}
+
+                          <div className="text-sm font-semibold">
+                            {variantName || `Phân loại ${index + 1}`}
+                          </div>
+
+                          {/* PRICE */}
+
+                          {Number(variant.price) > 0 && (
+                            <div className="mt-1 text-xs font-medium text-blue-600 dark:text-blue-400">
+                              {Number(variant.price).toLocaleString("vi-VN")}₫
+                            </div>
+                          )}
+
+                          {/* STOCK */}
+
+                          <div
+                            className={`mt-1 text-[10px] ${
+                              variantQty > 0 ? "text-green-600" : "text-red-500"
+                            }`}
+                          >
+                            {variantQty > 0 ? `Còn ${variantQty}` : "Hết hàng"}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* SELECTED VARIANT */}
+
+                  {selectedVariant && (
+                    <div className="mt-4 flex items-center justify-between rounded-xl bg-blue-50 px-4 py-3 dark:bg-blue-900/20">
+                      <div>
+                        <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                          Đã chọn
+                        </p>
+
+                        <p className="mt-0.5 text-sm font-bold text-blue-700 dark:text-blue-400">
+                          {getVariantName(selectedVariant)}
+                        </p>
+                      </div>
+
+                      <div className="text-right">
+                        <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                          Giá
+                        </p>
+
+                        <p className="text-base font-bold text-red-600">
+                          {currentPrice > 0
+                            ? currentPrice.toLocaleString("vi-VN")
+                            : "Liên hệ"}{" "}
+                          {currentPrice > 0 && "₫"}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* =================================================
+                  PRICE
+              ================================================= */}
 
               <div className="mt-6 rounded-2xl bg-gray-50 p-5 dark:bg-slate-900">
                 <p className="mb-1 text-xs font-medium uppercase tracking-wide text-gray-400">
                   Giá bán
                 </p>
 
-                {product.discountPercentage ? (
+                {hasVariants ? (
+                  <p className="text-3xl font-bold text-red-600">
+                    {currentPrice > 0
+                      ? currentPrice.toLocaleString("vi-VN")
+                      : "Liên hệ"}
+
+                    {currentPrice > 0 && (
+                      <span className="ml-1 text-base">₫</span>
+                    )}
+                  </p>
+                ) : product.discountPercentage ? (
                   <PriceSection
                     discountPercentage={product.discountPercentage}
                     price={product.price}
@@ -483,7 +784,9 @@ const SingleProduct: FC = () => {
                 )}
               </div>
 
-              {/* INFO */}
+              {/* =================================================
+                  INFO
+              ================================================= */}
 
               <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {/* STOCK */}
@@ -497,7 +800,7 @@ const SingleProduct: FC = () => {
                     <p className="text-xs text-gray-400">Tồn kho</p>
 
                     <p className="font-semibold text-gray-900 dark:text-white">
-                      {isInStock ? `${stock} sản phẩm` : "Hết hàng"}
+                      {isInStock ? `${currentQty} sản phẩm` : "Hết hàng"}
                     </p>
                   </div>
                 </div>
@@ -523,7 +826,9 @@ const SingleProduct: FC = () => {
                 </div>
               </div>
 
-              {/* PRODUCT META */}
+              {/* =================================================
+                  PRODUCT META
+              ================================================= */}
 
               <div className="mt-6 divide-y divide-gray-100 rounded-2xl border border-gray-100 dark:divide-slate-700 dark:border-slate-700">
                 {product.brand && (
@@ -557,7 +862,9 @@ const SingleProduct: FC = () => {
                 )}
               </div>
 
-              {/* DESCRIPTION */}
+              {/* =================================================
+                  DESCRIPTION
+              ================================================= */}
 
               {product.description && (
                 <div className="mt-7">
@@ -573,7 +880,9 @@ const SingleProduct: FC = () => {
                 </div>
               )}
 
-              {/* ACTION */}
+              {/* =================================================
+                  ACTION
+              ================================================= */}
 
               <div className="mt-7 grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <button
@@ -599,7 +908,9 @@ const SingleProduct: FC = () => {
                 </button>
               </div>
 
-              {/* WISHLIST */}
+              {/* =================================================
+                  WISHLIST
+              ================================================= */}
 
               <button
                 type="button"
@@ -625,9 +936,9 @@ const SingleProduct: FC = () => {
           </div>
         </div>
 
-        {/* =====================================================
+        {/* =================================================
             SIMILAR PRODUCTS
-        ===================================================== */}
+        ================================================= */}
 
         {similar.length > 0 && (
           <section className="mt-12">
@@ -641,18 +952,14 @@ const SingleProduct: FC = () => {
                   Sản phẩm tương tự
                 </h2>
               </div>
-
-              <button
-                type="button"
-                onClick={() => navigate(-1)}
-                className="hidden items-center gap-2 text-sm font-semibold text-blue-600 sm:flex"
-              >
-                Xem thêm
-                <FaChevronRight className="text-xs" />
-              </button>
             </div>
 
-            <ProductList title="" products={similar} isSlide={false} />
+            <ProductList
+              title=""
+              products={similar}
+              isSlide={false}
+              type={String(product?.type || "")}
+            />
           </section>
         )}
       </main>
@@ -666,17 +973,13 @@ const SingleProduct: FC = () => {
           className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/85 p-4"
           onClick={() => setIsImageModalOpen(false)}
         >
-          {/* CLOSE */}
-
           <button
             type="button"
             onClick={() => setIsImageModalOpen(false)}
-            className="absolute right-5 top-5 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-gray-800 shadow-lg transition hover:bg-white hover:scale-105"
+            className="absolute right-5 top-5 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-gray-800 shadow-lg transition hover:scale-105 hover:bg-white"
           >
             <FaXmark className="text-xl" />
           </button>
-
-          {/* IMAGE */}
 
           <img
             src={getImageUrl(selectedImg)}

@@ -28,7 +28,8 @@ import SingleProduct from "./pages/SingleProduct";
 import SingleCategory from "./pages/SingleCategory";
 import Wishlist from "./pages/Wishlist";
 import Profile from "./pages/Profile";
-
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 // ================================
 // ADMIN
 // ================================
@@ -72,7 +73,6 @@ const CheckAccount = () => {
   return (
     <>
       <Navbar />
-
       <Routes>
         {/* ================================
             HOME
@@ -120,22 +120,23 @@ const CheckAccount = () => {
           <Route index element={<Profile />} />
         </Route>
       </Routes>
-
       <Toaster position="bottom-center" reverseOrder={false} />
-
       {/* ================================
           WEBSITE COMPONENTS
       ================================= */}
-
       <Footer />
-
       <Cart />
-
       <LoginModal />
-
       <ScrollToTopButton />
-
-      <BannerPopup />
+      <BannerPopup />{" "}
+      <ToastContainer
+        position="bottom-right"
+        autoClose={2000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+      />
     </>
   );
 };

@@ -1,31 +1,50 @@
-import { FC } from "react";
-import { Product } from "../models/Product";
-import { addToCart } from "../redux/features/cartSlice";
-import { useAppDispatch } from "../redux/hooks";
-import toast from "react-hot-toast";
-import { AiOutlineShoppingCart } from "react-icons/ai";
-import { FiArrowRight } from "react-icons/fi";
+import { FC, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { AiOutlineShoppingCart } from "react-icons/ai";
+import { FaCheck, FaChevronDown } from "react-icons/fa6";
+import { toast } from "react-toastify";
+
+import { Product } from "../models/Product";
+import { useAppDispatch } from "../redux/hooks";
+import { addToCart } from "../redux/features/cartSlice";
 import useAuth from "../hooks/useAuth";
 
-const ProductCard: FC<Product> = ({
-  id,
-  price,
-  thumbnail,
-  title,
-  category,
-  rating,
-  discountPercentage,
-  qty,
-}) => {
+interface Variant {
+  name?: string;
+  value?: string;
+  label?: string;
+  price?: number | string;
+  qty?: number | string;
+  stock?: number | string;
+  code?: string;
+  sku?: string;
+  image?: string;
+  thumbnail?: string;
+}
+
+interface ProductCardProps extends Product {
+  id?: string;
+  _id?: string;
+  variants?: Variant[];
+}
+
+const ProductCard: FC<ProductCardProps> = (product) => {
   const dispatch = useAppDispatch();
   const { requireAuth } = useAuth();
 
-  const quantity = Number(qty) || 0;
+  const [selectedVariantIndex, setSelectedVariantIndex] = useState<number>(0);
 
-  /* =========================================================
-     IMAGE
-  ========================================================= */
+  const [isVariantOpen, setIsVariantOpen] = useState<boolean>(false);
+
+  // =====================================================
+  // PRODUCT ID
+  // =====================================================
+
+  const productId = product._id || product.id || "";
+
+  // =====================================================
+  // IMAGE
+  // =====================================================
 
   const getImageUrl = (image?: string) => {
     if (!image) {
@@ -43,359 +62,509 @@ const ProductCard: FC<Product> = ({
     return `/images/${image}`;
   };
 
-  const imageUrl = getImageUrl(thumbnail);
+  // =====================================================
+  // VARIANTS
+  // =====================================================
 
-  /* =========================================================
-     PRICE
-  ========================================================= */
+  const variants = Array.isArray(product.variants) ? product.variants : [];
 
-  const numericPrice = Number(price) || 0;
+  const hasVariants = variants.length > 0;
+
+  const selectedVariant = hasVariants
+    ? variants[selectedVariantIndex] || variants[0]
+    : null;
+
+  // =====================================================
+  // VARIANT NAME
+  // =====================================================
+
+  const getVariantName = (variant?: Variant | null) => {
+    if (!variant) return "";
+
+    return (
+      variant.name ||
+      variant.label ||
+      variant.value ||
+      variant.code ||
+      variant.sku ||
+      ""
+    );
+  };
+
+  // =====================================================
+  // STOCK
+  // =====================================================
+
+  const stock = useMemo(() => {
+    if (selectedVariant) {
+      return Number(selectedVariant.qty ?? selectedVariant.stock ?? 0) || 0;
+    }
+
+    return Number(product.qty) || 0;
+  }, [selectedVariant, product.qty]);
+
+  const isInStock = stock > 0;
+
+  // =====================================================
+  // PRICE
+  // =====================================================
+
+  const numericPrice = useMemo(() => {
+    if (selectedVariant) {
+      return Number(selectedVariant.price) || Number(product.price) || 0;
+    }
+
+    return Number(product.price) || 0;
+  }, [selectedVariant, product.price]);
 
   const formattedPrice =
     numericPrice > 0
       ? new Intl.NumberFormat("vi-VN").format(numericPrice)
       : "Liên hệ";
 
-  /* =========================================================
-     ADD CART
-  ========================================================= */
+  // =====================================================
+  // IMAGE
+  // =====================================================
 
-  const addCart = () => {
-    if (quantity <= 0) {
-      toast.error("Sản phẩm hiện đang hết hàng");
+  const productImage =
+    selectedVariant?.image || selectedVariant?.thumbnail || product.thumbnail;
+
+  // =====================================================
+  // SELECT VARIANT
+  // =====================================================
+
+  const handleSelectVariant = (index: number) => {
+    const variant = variants[index];
+
+    const variantQty = Number(variant.qty ?? variant.stock ?? 0) || 0;
+
+    if (variantQty <= 0) {
+      toast.info("Phân loại này hiện đã hết hàng");
+      return;
+    }
+
+    setSelectedVariantIndex(index);
+    setIsVariantOpen(false);
+  };
+
+  // =====================================================
+  // ADD TO CART
+  // =====================================================
+
+  const handleAddToCart = () => {
+    if (!isInStock) {
+      toast.warning("Sản phẩm hiện đã hết hàng");
       return;
     }
 
     requireAuth(() => {
-      dispatch(
-        addToCart({
-          id,
-          price,
-          title,
-          category,
-          rating,
-          thumbnail,
-          discountPercentage,
-          qty,
-        }),
-      );
+      const cartProduct: any = {
+        ...product,
 
-      toast.success("Đã thêm sản phẩm vào giỏ hàng", {
-        duration: 2500,
-      });
+        // Giữ id cho cart
+        id: productId,
+
+        // Giá hiện tại
+        price: numericPrice,
+
+        // Số lượng kho hiện tại
+        qty: stock,
+
+        // Variant khách chọn
+        selectedVariant: selectedVariant
+          ? {
+              ...selectedVariant,
+              name: getVariantName(selectedVariant),
+              qty: stock,
+              price: numericPrice,
+            }
+          : null,
+      };
+
+      dispatch(addToCart(cartProduct));
+
+      if (selectedVariant) {
+        toast.success(
+          `Đã thêm ${product.title} - ${getVariantName(
+            selectedVariant,
+          )} vào giỏ hàng`,
+        );
+      } else {
+        toast.success("Đã thêm sản phẩm vào giỏ hàng");
+      }
     });
   };
 
-  /* =========================================================
-     RENDER
-  ========================================================= */
+  // =====================================================
+  // RENDER
+  // =====================================================
 
   return (
-    <article
+    <div
       className="
-        group
-        relative
-        flex
-        h-full
-        flex-col
+        group flex h-full flex-col
         overflow-hidden
+        rounded-2xl
+        border border-gray-100
         bg-white
-        dark:bg-slate-800
+        shadow-sm
+        transition-all duration-300
+        hover:-translate-y-1
+        hover:shadow-xl
+        dark:border-slate-700
+        dark:bg-slate-900
       "
-      data-test="product-card"
     >
-      {/* =====================================================
+      {/* =================================================
           IMAGE
-      ===================================================== */}
+      ================================================= */}
 
-      <div
+      <Link
+        to={`/product/${productId}`}
         className="
-          relative
-          aspect-square
+          relative block
           overflow-hidden
-          bg-white
+          bg-gray-50
           dark:bg-slate-800
         "
       >
-        <Link to={`/product/${id}`} className="block h-full w-full">
+        <div className="aspect-square w-full">
           <img
-            src={imageUrl}
-            alt={title || "Sản phẩm"}
-            width={400}
-            height={400}
+            src={getImageUrl(productImage)}
+            alt={product.title || "Sản phẩm"}
             loading="lazy"
-            decoding="async"
+            className="
+              h-full w-full
+              object-contain
+              p-4
+              transition-transform duration-500
+              group-hover:scale-105
+            "
             onError={(e) => {
               e.currentTarget.src = "/images/no-image.jpg";
             }}
-            className="
-              h-full
-              w-full
-              object-contain
-              p-3
-              transition-transform
-              duration-500
-              group-hover:scale-105
-            "
           />
-        </Link>
-
-        {/* =================================================
-            STOCK BADGE
-        ================================================= */}
-
-        <div className="absolute left-3 top-3">
-          {quantity > 0 ? (
-            <span
-              className="
-                inline-flex
-                items-center
-                rounded-full
-                bg-green-50
-                px-2.5
-                py-1
-                text-[11px]
-                font-semibold
-                text-green-700
-                ring-1
-                ring-inset
-                ring-green-200
-                dark:bg-green-900/30
-                dark:text-green-400
-                dark:ring-green-800
-              "
-            >
-              Còn hàng
-            </span>
-          ) : (
-            <span
-              className="
-                inline-flex
-                items-center
-                rounded-full
-                bg-red-50
-                px-2.5
-                py-1
-                text-[11px]
-                font-semibold
-                text-red-600
-                ring-1
-                ring-inset
-                ring-red-200
-                dark:bg-red-900/30
-                dark:text-red-400
-                dark:ring-red-800
-              "
-            >
-              Hết hàng
-            </span>
-          )}
         </div>
 
-        {/* =================================================
-            DISCOUNT
-        ================================================= */}
+        {/* STOCK BADGE */}
 
-        {Number(discountPercentage) > 0 && (
-          <span
+        <div
+          className={`
+            absolute left-3 top-3
+            rounded-full px-2.5 py-1
+            text-[11px] font-semibold
+            ${
+              isInStock
+                ? "bg-green-100 text-green-700"
+                : "bg-red-100 text-red-600"
+            }
+          `}
+        >
+          {isInStock ? "Còn hàng" : "Hết hàng"}
+        </div>
+
+        {/* VARIANT BADGE */}
+
+        {hasVariants && (
+          <div
             className="
-              absolute
-              right-3
-              top-3
+              absolute right-3 top-3
               rounded-full
-              bg-red-500
-              px-2.5
-              py-1
+              bg-blue-600
+              px-2.5 py-1
               text-[11px]
-              font-bold
+              font-semibold
               text-white
-              shadow-sm
+              shadow
             "
           >
-            -{discountPercentage}%
-          </span>
+            {variants.length} phân loại
+          </div>
         )}
-      </div>
+      </Link>
 
-      {/* =====================================================
+      {/* =================================================
           CONTENT
-      ===================================================== */}
+      ================================================= */}
 
-      <div
-        className="
-          flex
-          flex-1
-          flex-col
-          border-t
-          border-gray-100
-          px-3
-          pb-3
-          pt-3
-          dark:border-slate-700
-          sm:px-4
-        "
-      >
-        {/* =================================================
-            TITLE
-        ================================================= */}
+      <div className="flex flex-1 flex-col p-4">
+        {/* CATEGORY */}
+
+        {product.category && (
+          <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-blue-600">
+            {product.category}
+          </div>
+        )}
+
+        {/* TITLE */}
 
         <Link
-          to={`/product/${id}`}
-          title={title}
+          to={`/product/${productId}`}
           className="
             line-clamp-2
-            min-h-[40px]
+            min-h-[42px]
             text-sm
             font-semibold
             leading-5
-            text-gray-800
-            transition-colors
+            text-gray-900
+            transition
             hover:text-blue-600
             dark:text-white
             dark:hover:text-blue-400
-            sm:text-[15px]
           "
         >
-          {title || "Sản phẩm chưa có tên"}
+          {product.title}
         </Link>
 
         {/* =================================================
-            CATEGORY
+            VARIANTS
         ================================================= */}
 
-        {category && (
-          <p
-            className="
-              mt-1.5
-              truncate
-              text-xs
-              text-gray-400
-              dark:text-gray-500
-            "
-            title={category}
-          >
-            {category}
-          </p>
+        {hasVariants && (
+          <div className="relative mt-3">
+            <div className="mb-1.5 flex items-center justify-between">
+              <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                Phân loại
+              </span>
+
+              <span className="text-[10px] text-gray-400">
+                {variants.length} lựa chọn
+              </span>
+            </div>
+
+            {/* MOBILE / COMPACT SELECT */}
+
+            <button
+              type="button"
+              onClick={() => setIsVariantOpen(!isVariantOpen)}
+              className="
+                flex w-full
+                items-center
+                justify-between
+                rounded-lg
+                border
+                border-gray-200
+                bg-gray-50
+                px-3 py-2
+                text-left
+                text-xs
+                transition
+                hover:border-blue-400
+                dark:border-slate-600
+                dark:bg-slate-800
+              "
+            >
+              <div className="flex min-w-0 items-center gap-2">
+                {selectedVariant &&
+                  Number(selectedVariant.qty ?? selectedVariant.stock ?? 0) >
+                    0 && (
+                    <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white">
+                      <FaCheck className="text-[8px]" />
+                    </span>
+                  )}
+
+                <span className="truncate font-medium text-gray-700 dark:text-gray-200">
+                  {getVariantName(selectedVariant) || "Chọn phân loại"}
+                </span>
+              </div>
+
+              <FaChevronDown
+                className={`
+                  shrink-0 text-[10px]
+                  text-gray-400
+                  transition-transform
+                  ${isVariantOpen ? "rotate-180" : ""}
+                `}
+              />
+            </button>
+
+            {/* DROPDOWN */}
+
+            {isVariantOpen && (
+              <div
+                className="
+                  absolute
+                  left-0
+                  right-0
+                  top-full
+                  z-30
+                  mt-1
+                  max-h-48
+                  overflow-y-auto
+                  rounded-xl
+                  border
+                  border-gray-200
+                  bg-white
+                  p-1.5
+                  shadow-xl
+                  dark:border-slate-600
+                  dark:bg-slate-800
+                "
+              >
+                {variants.map((variant, index) => {
+                  const variantQty =
+                    Number(variant.qty ?? variant.stock ?? 0) || 0;
+
+                  const isSelected = index === selectedVariantIndex;
+
+                  const variantPrice = Number(variant.price) || 0;
+
+                  return (
+                    <button
+                      key={
+                        variant.code ||
+                        variant.sku ||
+                        `${getVariantName(variant)}-${index}`
+                      }
+                      type="button"
+                      disabled={variantQty <= 0}
+                      onClick={() => handleSelectVariant(index)}
+                      className={`
+                          mb-1 flex
+                          w-full
+                          items-center
+                          justify-between
+                          rounded-lg
+                          px-3 py-2
+                          text-left
+                          transition
+                          last:mb-0
+                          ${
+                            isSelected
+                              ? "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                              : "hover:bg-gray-50 dark:hover:bg-slate-700"
+                          }
+                          ${
+                            variantQty <= 0
+                              ? "cursor-not-allowed opacity-40"
+                              : ""
+                          }
+                        `}
+                    >
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          {isSelected && (
+                            <FaCheck className="shrink-0 text-[10px]" />
+                          )}
+
+                          <span className="truncate text-xs font-medium">
+                            {getVariantName(variant) ||
+                              `Phân loại ${index + 1}`}
+                          </span>
+                        </div>
+
+                        <div className="mt-0.5 text-[10px] text-gray-400">
+                          {variantQty > 0 ? `Còn ${variantQty}` : "Hết hàng"}
+                        </div>
+                      </div>
+
+                      {variantPrice > 0 && (
+                        <span className="ml-2 shrink-0 text-[11px] font-semibold text-blue-600">
+                          {new Intl.NumberFormat("vi-VN").format(variantPrice)}đ
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         )}
 
         {/* =================================================
-            STOCK
+            PRICE
         ================================================= */}
 
-        <div className="mt-3 flex items-center justify-between">
-          <span className="text-xs text-gray-400">Tồn kho</span>
+        <div className="mt-3 flex items-end justify-between gap-2">
+          <div>
+            <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
+              {formattedPrice}
+              {numericPrice > 0 && (
+                <span className="ml-0.5 text-xs font-medium">đ</span>
+              )}
+            </div>
 
-          {quantity > 0 ? (
-            <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-              {quantity} sản phẩm
-            </span>
-          ) : (
-            <span className="text-xs font-semibold text-red-500">Tạm hết</span>
-          )}
+            {hasVariants && (
+              <div className="mt-0.5 text-[10px] text-gray-400">
+                {getVariantName(selectedVariant)}
+              </div>
+            )}
+          </div>
+
+          {/* STOCK */}
+
+          <div className="text-right text-[10px] text-gray-400">
+            {isInStock ? `Kho: ${stock}` : "Tạm hết"}
+          </div>
         </div>
 
         {/* =================================================
-            BOTTOM
+            ACTIONS
         ================================================= */}
 
-        <div className="mt-auto pt-3">
-          <div className="mb-3 flex items-end justify-between gap-2">
-            {/* PRICE */}
+        <div className="mt-4 flex gap-2">
+          {/* DETAIL */}
 
-            <div className="min-w-0">
-              <p className="text-[11px] text-gray-400">Giá bán</p>
+          <Link
+            to={`/product/${productId}`}
+            className="
+              flex flex-1
+              items-center
+              justify-center
+              rounded-xl
+              border
+              border-blue-200
+              px-3 py-2.5
+              text-xs
+              font-semibold
+              text-blue-600
+              transition
+              hover:border-blue-600
+              hover:bg-blue-50
+              dark:border-blue-900
+              dark:text-blue-400
+              dark:hover:bg-blue-900/20
+            "
+          >
+            Chi tiết
+          </Link>
 
-              <p className="mt-0.5 truncate text-base font-bold text-blue-600 sm:text-lg">
-                {formattedPrice}
-                {numericPrice > 0 && (
-                  <span className="ml-0.5 text-xs font-medium">₫</span>
-                )}
-              </p>
-            </div>
+          {/* ADD CART */}
 
-            {/* DETAIL */}
+          <button
+            type="button"
+            disabled={!isInStock}
+            onClick={handleAddToCart}
+            className="
+              flex
+              items-center
+              justify-center
+              gap-1.5
+              rounded-xl
+              bg-blue-600
+              px-3
+              py-2.5
+              text-xs
+              font-semibold
+              text-white
+              shadow-sm
+              transition
+              hover:bg-blue-700
+              hover:shadow-md
+              disabled:cursor-not-allowed
+              disabled:bg-gray-300
+              dark:disabled:bg-slate-700
+            "
+          >
+            <AiOutlineShoppingCart className="text-base" />
 
-            <Link
-              to={`/product/${id}`}
-              className="
-                flex
-                shrink-0
-                items-center
-                gap-1
-                text-xs
-                font-semibold
-                text-gray-400
-                transition
-                hover:text-blue-600
-              "
-            >
-              Chi tiết
-              <FiArrowRight size={13} />
-            </Link>
-          </div>
-
-          {/* =================================================
-              ADD CART
-          ================================================= */}
-
-          {quantity > 0 ? (
-            <button
-              type="button"
-              onClick={addCart}
-              data-test="add-cart-btn"
-              className="
-                flex
-                w-full
-                items-center
-                justify-center
-                gap-2
-                rounded-xl
-                bg-blue-600
-                px-3
-                py-2.5
-                text-sm
-                font-semibold
-                text-white
-                shadow-sm
-                transition-all
-                duration-200
-                hover:bg-blue-700
-                hover:shadow-md
-                active:scale-[0.98]
-              "
-              title="Thêm vào giỏ hàng"
-            >
-              <AiOutlineShoppingCart size={19} />
-
-              <span>Thêm vào giỏ</span>
-            </button>
-          ) : (
-            <button
-              type="button"
-              disabled
-              className="
-                flex
-                w-full
-                cursor-not-allowed
-                items-center
-                justify-center
-                rounded-xl
-                bg-gray-100
-                px-3
-                py-2.5
-                text-sm
-                font-semibold
-                text-gray-400
-                dark:bg-slate-700
-                dark:text-gray-500
-              "
-            >
-              Tạm hết hàng
-            </button>
-          )}
+            <span className="hidden sm:inline">
+              {isInStock ? "Thêm giỏ" : "Hết hàng"}
+            </span>
+          </button>
         </div>
       </div>
-    </article>
+    </div>
   );
 };
 
