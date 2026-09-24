@@ -1,12 +1,11 @@
 import { FC } from "react";
 import { Product } from "../models/Product";
-// import RatingStar from "./RatingStar";
 import { addToCart } from "../redux/features/cartSlice";
 import { useAppDispatch } from "../redux/hooks";
 import toast from "react-hot-toast";
 import { AiOutlineShoppingCart } from "react-icons/ai";
+import { FiArrowRight } from "react-icons/fi";
 import { Link } from "react-router-dom";
-import PriceSection from "./PriceSection";
 import useAuth from "../hooks/useAuth";
 
 const ProductCard: FC<Product> = ({
@@ -22,11 +21,51 @@ const ProductCard: FC<Product> = ({
   const dispatch = useAppDispatch();
   const { requireAuth } = useAuth();
 
-  const imageUrl = thumbnail ? `/images/${thumbnail}` : "/images/no-image.jpg";
-
   const quantity = Number(qty) || 0;
 
+  /* =========================================================
+     IMAGE
+  ========================================================= */
+
+  const getImageUrl = (image?: string) => {
+    if (!image) {
+      return "/images/no-image.jpg";
+    }
+
+    if (
+      image.startsWith("http://") ||
+      image.startsWith("https://") ||
+      image.startsWith("/")
+    ) {
+      return image;
+    }
+
+    return `/images/${image}`;
+  };
+
+  const imageUrl = getImageUrl(thumbnail);
+
+  /* =========================================================
+     PRICE
+  ========================================================= */
+
+  const numericPrice = Number(price) || 0;
+
+  const formattedPrice =
+    numericPrice > 0
+      ? new Intl.NumberFormat("vi-VN").format(numericPrice)
+      : "Liên hệ";
+
+  /* =========================================================
+     ADD CART
+  ========================================================= */
+
   const addCart = () => {
+    if (quantity <= 0) {
+      toast.error("Sản phẩm hiện đang hết hàng");
+      return;
+    }
+
     requireAuth(() => {
       dispatch(
         addToCart({
@@ -41,96 +80,322 @@ const ProductCard: FC<Product> = ({
         }),
       );
 
-      toast.success("item added to cart successfully", {
-        duration: 3000,
+      toast.success("Đã thêm sản phẩm vào giỏ hàng", {
+        duration: 2500,
       });
     });
   };
 
+  /* =========================================================
+     RENDER
+  ========================================================= */
+
   return (
-    <div
-      className="product-card overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg dark:border-gray-700 dark:bg-slate-800"
+    <article
+      className="
+        group
+        relative
+        flex
+        h-full
+        flex-col
+        overflow-hidden
+        bg-white
+        dark:bg-slate-800
+      "
       data-test="product-card"
     >
-      {/* ================= IMAGE ================= */}
-      <div className="overflow-hidden border-b border-gray-200 text-center dark:border-gray-700">
-        <Link to={`/product/${id}`}>
+      {/* =====================================================
+          IMAGE
+      ===================================================== */}
+
+      <div
+        className="
+          relative
+          aspect-square
+          overflow-hidden
+          bg-white
+          dark:bg-slate-800
+        "
+      >
+        <Link to={`/product/${id}`} className="block h-full w-full">
           <img
             src={imageUrl}
             alt={title || "Sản phẩm"}
-            width={240}
-            height={240}
+            width={400}
+            height={400}
             loading="lazy"
             decoding="async"
-            className="inline-block h-60 w-auto object-contain transition-transform duration-200 hover:scale-110"
+            onError={(e) => {
+              e.currentTarget.src = "/images/no-image.jpg";
+            }}
+            className="
+              h-full
+              w-full
+              object-contain
+              p-3
+              transition-transform
+              duration-500
+              group-hover:scale-105
+            "
           />
         </Link>
-      </div>
 
-      {/* ================= PRODUCT INFO ================= */}
-      <div className="px-4 pt-4">
-        {/* Title */}
-        <Link
-          to={`/product/${id}`}
-          className="block overflow-hidden text-ellipsis whitespace-nowrap text-base font-semibold text-gray-800 hover:text-blue-600 hover:underline dark:text-white dark:hover:text-blue-400"
-          title={title}
-        >
-          {title}
-        </Link>
+        {/* =================================================
+            STOCK BADGE
+        ================================================= */}
 
-        {/* Quantity */}
-        <div className="mt-2 flex items-center justify-between">
-          <span className="text-sm text-gray-500 dark:text-gray-400">
-            Số lượng
-          </span>
-
+        <div className="absolute left-3 top-3">
           {quantity > 0 ? (
-            <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-400">
-              {quantity}
+            <span
+              className="
+                inline-flex
+                items-center
+                rounded-full
+                bg-green-50
+                px-2.5
+                py-1
+                text-[11px]
+                font-semibold
+                text-green-700
+                ring-1
+                ring-inset
+                ring-green-200
+                dark:bg-green-900/30
+                dark:text-green-400
+                dark:ring-green-800
+              "
+            >
+              Còn hàng
             </span>
           ) : (
-            <span className="rounded-full bg-red-100 px-3 py-1 text-sm font-semibold text-red-600 dark:bg-red-900/30 dark:text-red-400">
+            <span
+              className="
+                inline-flex
+                items-center
+                rounded-full
+                bg-red-50
+                px-2.5
+                py-1
+                text-[11px]
+                font-semibold
+                text-red-600
+                ring-1
+                ring-inset
+                ring-red-200
+                dark:bg-red-900/30
+                dark:text-red-400
+                dark:ring-red-800
+              "
+            >
               Hết hàng
             </span>
           )}
         </div>
-      </div>
 
-      {/* ================= RATING ================= */}
-      {/*
-      <div className="px-4">
-        <RatingStar rating={rating} />
-      </div>
-      */}
+        {/* =================================================
+            DISCOUNT
+        ================================================= */}
 
-      {/* ================= PRICE / CART ================= */}
-      <div className="flex flex-wrap items-center justify-between px-4 pb-4 pt-3">
-        {/*
-        {discountPercentage && (
-          <PriceSection
-            discountPercentage={discountPercentage}
-            price={price}
-          />
-        )}
-
-        {quantity > 0 ? (
-          <button
-            type="button"
-            className="flex items-center space-x-2 rounded bg-pink-500 px-4 py-2 text-white hover:bg-blue-500"
-            onClick={addCart}
-            data-test="add-cart-btn"
-            title="Thêm vào giỏ hàng"
+        {Number(discountPercentage) > 0 && (
+          <span
+            className="
+              absolute
+              right-3
+              top-3
+              rounded-full
+              bg-red-500
+              px-2.5
+              py-1
+              text-[11px]
+              font-bold
+              text-white
+              shadow-sm
+            "
           >
-            <AiOutlineShoppingCart />
-          </button>
-        ) : (
-          <p className="sold-out-badge">
-            Tạm hết hàng
+            -{discountPercentage}%
+          </span>
+        )}
+      </div>
+
+      {/* =====================================================
+          CONTENT
+      ===================================================== */}
+
+      <div
+        className="
+          flex
+          flex-1
+          flex-col
+          border-t
+          border-gray-100
+          px-3
+          pb-3
+          pt-3
+          dark:border-slate-700
+          sm:px-4
+        "
+      >
+        {/* =================================================
+            TITLE
+        ================================================= */}
+
+        <Link
+          to={`/product/${id}`}
+          title={title}
+          className="
+            line-clamp-2
+            min-h-[40px]
+            text-sm
+            font-semibold
+            leading-5
+            text-gray-800
+            transition-colors
+            hover:text-blue-600
+            dark:text-white
+            dark:hover:text-blue-400
+            sm:text-[15px]
+          "
+        >
+          {title || "Sản phẩm chưa có tên"}
+        </Link>
+
+        {/* =================================================
+            CATEGORY
+        ================================================= */}
+
+        {category && (
+          <p
+            className="
+              mt-1.5
+              truncate
+              text-xs
+              text-gray-400
+              dark:text-gray-500
+            "
+            title={category}
+          >
+            {category}
           </p>
         )}
-        */}
+
+        {/* =================================================
+            STOCK
+        ================================================= */}
+
+        <div className="mt-3 flex items-center justify-between">
+          <span className="text-xs text-gray-400">Tồn kho</span>
+
+          {quantity > 0 ? (
+            <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+              {quantity} sản phẩm
+            </span>
+          ) : (
+            <span className="text-xs font-semibold text-red-500">Tạm hết</span>
+          )}
+        </div>
+
+        {/* =================================================
+            BOTTOM
+        ================================================= */}
+
+        <div className="mt-auto pt-3">
+          <div className="mb-3 flex items-end justify-between gap-2">
+            {/* PRICE */}
+
+            <div className="min-w-0">
+              <p className="text-[11px] text-gray-400">Giá bán</p>
+
+              <p className="mt-0.5 truncate text-base font-bold text-blue-600 sm:text-lg">
+                {formattedPrice}
+                {numericPrice > 0 && (
+                  <span className="ml-0.5 text-xs font-medium">₫</span>
+                )}
+              </p>
+            </div>
+
+            {/* DETAIL */}
+
+            <Link
+              to={`/product/${id}`}
+              className="
+                flex
+                shrink-0
+                items-center
+                gap-1
+                text-xs
+                font-semibold
+                text-gray-400
+                transition
+                hover:text-blue-600
+              "
+            >
+              Chi tiết
+              <FiArrowRight size={13} />
+            </Link>
+          </div>
+
+          {/* =================================================
+              ADD CART
+          ================================================= */}
+
+          {quantity > 0 ? (
+            <button
+              type="button"
+              onClick={addCart}
+              data-test="add-cart-btn"
+              className="
+                flex
+                w-full
+                items-center
+                justify-center
+                gap-2
+                rounded-xl
+                bg-blue-600
+                px-3
+                py-2.5
+                text-sm
+                font-semibold
+                text-white
+                shadow-sm
+                transition-all
+                duration-200
+                hover:bg-blue-700
+                hover:shadow-md
+                active:scale-[0.98]
+              "
+              title="Thêm vào giỏ hàng"
+            >
+              <AiOutlineShoppingCart size={19} />
+
+              <span>Thêm vào giỏ</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              disabled
+              className="
+                flex
+                w-full
+                cursor-not-allowed
+                items-center
+                justify-center
+                rounded-xl
+                bg-gray-100
+                px-3
+                py-2.5
+                text-sm
+                font-semibold
+                text-gray-400
+                dark:bg-slate-700
+                dark:text-gray-500
+              "
+            >
+              Tạm hết hàng
+            </button>
+          )}
+        </div>
       </div>
-    </div>
+    </article>
   );
 };
 

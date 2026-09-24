@@ -169,8 +169,31 @@ const Products = () => {
 
   const calculateTotalQty = (variants: Variant[]) => {
     return variants.reduce((total, variant) => {
-      return total + (Number(variant.qty) || 0);
+      const qty = Number(variant.qty);
+
+      return total + (Number.isFinite(qty) ? qty : 0);
     }, 0);
+  };
+
+  // =====================================================
+  // NORMALIZE NUMBER
+  // Cho phép "" trong lúc edit
+  // =====================================================
+
+  const normalizeNumber = (
+    value: number | string | null | undefined,
+  ): number | string => {
+    if (value === "" || value === null || value === undefined) {
+      return "";
+    }
+
+    const number = Number(value);
+
+    if (!Number.isFinite(number)) {
+      return "";
+    }
+
+    return number;
   };
 
   // =====================================================
@@ -184,9 +207,11 @@ const Products = () => {
 
           name: variant.name || "",
 
-          price: Number(variant.price) || 0,
+          // Không ép "" thành 0
+          price: normalizeNumber(variant.price),
 
-          qty: Number(variant.qty) || 0,
+          // Không ép "" thành 0
+          qty: normalizeNumber(variant.qty),
         }))
       : [];
 
@@ -196,9 +221,10 @@ const Products = () => {
       // Luôn đưa type về string
       type: product.type ? String(product.type) : "",
 
-      price: Number(product.price) || 0,
+      // Không ép "" thành 0
+      price: normalizeNumber(product.price),
 
-      originalPrice: Number(product.originalPrice) || 0,
+      originalPrice: normalizeNumber(product.originalPrice),
 
       variants,
 
@@ -272,7 +298,7 @@ const Products = () => {
       };
 
       // Type chỉ dùng để FILTER danh sách
-      // Không dùng type này để ghi đè khi save
+      // Không dùng type URL để ghi đè khi save
       if (type) {
         params.type = type;
       }
@@ -378,6 +404,8 @@ const Products = () => {
     setDirty(true);
 
     setSaveMessage("");
+
+    setErrorMessage("");
   };
 
   // =====================================================
@@ -387,7 +415,7 @@ const Products = () => {
   const updateVariant = (
     index: number,
     field: "name" | "price" | "qty",
-    value: any,
+    value: string,
   ) => {
     if (!selectedProduct) {
       return;
@@ -398,8 +426,10 @@ const Products = () => {
     variants[index] = {
       ...variants[index],
 
-      [field]:
-        field === "price" || field === "qty" ? Number(value) || 0 : value,
+      // QUAN TRỌNG:
+      // Không Number(value) ở đây.
+      // Cho phép value = "" khi user xóa.
+      [field]: value,
     };
 
     const totalQty = calculateTotalQty(variants);
@@ -415,6 +445,8 @@ const Products = () => {
     setDirty(true);
 
     setSaveMessage("");
+
+    setErrorMessage("");
   };
 
   // =====================================================
@@ -431,8 +463,10 @@ const Products = () => {
 
       {
         name: "",
-        price: 0,
-        qty: 0,
+
+        price: "",
+
+        qty: "",
       },
     ];
 
@@ -449,6 +483,8 @@ const Products = () => {
     setDirty(true);
 
     setSaveMessage("");
+
+    setErrorMessage("");
   };
 
   // =====================================================
@@ -477,6 +513,8 @@ const Products = () => {
     setDirty(true);
 
     setSaveMessage("");
+
+    setErrorMessage("");
   };
 
   // =====================================================
@@ -506,6 +544,7 @@ const Products = () => {
 
     // IMPORTANT:
     // Category KHÔNG được tự động thay đổi type
+
     setSelectedProduct({
       ...selectedProduct,
 
@@ -569,9 +608,53 @@ const Products = () => {
 
       setErrorMessage("");
 
-      const variants = selectedProduct.variants || [];
+      // =================================================
+      // NORMALIZE VARIANTS KHI SAVE
+      // =================================================
+
+      const variants = (selectedProduct.variants || []).map((variant) => ({
+        name: variant.name || "",
+
+        // Khi lưu:
+        // "" -> "0"
+        // "10000" -> "10000"
+        price:
+          variant.price === "" ||
+          variant.price === null ||
+          variant.price === undefined
+            ? "0"
+            : String(variant.price),
+
+        // Khi lưu:
+        // "" -> 0
+        // "10" -> 10
+        qty:
+          variant.qty === "" ||
+          variant.qty === null ||
+          variant.qty === undefined
+            ? 0
+            : Number(variant.qty) || 0,
+      }));
 
       const finalQty = calculateTotalQty(variants);
+
+      // =================================================
+      // NORMALIZE PRICE
+      // =================================================
+
+      const finalPrice =
+        selectedProduct.price === "" ||
+        selectedProduct.price === null ||
+        selectedProduct.price === undefined
+          ? "0"
+          : String(selectedProduct.price);
+
+      const finalOriginalPrice =
+        selectedProduct.originalPrice === "" ||
+        selectedProduct.originalPrice === null ||
+        selectedProduct.originalPrice === undefined
+          ? "0"
+          : String(selectedProduct.originalPrice);
 
       // =================================================
       // PRODUCT TO SAVE
@@ -580,15 +663,40 @@ const Products = () => {
       const productToSave: Product = {
         ...selectedProduct,
 
-        // Type lấy từ Select đang chọn
+        // Type lấy từ Select
         type: productType,
 
+        // Giá đã chuẩn hóa
+        price: finalPrice,
+
+        originalPrice: finalOriginalPrice,
+
+        // Variants đã chuẩn hóa
         variants,
 
+        // Qty tổng
         qty: finalQty,
       };
 
+      console.log("====================================");
+
       console.log("SAVE PRODUCT:", productToSave);
+
+      console.log("SAVE TYPE:", productToSave.type);
+
+      console.log("SAVE PRICE:", productToSave.price);
+
+      console.log("SAVE ORIGINAL PRICE:", productToSave.originalPrice);
+
+      console.log("SAVE VARIANTS:", productToSave.variants);
+
+      console.log("SAVE QTY:", productToSave.qty);
+
+      console.log("====================================");
+
+      // =================================================
+      // API
+      // =================================================
 
       await patchRequest({
         url: "/products",
@@ -646,6 +754,10 @@ const Products = () => {
   // =====================================================
 
   const formatPrice = (value: any) => {
+    if (value === "" || value === null || value === undefined) {
+      return "0";
+    }
+
     const number = Number(value);
 
     if (Number.isNaN(number)) {
@@ -1214,11 +1326,11 @@ const Products = () => {
                         label="Giá mặc định"
                         value={selectedProduct.price ?? ""}
                         onChange={(e) =>
-                          updateProductField(
-                            "price",
-                            Number(e.target.value) || 0,
-                          )
+                          updateProductField("price", e.target.value)
                         }
+                        inputProps={{
+                          min: 0,
+                        }}
                       />
                     </Grid>
 
@@ -1236,11 +1348,11 @@ const Products = () => {
                         label="Giá cũ"
                         value={selectedProduct.originalPrice ?? ""}
                         onChange={(e) =>
-                          updateProductField(
-                            "originalPrice",
-                            Number(e.target.value) || 0,
-                          )
+                          updateProductField("originalPrice", e.target.value)
                         }
+                        inputProps={{
+                          min: 0,
+                        }}
                       />
                     </Grid>
                   </Grid>
@@ -1359,10 +1471,13 @@ const Products = () => {
                                 size="small"
                                 type="number"
                                 label="Giá"
-                                value={variant.price ?? 0}
+                                value={variant.price ?? ""}
                                 onChange={(e) =>
                                   updateVariant(index, "price", e.target.value)
                                 }
+                                inputProps={{
+                                  min: 0,
+                                }}
                               />
                             </Grid>
 
@@ -1380,7 +1495,7 @@ const Products = () => {
                                 size="small"
                                 type="number"
                                 label="Số lượng"
-                                value={variant.qty ?? 0}
+                                value={variant.qty ?? ""}
                                 onChange={(e) =>
                                   updateVariant(index, "qty", e.target.value)
                                 }
@@ -1399,6 +1514,7 @@ const Products = () => {
                               }}
                               sx={{
                                 display: "flex",
+
                                 justifyContent: {
                                   xs: "flex-end",
                                   md: "center",

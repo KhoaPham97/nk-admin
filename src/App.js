@@ -23,7 +23,7 @@ import SingleProduct from "./pages/SingleProduct";
 import SingleCategory from "./pages/SingleCategory";
 import Wishlist from "./pages/Wishlist";
 import Profile from "./pages/Profile";
-
+import ChatGPTWidget from "./pages/ChatGPTWidget";
 import BasicExample from "./admin/AppAdmin";
 
 const CheckAccount = () => {
@@ -84,6 +84,7 @@ const CheckAccount = () => {
       <LoginModal />
       <ScrollToTopButton />
       <BannerPopup />
+      <ChatGPTWidget />
     </>
   );
 };

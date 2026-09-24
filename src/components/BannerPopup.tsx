@@ -16,7 +16,7 @@ const BannerPopup: FC = () => {
     >
       <div className="relative">
         <img
-          src="/banner.jpg"
+          src="/images/51ead272-e1ae-4852-b2ff-0e3f6739b6f5.jpg"
           alt="banner"
           className="w-[50vw] min-w-[300px] m-auto"
         />

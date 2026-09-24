@@ -690,12 +690,32 @@ const CreateOrder = () => {
                       type="number"
                       label="SL"
                       value={quantity}
-                      onChange={(e) =>
-                        setQuantity(Math.max(1, Number(e.target.value) || 1))
-                      }
+                      onChange={(e) => {
+                        const value = e.target.value;
+
+                        // Cho phép xóa hết số
+                        if (value === "") {
+                          setQuantity("");
+                          return;
+                        }
+
+                        let number = Number(value);
+
+                        // Không cho số âm
+                        if (number < 1) {
+                          number = 1;
+                        }
+
+                        // Không vượt quá tồn kho
+                        if (currentStock > 0) {
+                          number = Math.min(number, currentStock);
+                        }
+
+                        setQuantity(number);
+                      }}
                       inputProps={{
                         min: 1,
-                        max: currentStock || undefined,
+                        max: currentStock > 0 ? currentStock : undefined,
                       }}
                       disabled={!selectedProduct}
                     />

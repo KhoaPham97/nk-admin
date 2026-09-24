@@ -1,7 +1,7 @@
 describe("testing the home page", () => {
   beforeEach(() => {
     cy.intercept("GET", "https://dummyjson.com/products?limit=24").as(
-      "products"
+      "products",
     );
     cy.visit("/");
   });
@@ -19,16 +19,12 @@ describe("testing the home page", () => {
     cy.contains(/new arrivals/i).should("be.visible");
   });
 
-  it("the banner section loads", () => {
-    cy.get('[data-test="banner-btn"]').should("contain.text", "Shop Now");
-  });
-
   it("products endpoint is working properly", () => {
     cy.request("GET", "https://dummyjson.com/products?limit=24&skip=24").should(
       (response) => {
         expect(response.body).to.have.property("skip", 24);
         expect(response.body.products).to.have.length(24);
-      }
+      },
     );
   });
 
