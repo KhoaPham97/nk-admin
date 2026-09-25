@@ -6,6 +6,7 @@ import AdminSidebar from "../components/AdminSidebar";
 import AdminHeader from "../components/AdminHeader";
 
 const DRAWER_WIDTH = 260;
+const HEADER_HEIGHT = 64;
 
 const AdminLayout = () => {
   const theme = useTheme();
@@ -35,7 +36,7 @@ const AdminLayout = () => {
         isMobile={isMobile}
       />
 
-      {/* MAIN */}
+      {/* MAIN AREA */}
 
       <Box
         sx={{
@@ -51,16 +52,34 @@ const AdminLayout = () => {
           isMobile={isMobile}
         />
 
+        {/* HEADER SPACER */}
+        <Box
+          sx={{
+            height: {
+              xs: "56px",
+              sm: "64px",
+              md: `${HEADER_HEIGHT}px`,
+            },
+            flexShrink: 0,
+          }}
+        />
+
         {/* CONTENT */}
 
         <Box
           component="main"
           sx={{
+            width: "100%",
+            minWidth: 0,
+            boxSizing: "border-box",
+
             p: {
               xs: 1.5,
               sm: 2,
               md: 3,
             },
+
+            minHeight: `calc(100vh - ${HEADER_HEIGHT}px)`,
           }}
         >
           <Outlet />

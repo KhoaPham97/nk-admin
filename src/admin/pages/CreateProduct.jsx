@@ -17,7 +17,23 @@ import { Add, Delete, Save } from "@mui/icons-material";
 
 import axios from "axios";
 import { API_ENDPOINTS } from "../../api";
+const formatVND = (value) => {
+  if (value === "" || value === null || value === undefined) {
+    return "";
+  }
 
+  const number = Number(String(value).replace(/\D/g, ""));
+
+  if (!number) {
+    return "";
+  }
+
+  return new Intl.NumberFormat("vi-VN").format(number);
+};
+
+const parseVND = (value) => {
+  return String(value || "").replace(/\D/g, "");
+};
 const API_URL = API_ENDPOINTS || "";
 
 // =========================================================
@@ -662,12 +678,19 @@ export default function CreateProduct() {
             <Grid item xs={12} md={3}>
               <TextField
                 fullWidth
-                label="Giá bán"
-                value={form.price}
-                onChange={handleChange("price")}
-                type="number"
-                inputProps={{
-                  min: 0,
+                label="Giá bán (VND)"
+                value={formatVND(form.price)}
+                onChange={(e) => {
+                  const value = parseVND(e.target.value);
+
+                  setForm((prev) => ({
+                    ...prev,
+                    price: value,
+                  }));
+                }}
+                placeholder="VD: 150.000"
+                InputProps={{
+                  endAdornment: "₫",
                 }}
               />
             </Grid>
@@ -679,12 +702,19 @@ export default function CreateProduct() {
             <Grid item xs={12} md={3}>
               <TextField
                 fullWidth
-                label="Giá gốc"
-                value={form.originalPrice}
-                onChange={handleChange("originalPrice")}
-                type="number"
-                inputProps={{
-                  min: 0,
+                label="Giá gốc (VND)"
+                value={formatVND(form.originalPrice)}
+                onChange={(e) => {
+                  const value = parseVND(e.target.value);
+
+                  setForm((prev) => ({
+                    ...prev,
+                    originalPrice: value,
+                  }));
+                }}
+                placeholder="VD: 200.000"
+                InputProps={{
+                  endAdornment: "₫",
                 }}
               />
             </Grid>
@@ -886,14 +916,14 @@ export default function CreateProduct() {
                     <TextField
                       fullWidth
                       size="small"
-                      label="Giá"
-                      value={variant.price}
+                      label="Giá (VND)"
+                      value={formatVND(variant.price)}
                       onChange={(e) =>
-                        updateVariant(index, "price", e.target.value)
+                        updateVariant(index, "price", parseVND(e.target.value))
                       }
-                      type="number"
-                      inputProps={{
-                        min: 0,
+                      placeholder="VD: 150.000"
+                      InputProps={{
+                        endAdornment: "₫",
                       }}
                     />
                   </Grid>

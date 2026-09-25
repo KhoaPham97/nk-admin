@@ -23,6 +23,7 @@ import {
   TableRow,
   TextField,
   Typography,
+  Tooltip,
 } from "@mui/material";
 
 import {
@@ -33,6 +34,7 @@ import {
   PersonOutline,
   ReceiptLong,
   Search,
+  Sync,
 } from "@mui/icons-material";
 
 import axios from "axios";
@@ -67,18 +69,22 @@ const STATUS_CONFIG = {
     label: "Chờ xác nhận",
     color: "warning",
   },
+
   confirmed: {
     label: "Đã xác nhận",
     color: "info",
   },
+
   shipping: {
     label: "Đang giao",
     color: "primary",
   },
+
   completed: {
     label: "Hoàn thành",
     color: "success",
   },
+
   cancelled: {
     label: "Đã hủy",
     color: "error",
@@ -95,6 +101,8 @@ const Orders = () => {
   const [orders, setOrders] = useState([]);
 
   const [loading, setLoading] = useState(false);
+
+  const [syncing, setSyncing] = useState(false);
 
   const [search, setSearch] = useState("");
 
@@ -152,6 +160,50 @@ const Orders = () => {
   }, [page, status]);
 
   // =========================================================
+  // SYNC PRICE
+  // =========================================================
+
+  const handleSyncPrices = async () => {
+    if (syncing) return;
+
+    try {
+      setSyncing(true);
+
+      const response = await axios.post(
+        `${API_ENDPOINTS.ORDER}/sync-all-uncompleted-prices`,
+      );
+
+      const data = response?.data || {};
+
+      const updatedOrders = Number(data.updatedOrders) || 0;
+
+      const updatedItems = Number(data.updatedItems) || 0;
+
+      /*
+       * Load lại danh sách để cập nhật:
+       *
+       * totalAmount
+       * debt
+       * subtotal
+       * item.price
+       */
+      await loadOrders();
+
+      alert(
+        `Đồng bộ giá thành công!\n\n` +
+          `Đơn hàng cập nhật: ${updatedOrders}\n` +
+          `Sản phẩm cập nhật: ${updatedItems}`,
+      );
+    } catch (error) {
+      console.error("Sync order prices:", error);
+
+      alert(error?.response?.data?.message || "Không thể đồng bộ giá đơn hàng");
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  // =========================================================
   // SEARCH
   // =========================================================
 
@@ -165,6 +217,7 @@ const Orders = () => {
 
   const handleClearSearch = () => {
     setSearch("");
+
     setPage(1);
 
     if (page === 1) {
@@ -182,6 +235,7 @@ const Orders = () => {
     return (
       STATUS_CONFIG[value] || {
         label: value || "Không xác định",
+
         color: "default",
       }
     );
@@ -194,7 +248,9 @@ const Orders = () => {
   const handleChangeStatus = async (order, newStatus) => {
     if (!order?._id) return;
 
-    if (order.status === newStatus) return;
+    if (order.status === newStatus) {
+      return;
+    }
 
     try {
       await axios.patch(`${API_ENDPOINTS.ORDER}/${order._id}/status`, {
@@ -242,13 +298,17 @@ const Orders = () => {
     <Box
       sx={{
         width: "100%",
+
         maxWidth: "1600px",
+
         mx: "auto",
+
         px: {
           xs: 1,
           sm: 2,
           md: 3,
         },
+
         pb: 4,
       }}
     >
@@ -279,18 +339,58 @@ const Orders = () => {
           </Typography>
         </Box>
 
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={() => navigate("/admin/orders/create")}
-          sx={{
-            height: 44,
-            borderRadius: 2,
-            fontWeight: 700,
+        {/* =================================================
+            HEADER BUTTONS
+        ================================================= */}
+
+        <Stack
+          direction={{
+            xs: "column",
+            sm: "row",
           }}
+          spacing={1}
         >
-          Tạo đơn hàng
-        </Button>
+          {/* SYNC PRICE */}
+
+          <Tooltip title="Đồng bộ giá mới vào các đơn chưa hoàn thành">
+            <span>
+              <Button
+                variant="outlined"
+                startIcon={syncing ? <CircularProgress size={18} /> : <Sync />}
+                onClick={handleSyncPrices}
+                disabled={syncing || loading}
+                sx={{
+                  height: 44,
+
+                  borderRadius: 2,
+
+                  fontWeight: 700,
+
+                  minWidth: 150,
+                }}
+              >
+                {syncing ? "Đang đồng bộ..." : "Đồng bộ giá"}
+              </Button>
+            </span>
+          </Tooltip>
+
+          {/* CREATE ORDER */}
+
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            onClick={() => navigate("/admin/orders/create")}
+            sx={{
+              height: 44,
+
+              borderRadius: 2,
+
+              fontWeight: 700,
+            }}
+          >
+            Tạo đơn hàng
+          </Button>
+        </Stack>
       </Stack>
 
       {/* =====================================================
@@ -301,8 +401,11 @@ const Orders = () => {
         elevation={0}
         sx={{
           border: "1px solid",
+
           borderColor: "divider",
+
           borderRadius: 2,
+
           mb: 2,
         }}
       >
@@ -349,6 +452,7 @@ const Orders = () => {
                   displayEmpty
                   onChange={(e) => {
                     setStatus(e.target.value);
+
                     setPage(1);
                   }}
                 >
@@ -377,6 +481,7 @@ const Orders = () => {
                 onClick={handleSearch}
                 sx={{
                   height: 40,
+
                   fontWeight: 600,
                 }}
               >
@@ -407,8 +512,11 @@ const Orders = () => {
         elevation={0}
         sx={{
           border: "1px solid",
+
           borderColor: "divider",
+
           borderRadius: 2,
+
           overflow: "hidden",
         }}
       >
@@ -468,7 +576,13 @@ const Orders = () => {
               {loading ? (
                 <TableRow>
                   <TableCell colSpan={9} align="center">
-                    <Stack spacing={1} alignItems="center" sx={{ py: 7 }}>
+                    <Stack
+                      spacing={1}
+                      alignItems="center"
+                      sx={{
+                        py: 7,
+                      }}
+                    >
                       <CircularProgress />
 
                       <Typography variant="body2" color="text.secondary">
@@ -480,11 +594,17 @@ const Orders = () => {
               ) : orders.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={9} align="center">
-                    <Box sx={{ py: 7 }}>
+                    <Box
+                      sx={{
+                        py: 7,
+                      }}
+                    >
                       <ReceiptLong
                         sx={{
                           fontSize: 50,
+
                           opacity: 0.3,
+
                           mb: 1,
                         }}
                       />
@@ -561,9 +681,13 @@ const Orders = () => {
                               color="text.secondary"
                               sx={{
                                 maxWidth: 240,
+
                                 overflow: "hidden",
+
                                 textOverflow: "ellipsis",
+
                                 whiteSpace: "nowrap",
+
                                 display: "block",
                               }}
                             >
@@ -625,6 +749,7 @@ const Orders = () => {
                           }
                           sx={{
                             minWidth: 140,
+
                             "& .MuiSelect-select": {
                               py: 0.7,
                             },
@@ -653,6 +778,7 @@ const Orders = () => {
                           <CalendarToday
                             sx={{
                               fontSize: 15,
+
                               color: "text.secondary",
                             }}
                           />
@@ -705,11 +831,17 @@ const Orders = () => {
             <Box
               sx={{
                 px: 2,
+
                 py: 1.5,
+
                 display: "flex",
+
                 justifyContent: "space-between",
+
                 alignItems: "center",
+
                 gap: 2,
+
                 flexWrap: "wrap",
               }}
             >

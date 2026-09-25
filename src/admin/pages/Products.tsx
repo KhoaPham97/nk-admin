@@ -623,7 +623,7 @@ const Products = () => {
           variant.price === null ||
           variant.price === undefined
             ? "0"
-            : String(variant.price),
+            : parsePrice(variant.price),
 
         // Khi lưu:
         // "" -> 0
@@ -647,14 +647,14 @@ const Products = () => {
         selectedProduct.price === null ||
         selectedProduct.price === undefined
           ? "0"
-          : String(selectedProduct.price);
+          : parsePrice(selectedProduct.price);
 
       const finalOriginalPrice =
         selectedProduct.originalPrice === "" ||
         selectedProduct.originalPrice === null ||
         selectedProduct.originalPrice === undefined
           ? "0"
-          : String(selectedProduct.originalPrice);
+          : parsePrice(selectedProduct.originalPrice);
 
       // =================================================
       // PRODUCT TO SAVE
@@ -666,9 +666,10 @@ const Products = () => {
         // Type lấy từ Select
         type: productType,
 
-        // Giá đã chuẩn hóa
+        // Giá đã chuẩn hóa, lưu dạng số thuần không có dấu chấm/₫
         price: finalPrice,
 
+        // Giá cũ lưu dạng số thuần không có dấu chấm/₫
         originalPrice: finalOriginalPrice,
 
         // Variants đã chuẩn hóa
@@ -753,18 +754,28 @@ const Products = () => {
   // FORMAT PRICE
   // =====================================================
 
-  const formatPrice = (value: any) => {
+  // =====================================================
+  // VND PRICE HELPERS
+  // Hiển thị: 150.000 ₫
+  // Lưu DB:   "150000"
+  // =====================================================
+
+  const parsePrice = (value: string | number | null | undefined) => {
     if (value === "" || value === null || value === undefined) {
-      return "0";
+      return "";
     }
 
-    const number = Number(value);
+    return String(value).replace(/\D/g, "");
+  };
 
-    if (Number.isNaN(number)) {
-      return "0";
+  const formatVND = (value: string | number | null | undefined) => {
+    const numericValue = parsePrice(value);
+
+    if (numericValue === "") {
+      return "";
     }
 
-    return number.toLocaleString("vi-VN");
+    return Number(numericValue).toLocaleString("vi-VN");
   };
 
   // =====================================================
@@ -1062,7 +1073,7 @@ const Products = () => {
                           />
 
                           <Typography variant="caption" fontWeight={600}>
-                            {formatPrice(product.price)}đ
+                            {formatVND(product.price)} ₫
                           </Typography>
                         </Stack>
                       </Box>
@@ -1322,14 +1333,21 @@ const Products = () => {
                     >
                       <TextField
                         fullWidth
-                        type="number"
-                        label="Giá mặc định"
-                        value={selectedProduct.price ?? ""}
+                        label="Giá mặc định (VND)"
+                        value={formatVND(selectedProduct.price)}
                         onChange={(e) =>
-                          updateProductField("price", e.target.value)
+                          updateProductField(
+                            "price",
+                            parsePrice(e.target.value),
+                          )
                         }
+                        InputProps={{
+                          endAdornment: (
+                            <InputAdornment position="end">₫</InputAdornment>
+                          ),
+                        }}
                         inputProps={{
-                          min: 0,
+                          inputMode: "numeric",
                         }}
                       />
                     </Grid>
@@ -1344,14 +1362,21 @@ const Products = () => {
                     >
                       <TextField
                         fullWidth
-                        type="number"
-                        label="Giá cũ"
-                        value={selectedProduct.originalPrice ?? ""}
+                        label="Giá cũ (VND)"
+                        value={formatVND(selectedProduct.originalPrice)}
                         onChange={(e) =>
-                          updateProductField("originalPrice", e.target.value)
+                          updateProductField(
+                            "originalPrice",
+                            parsePrice(e.target.value),
+                          )
                         }
+                        InputProps={{
+                          endAdornment: (
+                            <InputAdornment position="end">₫</InputAdornment>
+                          ),
+                        }}
                         inputProps={{
-                          min: 0,
+                          inputMode: "numeric",
                         }}
                       />
                     </Grid>
@@ -1469,14 +1494,24 @@ const Products = () => {
                               <TextField
                                 fullWidth
                                 size="small"
-                                type="number"
-                                label="Giá"
-                                value={variant.price ?? ""}
+                                label="Giá (VND)"
+                                value={formatVND(variant.price)}
                                 onChange={(e) =>
-                                  updateVariant(index, "price", e.target.value)
+                                  updateVariant(
+                                    index,
+                                    "price",
+                                    parsePrice(e.target.value),
+                                  )
                                 }
+                                InputProps={{
+                                  endAdornment: (
+                                    <InputAdornment position="end">
+                                      ₫
+                                    </InputAdornment>
+                                  ),
+                                }}
                                 inputProps={{
-                                  min: 0,
+                                  inputMode: "numeric",
                                 }}
                               />
                             </Grid>
