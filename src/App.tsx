@@ -28,6 +28,7 @@ import SingleProduct from "./pages/SingleProduct";
 import SingleCategory from "./pages/SingleCategory";
 import Wishlist from "./pages/Wishlist";
 import Profile from "./pages/Profile";
+import AnalyticsTracker from "./pages/AnalyticsTracker";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 // ================================
@@ -137,6 +138,7 @@ const CheckAccount = () => {
         closeOnClick
         pauseOnHover
       />
+      <AnalyticsTracker />
     </>
   );
 };

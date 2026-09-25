@@ -18,5 +18,7 @@ export const API_ENDPOINTS = {
   CARTUSER: `${BASE_URL}/user/:id/move-cart-to-db`,
   CUSTOMERS: `${BASE_URL}/customers`,
   ORDER: `${BASE_URL}/order`,
-  CHATGPT: `${BASE_URL}/api/chatgpt`,
+  CHATGPT: `${BASE_URL}/chatgpt`,
+  ANALYTICS_DASHBOARD: `${BASE_URL}/analytics/dashboard`,
+  ANALYTICS_TRACK: `${BASE_URL}/analytics/track`,
 };
