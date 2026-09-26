@@ -51,7 +51,6 @@ const ProductCard: FC<ProductCardProps> = (product) => {
 
   const productId = String(product._id || "");
 
-  // Không có _id thì không render
   if (!productId) {
     return null;
   }
@@ -231,29 +230,29 @@ const ProductCard: FC<ProductCardProps> = (product) => {
         ...product,
 
         // =================================================
-        // GIỮ _id LÀ ID CHÍNH
+        // ID
         // =================================================
+
         _id: productId,
 
-        // =================================================
-        // CART CŨ CÓ THỂ ĐANG DÙNG id
-        // TẠM GIỮ id ĐỂ KHÔNG LÀM HỎNG cartSlice
-        // =================================================
         id: productId,
 
         // =================================================
-        // GIÁ HIỆN TẠI
+        // CURRENT PRICE
         // =================================================
+
         price: numericPrice,
 
         // =================================================
-        // TỒN KHO HIỆN TẠI
+        // CURRENT STOCK
         // =================================================
+
         qty: stock,
 
         // =================================================
-        // VARIANT ĐANG CHỌN
+        // SELECTED VARIANT
         // =================================================
+
         selectedVariant: selectedVariant
           ? {
               ...selectedVariant,
@@ -290,13 +289,19 @@ const ProductCard: FC<ProductCardProps> = (product) => {
   return (
     <div
       className="
-        group flex h-full flex-col
+        group
+        flex
+        min-h-full
+        h-full
+        flex-col
         overflow-hidden
         rounded-2xl
-        border border-gray-100
+        border
+        border-gray-100
         bg-white
         shadow-sm
-        transition-all duration-300
+        transition-all
+        duration-300
         hover:-translate-y-1
         hover:shadow-xl
         dark:border-slate-700
@@ -310,7 +315,9 @@ const ProductCard: FC<ProductCardProps> = (product) => {
       <Link
         to={`/product/${productId}`}
         className="
-          relative block
+          relative
+          block
+          shrink-0
           overflow-hidden
           bg-gray-50
           dark:bg-slate-800
@@ -322,10 +329,12 @@ const ProductCard: FC<ProductCardProps> = (product) => {
             alt={product.title || "Sản phẩm"}
             loading="lazy"
             className="
-              h-full w-full
+              h-full
+              w-full
               object-contain
               p-4
-              transition-transform duration-500
+              transition-transform
+              duration-500
               group-hover:scale-105
             "
             onError={(e) => {
@@ -342,9 +351,14 @@ const ProductCard: FC<ProductCardProps> = (product) => {
 
         <div
           className={`
-            absolute left-3 top-3
-            rounded-full px-2.5 py-1
-            text-[11px] font-semibold
+            absolute
+            left-3
+            top-3
+            rounded-full
+            px-2.5
+            py-1
+            text-[11px]
+            font-semibold
             ${
               isInStock
                 ? "bg-green-100 text-green-700"
@@ -360,10 +374,13 @@ const ProductCard: FC<ProductCardProps> = (product) => {
         {hasVariants && (
           <div
             className="
-              absolute right-3 top-3
+              absolute
+              right-3
+              top-3
               rounded-full
               bg-blue-600
-              px-2.5 py-1
+              px-2.5
+              py-1
               text-[11px]
               font-semibold
               text-white
@@ -379,417 +396,468 @@ const ProductCard: FC<ProductCardProps> = (product) => {
           CONTENT
       ================================================= */}
 
-      <div className="flex flex-1 flex-col p-4">
-        {/* CATEGORY */}
-
-        {categoryName && (
-          <div
-            className="
-              mb-1
-              text-[11px]
-              font-medium
-              uppercase
-              tracking-wide
-              text-blue-600
-            "
-          >
-            {categoryName}
-          </div>
-        )}
-
-        {/* TITLE */}
-
-        <Link
-          to={`/product/${productId}`}
-          className="
-            line-clamp-2
-            min-h-[42px]
-            text-sm
-            font-semibold
-            leading-5
-            text-gray-900
-            transition
-            hover:text-blue-600
-            dark:text-white
-            dark:hover:text-blue-400
-          "
-        >
-          {typeof product.title === "string" ? product.title : "Sản phẩm"}
-        </Link>
-
+      <div
+        className="
+          flex
+          flex-1
+          flex-col
+          p-4
+        "
+      >
         {/* =================================================
-            VARIANTS
+            TOP CONTENT
         ================================================= */}
 
-        {hasVariants && (
-          <div className="relative mt-3">
+        <div>
+          {/* CATEGORY */}
+
+          {categoryName && (
             <div
               className="
-                mb-1.5
-                flex
-                items-center
-                justify-between
+                mb-1
+                text-[11px]
+                font-medium
+                uppercase
+                tracking-wide
+                text-blue-600
               "
             >
-              <span
-                className="
-                  text-xs
-                  font-medium
-                  text-gray-500
-                  dark:text-gray-400
-                "
-              >
-                Phân loại
-              </span>
-
-              <span className="text-[10px] text-gray-400">
-                {variants.length} lựa chọn
-              </span>
+              {categoryName}
             </div>
+          )}
 
-            {/* SELECTED VARIANT */}
-
-            <button
-              type="button"
-              onClick={() => setIsVariantOpen((value) => !value)}
-              className="
-                flex w-full
-                items-center
-                justify-between
-                rounded-lg
-                border
-                border-gray-200
-                bg-gray-50
-                px-3 py-2
-                text-left
-                text-xs
-                transition
-                hover:border-blue-400
-                dark:border-slate-600
-                dark:bg-slate-800
-              "
-            >
-              <div
-                className="
-                  flex
-                  min-w-0
-                  items-center
-                  gap-2
-                "
-              >
-                {selectedVariant &&
-                  Number(selectedVariant.qty ?? selectedVariant.stock ?? 0) >
-                    0 && (
-                    <span
-                      className="
-                        flex h-4 w-4
-                        shrink-0
-                        items-center
-                        justify-center
-                        rounded-full
-                        bg-blue-600
-                        text-white
-                      "
-                    >
-                      <FaCheck className="text-[8px]" />
-                    </span>
-                  )}
-
-                <span
-                  className="
-                    truncate
-                    font-medium
-                    text-gray-700
-                    dark:text-gray-200
-                  "
-                >
-                  {getVariantName(selectedVariant) || "Chọn phân loại"}
-                </span>
-              </div>
-
-              <FaChevronDown
-                className={`
-                  shrink-0
-                  text-[10px]
-                  text-gray-400
-                  transition-transform
-                  ${isVariantOpen ? "rotate-180" : ""}
-                `}
-              />
-            </button>
-
-            {/* DROPDOWN */}
-
-            {isVariantOpen && (
-              <div
-                className="
-                  absolute
-                  left-0
-                  right-0
-                  top-full
-                  z-50
-                  mt-1
-                  max-h-48
-                  overflow-y-auto
-                  rounded-xl
-                  border
-                  border-gray-200
-                  bg-white
-                  p-1.5
-                  shadow-xl
-                  dark:border-slate-600
-                  dark:bg-slate-800
-                "
-              >
-                {variants.map((variant, index) => {
-                  const variantQty =
-                    Number(variant.qty ?? variant.stock ?? 0) || 0;
-
-                  const isSelected = index === selectedVariantIndex;
-
-                  const variantPrice = Number(variant.price) || 0;
-
-                  return (
-                    <button
-                      key={
-                        variant._id ||
-                        variant.id ||
-                        variant.code ||
-                        variant.sku ||
-                        `${getVariantName(variant)}-${index}`
-                      }
-                      type="button"
-                      disabled={variantQty <= 0}
-                      onClick={() => handleSelectVariant(index)}
-                      className={`
-                          mb-1
-                          flex
-                          w-full
-                          items-center
-                          justify-between
-                          rounded-lg
-                          px-3 py-2
-                          text-left
-                          transition
-                          last:mb-0
-
-                          ${
-                            isSelected
-                              ? "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-                              : "hover:bg-gray-50 dark:hover:bg-slate-700"
-                          }
-
-                          ${
-                            variantQty <= 0
-                              ? "cursor-not-allowed opacity-40"
-                              : ""
-                          }
-                        `}
-                    >
-                      <div className="min-w-0">
-                        <div
-                          className="
-                              flex
-                              items-center
-                              gap-2
-                            "
-                        >
-                          {isSelected && (
-                            <FaCheck
-                              className="
-                                  shrink-0
-                                  text-[10px]
-                                "
-                            />
-                          )}
-
-                          <span
-                            className="
-                                truncate
-                                text-xs
-                                font-medium
-                              "
-                          >
-                            {getVariantName(variant) ||
-                              `Phân loại ${index + 1}`}
-                          </span>
-                        </div>
-
-                        <div
-                          className="
-                              mt-0.5
-                              text-[10px]
-                              text-gray-400
-                            "
-                        >
-                          {variantQty > 0 ? `Còn ${variantQty}` : "Hết hàng"}
-                        </div>
-                      </div>
-
-                      {showPrice && variantPrice > 0 && (
-                        <span
-                          className="
-                                ml-2
-                                shrink-0
-                                text-[11px]
-                                font-semibold
-                                text-blue-600
-                              "
-                        >
-                          {new Intl.NumberFormat("vi-VN").format(variantPrice)}đ
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* =================================================
-            PRICE
-        ================================================= */}
-
-        <div
-          className="
-            mt-3
-            flex
-            items-end
-            justify-between
-            gap-2
-          "
-        >
-          <div>
-            {showPrice ? (
-              <>
-                <div
-                  className="
-                    text-lg
-                    font-bold
-                    text-blue-600
-                    dark:text-blue-400
-                  "
-                >
-                  {formattedPrice}
-
-                  {numericPrice > 0 && (
-                    <span
-                      className="
-                        ml-0.5
-                        text-xs
-                        font-medium
-                      "
-                    >
-                      đ
-                    </span>
-                  )}
-                </div>
-
-                {hasVariants && (
-                  <div
-                    className="
-                      mt-0.5
-                      text-[10px]
-                      text-gray-400
-                    "
-                  >
-                    {getVariantName(selectedVariant)}
-                  </div>
-                )}
-              </>
-            ) : (
-              <div
-                className="
-                  text-sm
-                  font-semibold
-                  text-gray-500
-                  dark:text-gray-400
-                "
-              >
-                Liên hệ để biết giá
-              </div>
-            )}
-          </div>
-
-          {/* STOCK */}
-
-          <div
-            className="
-              text-right
-              text-[10px]
-              text-gray-400
-            "
-          >
-            {isInStock ? `Kho: ${stock}` : "Tạm hết"}
-          </div>
-        </div>
-
-        {/* =================================================
-            ACTIONS
-        ================================================= */}
-
-        <div className="mt-4 flex gap-2">
-          {/* DETAIL */}
+          {/* TITLE */}
 
           <Link
             to={`/product/${productId}`}
             className="
-              flex
-              flex-1
-              items-center
-              justify-center
-              rounded-xl
-              border
-              border-blue-200
-              px-3 py-2.5
-              text-xs
+              line-clamp-2
+              min-h-[42px]
+              text-sm
               font-semibold
-              text-blue-600
+              leading-5
+              text-gray-900
               transition
-              hover:border-blue-600
-              hover:bg-blue-50
-              dark:border-blue-900
-              dark:text-blue-400
-              dark:hover:bg-blue-900/20
+              hover:text-blue-600
+              dark:text-white
+              dark:hover:text-blue-400
             "
           >
-            Chi tiết
+            {typeof product.title === "string" ? product.title : "Sản phẩm"}
           </Link>
 
-          {/* ADD CART */}
+          {/* =================================================
+              VARIANTS
+          ================================================= */}
 
-          <button
-            type="button"
-            disabled={!isInStock}
-            onClick={handleAddToCart}
+          {hasVariants && (
+            <div className="relative mt-3">
+              <div
+                className="
+                  mb-1.5
+                  flex
+                  items-center
+                  justify-between
+                "
+              >
+                <span
+                  className="
+                    text-xs
+                    font-medium
+                    text-gray-500
+                    dark:text-gray-400
+                  "
+                >
+                  Phân loại
+                </span>
+
+                <span
+                  className="
+                    text-[10px]
+                    text-gray-400
+                  "
+                >
+                  {variants.length} lựa chọn
+                </span>
+              </div>
+
+              {/* SELECTED VARIANT */}
+
+              <button
+                type="button"
+                onClick={() => setIsVariantOpen((value) => !value)}
+                className="
+                  flex
+                  w-full
+                  items-center
+                  justify-between
+                  rounded-lg
+                  border
+                  border-gray-200
+                  bg-gray-50
+                  px-3
+                  py-2
+                  text-left
+                  text-xs
+                  transition
+                  hover:border-blue-400
+                  dark:border-slate-600
+                  dark:bg-slate-800
+                "
+              >
+                <div
+                  className="
+                    flex
+                    min-w-0
+                    items-center
+                    gap-2
+                  "
+                >
+                  {selectedVariant &&
+                    Number(selectedVariant.qty ?? selectedVariant.stock ?? 0) >
+                      0 && (
+                      <span
+                        className="
+                          flex
+                          h-4
+                          w-4
+                          shrink-0
+                          items-center
+                          justify-center
+                          rounded-full
+                          bg-blue-600
+                          text-white
+                        "
+                      >
+                        <FaCheck className="text-[8px]" />
+                      </span>
+                    )}
+
+                  <span
+                    className="
+                      truncate
+                      font-medium
+                      text-gray-700
+                      dark:text-gray-200
+                    "
+                  >
+                    {getVariantName(selectedVariant) || "Chọn phân loại"}
+                  </span>
+                </div>
+
+                <FaChevronDown
+                  className={`
+                    shrink-0
+                    text-[10px]
+                    text-gray-400
+                    transition-transform
+                    ${isVariantOpen ? "rotate-180" : ""}
+                  `}
+                />
+              </button>
+
+              {/* DROPDOWN */}
+
+              {isVariantOpen && (
+                <div
+                  className="
+                    absolute
+                    left-0
+                    right-0
+                    top-full
+                    z-50
+                    mt-1
+                    max-h-48
+                    overflow-y-auto
+                    rounded-xl
+                    border
+                    border-gray-200
+                    bg-white
+                    p-1.5
+                    shadow-xl
+                    dark:border-slate-600
+                    dark:bg-slate-800
+                  "
+                >
+                  {variants.map((variant, index) => {
+                    const variantQty =
+                      Number(variant.qty ?? variant.stock ?? 0) || 0;
+
+                    const isSelected = index === selectedVariantIndex;
+
+                    const variantPrice = Number(variant.price) || 0;
+
+                    return (
+                      <button
+                        key={
+                          variant._id ||
+                          variant.id ||
+                          variant.code ||
+                          variant.sku ||
+                          `${getVariantName(variant)}-${index}`
+                        }
+                        type="button"
+                        disabled={variantQty <= 0}
+                        onClick={() => handleSelectVariant(index)}
+                        className={`
+                            mb-1
+                            flex
+                            w-full
+                            items-center
+                            justify-between
+                            rounded-lg
+                            px-3
+                            py-2
+                            text-left
+                            transition
+                            last:mb-0
+
+                            ${
+                              isSelected
+                                ? "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                                : "hover:bg-gray-50 dark:hover:bg-slate-700"
+                            }
+
+                            ${
+                              variantQty <= 0
+                                ? "cursor-not-allowed opacity-40"
+                                : ""
+                            }
+                          `}
+                      >
+                        <div className="min-w-0">
+                          <div
+                            className="
+                                flex
+                                items-center
+                                gap-2
+                              "
+                          >
+                            {isSelected && (
+                              <FaCheck
+                                className="
+                                    shrink-0
+                                    text-[10px]
+                                  "
+                              />
+                            )}
+
+                            <span
+                              className="
+                                  truncate
+                                  text-xs
+                                  font-medium
+                                "
+                            >
+                              {getVariantName(variant) ||
+                                `Phân loại ${index + 1}`}
+                            </span>
+                          </div>
+
+                          <div
+                            className="
+                                mt-0.5
+                                text-[10px]
+                                text-gray-400
+                              "
+                          >
+                            {variantQty > 0 ? `Còn ${variantQty}` : "Hết hàng"}
+                          </div>
+                        </div>
+
+                        {showPrice && variantPrice > 0 && (
+                          <span
+                            className="
+                                  ml-2
+                                  shrink-0
+                                  text-[11px]
+                                  font-semibold
+                                  text-blue-600
+                                "
+                          >
+                            {new Intl.NumberFormat("vi-VN").format(
+                              variantPrice,
+                            )}
+                            đ
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* =================================================
+            BOTTOM AREA
+            Luôn nằm dưới cùng
+        ================================================= */}
+
+        <div
+          className="
+            mt-auto
+            pt-4
+          "
+        >
+          {/* =================================================
+              PRICE + STOCK
+          ================================================= */}
+
+          <div
             className="
               flex
-              items-center
-              justify-center
-              gap-1.5
-              rounded-xl
-              bg-blue-600
-              px-3
-              py-2.5
-              text-xs
-              font-semibold
-              text-white
-              shadow-sm
-              transition
-              hover:bg-blue-700
-              hover:shadow-md
-              disabled:cursor-not-allowed
-              disabled:bg-gray-300
-              dark:disabled:bg-slate-700
+              min-h-[48px]
+              items-end
+              justify-between
+              gap-2
             "
           >
-            <AiOutlineShoppingCart className="text-base" />
+            <div className="min-w-0">
+              {showPrice ? (
+                <>
+                  <div
+                    className="
+                      text-lg
+                      font-bold
+                      leading-6
+                      text-blue-600
+                      dark:text-blue-400
+                    "
+                  >
+                    {formattedPrice}
 
-            <span className="hidden sm:inline">
-              {isInStock ? "Thêm giỏ" : "Hết hàng"}
-            </span>
-          </button>
+                    {numericPrice > 0 && (
+                      <span
+                        className="
+                          ml-0.5
+                          text-xs
+                          font-medium
+                        "
+                      >
+                        đ
+                      </span>
+                    )}
+                  </div>
+
+                  {hasVariants && (
+                    <div
+                      className="
+                        mt-0.5
+                        max-w-full
+                        truncate
+                        text-[10px]
+                        text-gray-400
+                      "
+                    >
+                      {getVariantName(selectedVariant)}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div
+                  className="
+                    text-sm
+                    font-semibold
+                    leading-5
+                    text-gray-500
+                    dark:text-gray-400
+                  "
+                >
+                  Liên hệ để biết giá
+                </div>
+              )}
+            </div>
+
+            {/* STOCK */}
+
+            <div
+              className="
+                shrink-0
+                text-right
+                text-[10px]
+                text-gray-400
+              "
+            >
+              {isInStock ? `Kho: ${stock}` : "Tạm hết"}
+            </div>
+          </div>
+
+          {/* =================================================
+              ACTIONS
+          ================================================= */}
+
+          <div
+            className="
+              mt-4
+              flex
+              min-h-[42px]
+              gap-2
+            "
+          >
+            {/* DETAIL */}
+
+            <Link
+              to={`/product/${productId}`}
+              className="
+                flex
+                flex-1
+                items-center
+                justify-center
+                rounded-xl
+                border
+                border-blue-200
+                px-3
+                py-2.5
+                text-xs
+                font-semibold
+                text-blue-600
+                transition
+                hover:border-blue-600
+                hover:bg-blue-50
+                dark:border-blue-900
+                dark:text-blue-400
+                dark:hover:bg-blue-900/20
+              "
+            >
+              Chi tiết
+            </Link>
+
+            {/* ADD CART */}
+
+            <button
+              type="button"
+              disabled={!isInStock}
+              onClick={handleAddToCart}
+              className="
+                flex
+                items-center
+                justify-center
+                gap-1.5
+                rounded-xl
+                bg-blue-600
+                px-3
+                py-2.5
+                text-xs
+                font-semibold
+                text-white
+                shadow-sm
+                transition
+                hover:bg-blue-700
+                hover:shadow-md
+                disabled:cursor-not-allowed
+                disabled:bg-gray-300
+                dark:disabled:bg-slate-700
+              "
+            >
+              <AiOutlineShoppingCart className="text-base" />
+
+              <span className="hidden sm:inline">
+                {isInStock ? "Thêm giỏ" : "Hết hàng"}
+              </span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

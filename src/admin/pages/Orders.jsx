@@ -8,6 +8,10 @@ import {
   CardContent,
   Chip,
   CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Divider,
   FormControl,
   Grid,
@@ -30,10 +34,13 @@ import {
 } from "@mui/material";
 
 import {
+  AccountBalanceWallet,
   Add,
   ArrowForwardIos,
   CalendarToday,
+  CheckCircle,
   Clear,
+  Payments,
   PersonOutline,
   ReceiptLong,
   Search,
@@ -56,20 +63,31 @@ const Orders = () => {
 
   const [loading, setLoading] = useState(false);
 
-  // Đồng bộ giá riêng từng sản phẩm
   const [syncingPriceItem, setSyncingPriceItem] = useState(null);
 
-  // Đồng bộ tồn kho tất cả
   const [syncingStock, setSyncingStock] = useState(false);
 
-  // Đồng bộ tồn kho từng đơn
   const [syncingOrderId, setSyncingOrderId] = useState(null);
 
-  // Rollback tồn kho
   const [rollingBackOrderId, setRollingBackOrderId] = useState(null);
 
-  // Cập nhật trạng thái
   const [updatingStatusId, setUpdatingStatusId] = useState(null);
+
+  // =====================================================
+  // DEBT
+  // =====================================================
+
+  const [debtDialogOpen, setDebtDialogOpen] = useState(false);
+
+  const [selectedDebtOrder, setSelectedDebtOrder] = useState(null);
+
+  const [debtAmount, setDebtAmount] = useState("");
+
+  const [payingDebt, setPayingDebt] = useState(false);
+
+  // =====================================================
+  // FILTER
+  // =====================================================
 
   const [search, setSearch] = useState("");
 
@@ -92,6 +110,10 @@ const Orders = () => {
     message: "",
     severity: "success",
   });
+
+  // =====================================================
+  // SNACKBAR
+  // =====================================================
 
   const showSnackbar = (message, severity = "success") => {
     setSnackbar({
@@ -119,7 +141,7 @@ const Orders = () => {
   };
 
   // =====================================================
-  // AXIOS CONFIG
+  // AUTH CONFIG
   // =====================================================
 
   const getAuthConfig = () => {
@@ -134,12 +156,13 @@ const Orders = () => {
   };
 
   // =====================================================
-  // HANDLE AUTH ERROR
+  // AUTH ERROR
   // =====================================================
 
   const handleAuthError = (error) => {
     if (error?.response?.status === 401) {
       localStorage.removeItem("accessToken");
+
       localStorage.removeItem("adminToken");
 
       showSnackbar(
@@ -251,11 +274,12 @@ const Orders = () => {
 
   const handleStatusChange = (event) => {
     setStatus(event.target.value);
+
     setPage(1);
   };
 
   // =====================================================
-  // FORMAT MONEY
+  // MONEY
   // =====================================================
 
   const formatMoney = (value) => {
@@ -273,7 +297,7 @@ const Orders = () => {
   };
 
   // =====================================================
-  // FORMAT DATE
+  // DATE
   // =====================================================
 
   const formatDate = (value) => {
@@ -400,9 +424,10 @@ const Orders = () => {
       return 0;
     }
 
-    return order.items.reduce((totalQty, item) => {
-      return totalQty + Number(item?.qty || 0);
-    }, 0);
+    return order.items.reduce(
+      (totalQty, item) => totalQty + Number(item?.qty || 0),
+      0,
+    );
   };
 
   // =====================================================
@@ -420,7 +445,7 @@ const Orders = () => {
   };
 
   // =====================================================
-  // GET ITEM PRICE
+  // ITEM PRICE
   // =====================================================
 
   const getItemPrice = (item) => {
@@ -434,7 +459,7 @@ const Orders = () => {
   };
 
   // =====================================================
-  // GET CURRENT PRICE FROM ITEM
+  // CURRENT PRODUCT PRICE
   // =====================================================
 
   const getCurrentProductPrice = (item) => {
@@ -459,7 +484,13 @@ const Orders = () => {
   };
 
   // =====================================================
-  // SYNC PRICE ONE PRODUCT
+  // SYNC ITEM PRICE
+  //
+  // QUAN TRỌNG:
+  // Sau khi API thành công:
+  // await loadOrders()
+  //
+  // Không setOrders thủ công.
   // =====================================================
 
   const handleSyncItemPrice = async (order, item, index) => {
@@ -472,18 +503,19 @@ const Orders = () => {
       syncingOrderId ||
       rollingBackOrderId ||
       updatingStatusId ||
-      syncingPriceItem
+      syncingPriceItem ||
+      payingDebt
     ) {
       return;
     }
 
-    if (!item?.productId && !item?.product?._id) {
+    const productId = item?.productId || item?.product?._id;
+
+    if (!productId) {
       showSnackbar("Sản phẩm trong đơn không có productId.", "error");
 
       return;
     }
-
-    const productId = item?.productId || item?.product?._id;
 
     const variantName = String(item?.variantName || "").trim();
 
@@ -510,8 +542,13 @@ const Orders = () => {
 
       if (!token) {
         navigate("/admin/login");
+
         return;
       }
+
+      // =============================================
+      // CALL API SYNC PRICE
+      // =============================================
 
       const response = await axios.post(
         `${API_ENDPOINTS.ORDER}/sync-item-price`,
@@ -525,85 +562,19 @@ const Orders = () => {
 
       const data = response?.data || {};
 
-      /*
-       * Backend nên trả về:
-       *
-       * {
-       *   success: true,
-       *   itemPrice: 38000,
-       *   totalAmount: 380000,
-       *   order: {...}
-       * }
-       */
-
-      const newPrice = Number(
-        data?.itemPrice ?? data?.price ?? data?.newPrice ?? data?.item?.price,
-      );
-
-      const updatedOrder = data?.order;
-
-      setOrders((prev) =>
-        prev.map((currentOrder) => {
-          if (currentOrder._id !== order._id) {
-            return currentOrder;
-          }
-
-          // Nếu backend trả nguyên order
-          if (updatedOrder?._id) {
-            return updatedOrder;
-          }
-
-          const newItems = Array.isArray(currentOrder.items)
-            ? currentOrder.items.map((currentItem, currentIndex) => {
-                const sameProduct =
-                  String(
-                    currentItem?.productId || currentItem?.product?._id || "",
-                  ) === String(productId);
-
-                const sameVariant =
-                  String(currentItem?.variantName || "").trim() === variantName;
-
-                /*
-                 * index dùng để tránh trường hợp cùng một product
-                 * xuất hiện nhiều lần trong order.
-                 */
-                if (sameProduct && sameVariant && currentIndex === index) {
-                  return {
-                    ...currentItem,
-                    ...(Number.isFinite(newPrice)
-                      ? {
-                          price: newPrice,
-                          unitPrice: newPrice,
-                        }
-                      : {}),
-                  };
-                }
-
-                return currentItem;
-              })
-            : currentOrder.items;
-
-          return {
-            ...currentOrder,
-            items: newItems,
-            ...(Number.isFinite(Number(data?.totalAmount))
-              ? {
-                  totalAmount: Number(data.totalAmount),
-                }
-              : {}),
-            ...(Number.isFinite(Number(data?.total))
-              ? {
-                  total: Number(data.total),
-                }
-              : {}),
-          };
-        }),
-      );
+      // =============================================
+      // API THÀNH CÔNG
+      // LOAD LẠI DATABASE
+      // =============================================
 
       showSnackbar(
         data?.message || `Đã đồng bộ giá "${productName}" thành công.`,
         "success",
       );
+
+      // Quan trọng:
+      // Lấy lại dữ liệu mới nhất từ backend
+      await loadOrders();
     } catch (error) {
       console.error("SYNC ITEM PRICE ERROR:", error);
 
@@ -630,15 +601,15 @@ const Orders = () => {
       syncingOrderId ||
       rollingBackOrderId ||
       updatingStatusId ||
-      syncingPriceItem
+      syncingPriceItem ||
+      payingDebt
     ) {
       return;
     }
 
     const confirmed = window.confirm(
       "Bạn có chắc muốn đồng bộ tồn kho cho tất cả đơn hàng chưa đồng bộ?\n\n" +
-        "Hệ thống sẽ trừ tồn kho và ghi lịch sử kho.\n" +
-        "Trạng thái đơn hàng sẽ KHÔNG thay đổi.",
+        "Hệ thống sẽ trừ tồn kho và ghi lịch sử kho.",
     );
 
     if (!confirmed) {
@@ -652,6 +623,7 @@ const Orders = () => {
 
       if (!token) {
         navigate("/admin/login");
+
         return;
       }
 
@@ -701,7 +673,8 @@ const Orders = () => {
       syncingOrderId ||
       rollingBackOrderId ||
       updatingStatusId ||
-      syncingPriceItem
+      syncingPriceItem ||
+      payingDebt
     ) {
       return;
     }
@@ -719,11 +692,7 @@ const Orders = () => {
     }
 
     const confirmed = window.confirm(
-      `Bạn có chắc muốn đồng bộ tồn kho cho đơn ${
-        order.code || order._id
-      }?\n\n` +
-        "Hệ thống sẽ trừ tồn kho và lưu lịch sử kho.\n" +
-        "Trạng thái đơn hàng sẽ KHÔNG thay đổi.",
+      `Bạn có chắc muốn đồng bộ tồn kho cho đơn ${order.code || order._id}?`,
     );
 
     if (!confirmed) {
@@ -737,6 +706,7 @@ const Orders = () => {
 
       if (!token) {
         navigate("/admin/login");
+
         return;
       }
 
@@ -750,23 +720,15 @@ const Orders = () => {
 
       const data = response?.data || {};
 
-      setOrders((prev) =>
-        prev.map((item) =>
-          item._id === order._id
-            ? {
-                ...item,
-                stockDeducted: true,
-              }
-            : item,
-        ),
-      );
-
       showSnackbar(
         `Đồng bộ ${order.code || "đơn hàng"} thành công. Trừ ${
           data.updatedItems || 0
         } sản phẩm.`,
         "success",
       );
+
+      // Load lại từ DB
+      await loadOrders();
     } catch (error) {
       console.error("SYNC ONE ORDER STOCK ERROR:", error);
 
@@ -785,7 +747,7 @@ const Orders = () => {
   };
 
   // =====================================================
-  // ROLLBACK ONE ORDER STOCK
+  // ROLLBACK STOCK
   // =====================================================
 
   const handleRollbackOneOrder = async (order) => {
@@ -798,7 +760,8 @@ const Orders = () => {
       syncingOrderId ||
       rollingBackOrderId ||
       updatingStatusId ||
-      syncingPriceItem
+      syncingPriceItem ||
+      payingDebt
     ) {
       return;
     }
@@ -810,12 +773,7 @@ const Orders = () => {
     }
 
     const confirmed = window.confirm(
-      `Bạn có chắc muốn rollback tồn kho cho đơn ${
-        order.code || order._id
-      }?\n\n` +
-        "Hệ thống sẽ cộng lại số lượng đã xuất kho.\n" +
-        "Lịch sử kho rollback sẽ được ghi lại.\n" +
-        "Trạng thái đơn hàng sẽ KHÔNG thay đổi.",
+      `Bạn có chắc muốn rollback tồn kho cho đơn ${order.code || order._id}?`,
     );
 
     if (!confirmed) {
@@ -829,6 +787,7 @@ const Orders = () => {
 
       if (!token) {
         navigate("/admin/login");
+
         return;
       }
 
@@ -842,23 +801,13 @@ const Orders = () => {
 
       const data = response?.data || {};
 
-      setOrders((prev) =>
-        prev.map((item) =>
-          item._id === order._id
-            ? {
-                ...item,
-                stockDeducted: false,
-              }
-            : item,
-        ),
-      );
-
       showSnackbar(
-        `Rollback ${order.code || "đơn hàng"} thành công. Hoàn lại ${
-          data.restoredItems || 0
-        } sản phẩm.`,
+        `Rollback ${order.code || "đơn hàng"} thành công.`,
         "success",
       );
+
+      // Load lại từ DB
+      await loadOrders();
     } catch (error) {
       console.error("ROLLBACK STOCK ERROR:", error);
 
@@ -876,7 +825,7 @@ const Orders = () => {
   };
 
   // =====================================================
-  // UPDATE ORDER STATUS
+  // UPDATE STATUS
   // =====================================================
 
   const handleUpdateOrderStatus = async (order, newStatus) => {
@@ -889,7 +838,8 @@ const Orders = () => {
       syncingStock ||
       syncingOrderId ||
       rollingBackOrderId ||
-      syncingPriceItem
+      syncingPriceItem ||
+      payingDebt
     ) {
       return;
     }
@@ -898,12 +848,10 @@ const Orders = () => {
       return;
     }
 
-    const newStatusLabel = getStatusLabel(newStatus);
-
     const confirmed = window.confirm(
       `Bạn có chắc muốn đổi trạng thái đơn ${
         order.code || order._id
-      } sang "${newStatusLabel}"?`,
+      } sang "${getStatusLabel(newStatus)}"?`,
     );
 
     if (!confirmed) {
@@ -917,6 +865,7 @@ const Orders = () => {
 
       if (!token) {
         navigate("/admin/login");
+
         return;
       }
 
@@ -930,31 +879,23 @@ const Orders = () => {
 
       const data = response?.data || {};
 
-      setOrders((prev) =>
-        prev.map((item) =>
-          item._id === order._id
-            ? {
-                ...item,
-                status: newStatus,
-              }
-            : item,
-        ),
-      );
-
       showSnackbar(
-        data?.message || `Đã đổi trạng thái sang "${newStatusLabel}"`,
+        data?.message ||
+          `Đã đổi trạng thái sang "${getStatusLabel(newStatus)}"`,
         "success",
       );
+
+      // Load lại dữ liệu
+      await loadOrders();
     } catch (error) {
-      console.error("UPDATE ORDER STATUS ERROR:", error);
+      console.error("UPDATE STATUS ERROR:", error);
 
       if (handleAuthError(error)) {
         return;
       }
 
       showSnackbar(
-        error?.response?.data?.message ||
-          "Không thể cập nhật trạng thái đơn hàng",
+        error?.response?.data?.message || "Không thể cập nhật trạng thái",
         "error",
       );
     } finally {
@@ -991,6 +932,26 @@ const Orders = () => {
   };
 
   // =====================================================
+  // PAYMENT STATUS
+  // =====================================================
+
+  const getPaymentStatusLabel = (order) => {
+    const debt = Number(order?.debt || 0);
+
+    if (debt <= 0) {
+      return "Đã thanh toán";
+    }
+
+    const paid = Number(order?.paidAmount || 0);
+
+    if (paid > 0) {
+      return "Thanh toán một phần";
+    }
+
+    return "Chưa thanh toán";
+  };
+
+  // =====================================================
   // STATUS SELECT
   // =====================================================
 
@@ -1011,7 +972,8 @@ const Orders = () => {
             syncingStock ||
             Boolean(syncingOrderId) ||
             Boolean(rollingBackOrderId) ||
-            Boolean(syncingPriceItem)
+            Boolean(syncingPriceItem) ||
+            payingDebt
           }
           onChange={(event) =>
             handleUpdateOrderStatus(order, event.target.value)
@@ -1019,13 +981,6 @@ const Orders = () => {
           sx={{
             height: 36,
             borderRadius: 2,
-
-            "& .MuiSelect-select": {
-              display: "flex",
-              alignItems: "center",
-              py: 0.5,
-              pr: 4,
-            },
           }}
           renderValue={(value) => (
             <Stack direction="row" alignItems="center" spacing={0.7}>
@@ -1047,13 +1002,7 @@ const Orders = () => {
           )}
         >
           {statusOptions.map((option) => (
-            <MenuItem
-              key={option.value}
-              value={option.value}
-              sx={{
-                py: 0.8,
-              }}
-            >
+            <MenuItem key={option.value} value={option.value}>
               <Chip
                 size="small"
                 color={option.color}
@@ -1071,7 +1020,7 @@ const Orders = () => {
   };
 
   // =====================================================
-  // PRODUCT ITEM UI
+  // PRODUCT ITEM
   // =====================================================
 
   const renderProductItem = (order, item, index) => {
@@ -1083,10 +1032,7 @@ const Orders = () => {
 
     const currentPrice = getCurrentProductPrice(item);
 
-    const hasPriceDifference =
-      Number.isFinite(itemPrice) &&
-      Number.isFinite(currentPrice) &&
-      itemPrice !== currentPrice;
+    const hasPriceDifference = itemPrice !== currentPrice;
 
     const productName =
       item?.title || item?.productTitle || item?.product?.title || "Sản phẩm";
@@ -1095,33 +1041,27 @@ const Orders = () => {
 
     return (
       <Box
-        key={`${syncKey}`}
+        key={syncKey}
         sx={{
           mt: 1,
           p: 1,
           border: "1px solid",
           borderColor: hasPriceDifference ? "warning.light" : "divider",
           borderRadius: 1.5,
-          backgroundColor: hasPriceDifference ? "warning.50" : "transparent",
         }}
       >
-        {/* PRODUCT NAME */}
-
         <Stack
           direction="row"
           justifyContent="space-between"
           alignItems="flex-start"
           spacing={1}
         >
-          <Box sx={{ minWidth: 0 }}>
-            <Typography
-              variant="caption"
-              fontWeight={600}
-              sx={{
-                display: "block",
-                lineHeight: 1.4,
-              }}
-            >
+          <Box
+            sx={{
+              minWidth: 0,
+            }}
+          >
+            <Typography variant="caption" fontWeight={600} display="block">
               {productName}
             </Typography>
 
@@ -1131,7 +1071,7 @@ const Orders = () => {
             </Typography>
           </Box>
 
-          <Tooltip title="Đồng bộ giá sản phẩm này">
+          <Tooltip title="Đồng bộ giá sản phẩm">
             <span>
               <Button
                 size="small"
@@ -1142,7 +1082,8 @@ const Orders = () => {
                   syncingStock ||
                   Boolean(syncingOrderId) ||
                   Boolean(rollingBackOrderId) ||
-                  Boolean(updatingStatusId)
+                  Boolean(updatingStatusId) ||
+                  payingDebt
                 }
                 onClick={() => handleSyncItemPrice(order, item, index)}
                 startIcon={
@@ -1164,8 +1105,6 @@ const Orders = () => {
             </span>
           </Tooltip>
         </Stack>
-
-        {/* PRICE */}
 
         <Stack
           direction="row"
@@ -1233,6 +1172,162 @@ const Orders = () => {
   };
 
   // =====================================================
+  // OPEN DEBT
+  // =====================================================
+
+  const handleOpenDebtDialog = (order) => {
+    if (!order?._id) {
+      return;
+    }
+
+    const debt = Math.max(Number(order.debt || 0), 0);
+
+    if (debt <= 0) {
+      showSnackbar("Đơn hàng này không còn công nợ.", "info");
+
+      return;
+    }
+
+    setSelectedDebtOrder(order);
+
+    setDebtAmount(String(debt));
+
+    setDebtDialogOpen(true);
+  };
+
+  // =====================================================
+  // CLOSE DEBT
+  // =====================================================
+
+  const handleCloseDebtDialog = () => {
+    if (payingDebt) {
+      return;
+    }
+
+    setDebtDialogOpen(false);
+
+    setSelectedDebtOrder(null);
+
+    setDebtAmount("");
+  };
+
+  // =====================================================
+  // PAY FULL DEBT
+  // =====================================================
+
+  const handlePayFullDebt = () => {
+    if (!selectedDebtOrder) {
+      return;
+    }
+
+    const debt = Math.max(Number(selectedDebtOrder.debt || 0), 0);
+
+    setDebtAmount(String(debt));
+  };
+
+  // =====================================================
+  // PAY DEBT
+  // =====================================================
+
+  const handlePayDebt = async () => {
+    if (!selectedDebtOrder?._id) {
+      return;
+    }
+
+    const amount = Number(debtAmount);
+
+    const currentDebt = Math.max(Number(selectedDebtOrder.debt || 0), 0);
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+      showSnackbar("Vui lòng nhập số tiền thanh toán hợp lệ.", "warning");
+
+      return;
+    }
+
+    if (amount > currentDebt) {
+      showSnackbar(
+        `Số tiền thanh toán không được lớn hơn công nợ ${formatMoney(
+          currentDebt,
+        )}.`,
+        "warning",
+      );
+
+      return;
+    }
+
+    try {
+      setPayingDebt(true);
+
+      const token = getToken();
+
+      if (!token) {
+        navigate("/admin/login");
+
+        return;
+      }
+
+      const response = await axios.post(
+        `${API_ENDPOINTS.ORDER}/pay-debt`,
+        {
+          orderId: selectedDebtOrder._id,
+          amount,
+        },
+        getAuthConfig(),
+      );
+
+      const data = response?.data || {};
+
+      const result = data?.data || {};
+
+      const newDebt = Math.max(Number(result.debt ?? currentDebt - amount), 0);
+
+      showSnackbar(
+        data?.message || `Đã thu ${formatMoney(amount)}.`,
+        "success",
+      );
+
+      // =================================================
+      // LOAD LẠI DATABASE
+      // =================================================
+
+      await loadOrders();
+
+      if (newDebt <= 0) {
+        setDebtDialogOpen(false);
+
+        setSelectedDebtOrder(null);
+
+        setDebtAmount("");
+      } else {
+        setSelectedDebtOrder((prev) =>
+          prev
+            ? {
+                ...prev,
+                ...result,
+                debt: newDebt,
+              }
+            : prev,
+        );
+
+        setDebtAmount(String(newDebt));
+      }
+    } catch (error) {
+      console.error("PAY DEBT ERROR:", error);
+
+      if (handleAuthError(error)) {
+        return;
+      }
+
+      showSnackbar(
+        error?.response?.data?.message || "Không thể thanh toán công nợ.",
+        "error",
+      );
+    } finally {
+      setPayingDebt(false);
+    }
+  };
+
+  // =====================================================
   // PAGINATION
   // =====================================================
 
@@ -1277,14 +1372,8 @@ const Orders = () => {
             Quản lý đơn hàng
           </Typography>
 
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{
-              mt: 0.5,
-            }}
-          >
-            Quản lý đơn hàng, giá sản phẩm và tồn kho
+          <Typography variant="body2" color="text.secondary">
+            Quản lý đơn hàng, giá, tồn kho và công nợ
           </Typography>
         </Box>
 
@@ -1295,8 +1384,6 @@ const Orders = () => {
           }}
           spacing={1}
         >
-          {/* KHÔNG CÒN NÚT ĐỒNG BỘ GIÁ */}
-
           <Button
             variant="contained"
             color="warning"
@@ -1312,7 +1399,8 @@ const Orders = () => {
               Boolean(syncingOrderId) ||
               Boolean(rollingBackOrderId) ||
               Boolean(updatingStatusId) ||
-              Boolean(syncingPriceItem)
+              Boolean(syncingPriceItem) ||
+              payingDebt
             }
             onClick={handleSyncStock}
           >
@@ -1333,15 +1421,9 @@ const Orders = () => {
           FILTER
       ================================================= */}
 
-      <Card
-        sx={{
-          mb: 2,
-        }}
-      >
+      <Card sx={{ mb: 2 }}>
         <CardContent>
           <Grid container spacing={2}>
-            {/* SEARCH */}
-
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
@@ -1368,15 +1450,9 @@ const Orders = () => {
               />
             </Grid>
 
-            {/* STATUS */}
-
             <Grid item xs={12} sm={6} md={3}>
               <FormControl fullWidth size="small">
-                <Select
-                  value={status}
-                  onChange={handleStatusChange}
-                  displayEmpty
-                >
+                <Select value={status} onChange={handleStatusChange}>
                   <MenuItem value="all">Tất cả trạng thái</MenuItem>
 
                   {statusOptions.map((option) => (
@@ -1387,8 +1463,6 @@ const Orders = () => {
                 </Select>
               </FormControl>
             </Grid>
-
-            {/* LIMIT */}
 
             <Grid item xs={12} sm={6} md={3}>
               <FormControl fullWidth size="small">
@@ -1410,8 +1484,6 @@ const Orders = () => {
                 </Select>
               </FormControl>
             </Grid>
-
-            {/* SEARCH BUTTON */}
 
             <Grid item xs={12}>
               <Stack direction="row" spacing={1}>
@@ -1513,7 +1585,7 @@ const Orders = () => {
           <Table
             size="small"
             sx={{
-              minWidth: 1450,
+              minWidth: 1550,
             }}
           >
             <TableHead>
@@ -1612,6 +1684,8 @@ const Orders = () => {
 
                   const isCancelled = order.status === "cancelled";
 
+                  const orderDebt = Number(order.debt || 0);
+
                   return (
                     <TableRow
                       key={order._id}
@@ -1620,7 +1694,7 @@ const Orders = () => {
                         verticalAlign: "top",
                       }}
                     >
-                      {/* CODE */}
+                      {/* MÃ ĐƠN */}
 
                       <TableCell>
                         <Typography fontWeight={600}>
@@ -1628,7 +1702,7 @@ const Orders = () => {
                         </Typography>
                       </TableCell>
 
-                      {/* CUSTOMER */}
+                      {/* KHÁCH HÀNG */}
 
                       <TableCell>
                         <Stack spacing={0.3}>
@@ -1647,7 +1721,7 @@ const Orders = () => {
                         </Stack>
                       </TableCell>
 
-                      {/* PRODUCTS + PRICE */}
+                      {/* SẢN PHẨM */}
 
                       <TableCell>
                         <Typography
@@ -1665,7 +1739,7 @@ const Orders = () => {
                           )}
                       </TableCell>
 
-                      {/* TOTAL */}
+                      {/* TỔNG TIỀN */}
 
                       <TableCell>
                         <Typography fontWeight={700}>
@@ -1673,36 +1747,74 @@ const Orders = () => {
                         </Typography>
                       </TableCell>
 
-                      {/* PAID */}
+                      {/* ĐÃ TRẢ */}
 
                       <TableCell>
-                        {formatMoney(order.paidAmount || 0)}
-                      </TableCell>
+                        <Typography fontWeight={600} color="success.main">
+                          {formatMoney(order.paidAmount || 0)}
+                        </Typography>
 
-                      {/* DEBT */}
-
-                      <TableCell>
-                        <Typography
-                          color={
-                            Number(order.debt || 0) > 0
-                              ? "error.main"
-                              : "success.main"
-                          }
-                          fontWeight={600}
-                        >
-                          {formatMoney(order.debt || 0)}
+                        <Typography variant="caption" color="text.secondary">
+                          {getPaymentStatusLabel(order)}
                         </Typography>
                       </TableCell>
 
-                      {/* STATUS */}
+                      {/* CÔNG NỢ */}
+
+                      <TableCell>
+                        {orderDebt > 0 ? (
+                          <Stack spacing={0.7}>
+                            <Typography color="error.main" fontWeight={700}>
+                              {formatMoney(orderDebt)}
+                            </Typography>
+
+                            <Button
+                              size="small"
+                              variant="contained"
+                              color="error"
+                              startIcon={<Payments fontSize="small" />}
+                              onClick={() => handleOpenDebtDialog(order)}
+                              disabled={
+                                payingDebt ||
+                                syncingStock ||
+                                Boolean(syncingOrderId) ||
+                                Boolean(rollingBackOrderId) ||
+                                Boolean(updatingStatusId) ||
+                                Boolean(syncingPriceItem)
+                              }
+                              sx={{
+                                minWidth: 110,
+                                fontSize: 11,
+                                fontWeight: 700,
+                                borderRadius: 1.5,
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              Thu công nợ
+                            </Button>
+                          </Stack>
+                        ) : (
+                          <Chip
+                            size="small"
+                            color="success"
+                            icon={<CheckCircle />}
+                            label="Đã thanh toán"
+                            sx={{
+                              fontWeight: 600,
+                            }}
+                          />
+                        )}
+                      </TableCell>
+
+                      {/* TRẠNG THÁI */}
 
                       <TableCell>{renderStatusSelect(order)}</TableCell>
 
-                      {/* STOCK */}
+                      {/* TỒN KHO */}
 
                       <TableCell>{renderStockStatus(order)}</TableCell>
 
-                      {/* DATE */}
+                      {/* NGÀY */}
 
                       <TableCell>
                         <Typography variant="body2">
@@ -1710,7 +1822,7 @@ const Orders = () => {
                         </Typography>
                       </TableCell>
 
-                      {/* ACTION */}
+                      {/* THAO TÁC */}
 
                       <TableCell align="right">
                         <Stack
@@ -1719,10 +1831,8 @@ const Orders = () => {
                           justifyContent="flex-end"
                           alignItems="center"
                         >
-                          {/* SYNC STOCK */}
-
                           {!stockSynced && !isCancelled && (
-                            <Tooltip title="Đồng bộ tồn kho cho đơn này">
+                            <Tooltip title="Đồng bộ tồn kho">
                               <span>
                                 <Button
                                   size="small"
@@ -1733,7 +1843,8 @@ const Orders = () => {
                                     Boolean(syncingOrderId) ||
                                     Boolean(rollingBackOrderId) ||
                                     Boolean(updatingStatusId) ||
-                                    Boolean(syncingPriceItem)
+                                    Boolean(syncingPriceItem) ||
+                                    payingDebt
                                   }
                                   onClick={() => handleSyncOneOrder(order)}
                                   startIcon={
@@ -1746,10 +1857,6 @@ const Orders = () => {
                                       <Sync />
                                     )
                                   }
-                                  sx={{
-                                    minWidth: 120,
-                                    fontWeight: 600,
-                                  }}
                                 >
                                   {isSyncingThisOrder
                                     ? "Đang đồng bộ"
@@ -1758,8 +1865,6 @@ const Orders = () => {
                               </span>
                             </Tooltip>
                           )}
-
-                          {/* ROLLBACK */}
 
                           {stockSynced && (
                             <Tooltip title="Rollback tồn kho">
@@ -1773,7 +1878,8 @@ const Orders = () => {
                                     Boolean(syncingOrderId) ||
                                     Boolean(rollingBackOrderId) ||
                                     Boolean(updatingStatusId) ||
-                                    Boolean(syncingPriceItem)
+                                    Boolean(syncingPriceItem) ||
+                                    payingDebt
                                   }
                                   onClick={() => handleRollbackOneOrder(order)}
                                   startIcon={
@@ -1790,10 +1896,6 @@ const Orders = () => {
                                       />
                                     )
                                   }
-                                  sx={{
-                                    minWidth: 100,
-                                    fontWeight: 600,
-                                  }}
                                 >
                                   {isRollingBackThisOrder
                                     ? "Đang rollback"
@@ -1802,8 +1904,6 @@ const Orders = () => {
                               </span>
                             </Tooltip>
                           )}
-
-                          {/* VIEW */}
 
                           <Tooltip title="Xem đơn hàng">
                             <IconButton
@@ -1825,7 +1925,7 @@ const Orders = () => {
         </TableContainer>
 
         {/* =================================================
-            FOOTER
+            PAGINATION
         ================================================= */}
 
         <Divider />
@@ -1854,6 +1954,231 @@ const Orders = () => {
           />
         </Box>
       </Card>
+
+      {/* =================================================
+          DEBT DIALOG
+      ================================================= */}
+
+      <Dialog
+        open={debtDialogOpen}
+        onClose={handleCloseDebtDialog}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>
+          <Stack direction="row" spacing={1} alignItems="center">
+            <AccountBalanceWallet color="error" />
+
+            <Box>
+              <Typography variant="h6" fontWeight={700}>
+                Thu công nợ
+              </Typography>
+
+              {selectedDebtOrder && (
+                <Typography variant="body2" color="text.secondary">
+                  Đơn hàng:{" "}
+                  <strong>
+                    {selectedDebtOrder.code || selectedDebtOrder._id}
+                  </strong>
+                </Typography>
+              )}
+            </Box>
+          </Stack>
+        </DialogTitle>
+
+        <Divider />
+
+        <DialogContent>
+          {selectedDebtOrder && (
+            <Stack
+              spacing={2.5}
+              sx={{
+                pt: 1,
+              }}
+            >
+              {/* CUSTOMER */}
+
+              <Box
+                sx={{
+                  p: 2,
+                  borderRadius: 2,
+                  backgroundColor: "grey.50",
+                  border: "1px solid",
+                  borderColor: "divider",
+                }}
+              >
+                <Typography variant="body2" color="text.secondary">
+                  Khách hàng
+                </Typography>
+
+                <Typography variant="h6" fontWeight={700}>
+                  {getCustomerName(selectedDebtOrder)}
+                </Typography>
+              </Box>
+
+              {/* SUMMARY */}
+
+              <Grid container spacing={1.5}>
+                <Grid item xs={4}>
+                  <Box
+                    sx={{
+                      p: 1.5,
+                      borderRadius: 2,
+                      backgroundColor: "grey.50",
+                    }}
+                  >
+                    <Typography variant="caption" color="text.secondary">
+                      Tổng đơn
+                    </Typography>
+
+                    <Typography fontWeight={700}>
+                      {formatMoney(selectedDebtOrder.totalAmount || 0)}
+                    </Typography>
+                  </Box>
+                </Grid>
+
+                <Grid item xs={4}>
+                  <Box
+                    sx={{
+                      p: 1.5,
+                      borderRadius: 2,
+                      backgroundColor: "success.50",
+                    }}
+                  >
+                    <Typography variant="caption" color="text.secondary">
+                      Đã trả
+                    </Typography>
+
+                    <Typography fontWeight={700} color="success.main">
+                      {formatMoney(selectedDebtOrder.paidAmount || 0)}
+                    </Typography>
+                  </Box>
+                </Grid>
+
+                <Grid item xs={4}>
+                  <Box
+                    sx={{
+                      p: 1.5,
+                      borderRadius: 2,
+                      backgroundColor: "error.50",
+                    }}
+                  >
+                    <Typography variant="caption" color="text.secondary">
+                      Còn nợ
+                    </Typography>
+
+                    <Typography fontWeight={700} color="error.main">
+                      {formatMoney(selectedDebtOrder.debt || 0)}
+                    </Typography>
+                  </Box>
+                </Grid>
+              </Grid>
+
+              {/* AMOUNT */}
+
+              <TextField
+                fullWidth
+                label="Số tiền khách thanh toán"
+                value={debtAmount}
+                onChange={(event) => {
+                  const value = event.target.value.replace(/\D/g, "");
+
+                  setDebtAmount(value);
+                }}
+                disabled={payingDebt}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">₫</InputAdornment>
+                  ),
+                }}
+                helperText={`Công nợ tối đa: ${formatMoney(
+                  selectedDebtOrder.debt || 0,
+                )}`}
+              />
+
+              <Button
+                variant="outlined"
+                color="error"
+                onClick={handlePayFullDebt}
+                disabled={payingDebt}
+                startIcon={<CheckCircle />}
+              >
+                Thu đủ công nợ
+              </Button>
+
+              {/* PREVIEW */}
+
+              <Box
+                sx={{
+                  p: 2,
+                  borderRadius: 2,
+                  backgroundColor: "grey.50",
+                  border: "1px dashed",
+                  borderColor: "divider",
+                }}
+              >
+                <Stack direction="row" justifyContent="space-between">
+                  <Typography variant="body2" color="text.secondary">
+                    Sau thanh toán
+                  </Typography>
+
+                  <Typography
+                    fontWeight={700}
+                    color={
+                      Math.max(
+                        Number(selectedDebtOrder.debt || 0) -
+                          Number(debtAmount || 0),
+                        0,
+                      ) === 0
+                        ? "success.main"
+                        : "error.main"
+                    }
+                  >
+                    Còn{" "}
+                    {formatMoney(
+                      Math.max(
+                        Number(selectedDebtOrder.debt || 0) -
+                          Number(debtAmount || 0),
+                        0,
+                      ),
+                    )}
+                  </Typography>
+                </Stack>
+              </Box>
+            </Stack>
+          )}
+        </DialogContent>
+
+        <Divider />
+
+        <DialogActions
+          sx={{
+            p: 2,
+          }}
+        >
+          <Button onClick={handleCloseDebtDialog} disabled={payingDebt}>
+            Hủy
+          </Button>
+
+          <Button
+            variant="contained"
+            color="error"
+            onClick={handlePayDebt}
+            disabled={
+              payingDebt || !selectedDebtOrder || Number(debtAmount) <= 0
+            }
+            startIcon={
+              payingDebt ? (
+                <CircularProgress size={18} color="inherit" />
+              ) : (
+                <Payments />
+              )
+            }
+          >
+            {payingDebt ? "Đang xử lý..." : "Xác nhận thanh toán"}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* =================================================
           SNACKBAR

@@ -129,7 +129,7 @@ const CheckAccount = () => {
       <Cart />
       <LoginModal />
       <ScrollToTopButton />
-      <BannerPopup />{" "}
+      {/* <BannerPopup />{" "} */}
       <ToastContainer
         position="bottom-right"
         autoClose={2000}

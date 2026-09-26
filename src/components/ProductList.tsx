@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import ProductCard from "./ProductCard";
 
 import { Swiper, SwiperSlide } from "swiper/react";
+
 import { Autoplay, Navigation } from "swiper/modules";
 
 import "swiper/css";
@@ -28,7 +29,15 @@ const ProductList: FC<ProductListProps> = ({
   // PRODUCT DATA
   // =========================================================
 
-  const productList = Array.isArray(products) ? products : [];
+  const productList = Array.isArray(products) ? products.filter(Boolean) : [];
+
+  // =========================================================
+  // PRODUCT ID
+  // =========================================================
+
+  const getProductId = (product: any, index: number) => {
+    return String(product?._id || product?.id || `product-${index}`);
+  };
 
   // =========================================================
   // PRODUCT CARD
@@ -37,12 +46,19 @@ const ProductList: FC<ProductListProps> = ({
   const renderProductCard = (product: any) => {
     if (!product) return null;
 
+    const productId = String(product._id || product.id || "");
+
+    if (!productId) {
+      return null;
+    }
+
     return (
       <ProductCard
         {...product}
-        _id={product._id || product.id}
+        _id={productId}
+        id={productId}
         category={product.category}
-        title={product.title}
+        title={product.title || "Sản phẩm"}
         price={product.price}
         thumbnail={product.thumbnail}
         images={Array.isArray(product.images) ? product.images : []}
@@ -61,9 +77,19 @@ const ProductList: FC<ProductListProps> = ({
   const renderHeader = () => {
     return (
       <div className="mb-5 flex items-end justify-between gap-4">
+        {/* TITLE */}
+
         <div className="min-w-0">
           <div className="flex items-center gap-3">
-            <span className="h-7 w-1 rounded-full bg-blue-600" />
+            <span
+              className="
+                h-7
+                w-1
+                shrink-0
+                rounded-full
+                bg-blue-600
+              "
+            />
 
             <h2
               className="
@@ -80,11 +106,21 @@ const ProductList: FC<ProductListProps> = ({
             </h2>
           </div>
 
-          <div className="ml-4 mt-2 h-px w-16 bg-blue-600" />
+          <div
+            className="
+              ml-4
+              mt-2
+              h-px
+              w-16
+              bg-blue-600
+            "
+          />
         </div>
 
+        {/* VIEW ALL */}
+
         <Link
-          to={`/list-product/${type}`}
+          to={`/list-product/${type || "all"}`}
           data-test="main-categories"
           className="
             group
@@ -125,7 +161,16 @@ const ProductList: FC<ProductListProps> = ({
 
   if (productList.length === 0) {
     return (
-      <section className="mx-auto mt-8 max-w-7xl px-4 sm:px-6 lg:px-8">
+      <section
+        className="
+          mx-auto
+          mt-8
+          max-w-7xl
+          px-4
+          sm:px-6
+          lg:px-8
+        "
+      >
         {renderHeader()}
 
         <div
@@ -157,7 +202,16 @@ const ProductList: FC<ProductListProps> = ({
 
   const renderSlide = () => {
     return (
-      <section className="mx-auto mt-10 max-w-7xl px-4 sm:px-6 lg:px-8">
+      <section
+        className="
+          mx-auto
+          mt-10
+          max-w-7xl
+          px-4
+          sm:px-6
+          lg:px-8
+        "
+      >
         {renderHeader()}
 
         <div className="relative">
@@ -210,34 +264,29 @@ const ProductList: FC<ProductListProps> = ({
             }}
             className="!pb-2"
           >
-            {productList.map((product: any, index: number) => (
-              <SwiperSlide
-                key={product?._id || product?.id || `product-${index}`}
-                className="!h-auto"
-              >
-                <div
-                  className="
-                      h-full
-                      overflow-hidden
-                      rounded-2xl
-                      border
-                      border-gray-100
-                      bg-white
-                      transition
-                      duration-300
-                      hover:-translate-y-1
-                      hover:shadow-lg
-                      dark:border-slate-700
-                      dark:bg-slate-800
-                    "
-                >
-                  {renderProductCard(product)}
-                </div>
-              </SwiperSlide>
-            ))}
+            {productList.map((product: any, index: number) => {
+              const productId = getProductId(product, index);
+
+              return (
+                <SwiperSlide key={productId} className="!flex !h-auto">
+                  <div
+                    className="
+                        flex
+                        h-full
+                        w-full
+                        min-w-0
+                      "
+                  >
+                    {renderProductCard(product)}
+                  </div>
+                </SwiperSlide>
+              );
+            })}
           </Swiper>
 
-          {/* PREV */}
+          {/* =================================================
+              PREV
+          ================================================= */}
 
           <button
             type="button"
@@ -283,7 +332,9 @@ const ProductList: FC<ProductListProps> = ({
             </svg>
           </button>
 
-          {/* NEXT */}
+          {/* =================================================
+              NEXT
+          ================================================= */}
 
           <button
             type="button"
@@ -339,13 +390,23 @@ const ProductList: FC<ProductListProps> = ({
 
   const renderDefault = () => {
     return (
-      <section className="mx-auto mt-10 max-w-7xl px-4 sm:px-6 lg:px-8">
+      <section
+        className="
+          mx-auto
+          mt-10
+          max-w-7xl
+          px-4
+          sm:px-6
+          lg:px-8
+        "
+      >
         {renderHeader()}
 
         <div
           className="
             grid
             grid-cols-2
+            items-stretch
             gap-3
             sm:grid-cols-2
             sm:gap-5
@@ -355,26 +416,22 @@ const ProductList: FC<ProductListProps> = ({
           "
           data-test="product-list-container"
         >
-          {productList.map((product: any, index: number) => (
-            <div
-              key={product?._id || product?.id || `product-${index}`}
-              className="
-                  overflow-hidden
-                  rounded-2xl
-                  border
-                  border-gray-100
-                  bg-white
-                  transition
-                  duration-300
-                  hover:-translate-y-1
-                  hover:shadow-lg
-                  dark:border-slate-700
-                  dark:bg-slate-800
-                "
-            >
-              {renderProductCard(product)}
-            </div>
-          ))}
+          {productList.map((product: any, index: number) => {
+            const productId = getProductId(product, index);
+
+            return (
+              <div
+                key={productId}
+                className="
+                    flex
+                    min-w-0
+                    h-full
+                  "
+              >
+                {renderProductCard(product)}
+              </div>
+            );
+          })}
         </div>
       </section>
     );
