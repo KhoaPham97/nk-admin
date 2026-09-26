@@ -1,19 +1,24 @@
 import { FC, useState } from "react";
 import { Link } from "react-router-dom";
+
 import {
   AiOutlineShoppingCart,
   AiOutlineMenu,
   AiOutlineClose,
 } from "react-icons/ai";
+
 import { FaUser } from "react-icons/fa";
+
 import { MdOutlineDarkMode, MdOutlineLightMode } from "react-icons/md";
 
-import { useAppSelector, useAppDispatch } from "../redux/hooks";
+import { useAppDispatch, useAppSelector } from "../redux/hooks";
+
 import { setCartState } from "../redux/features/cartSlice";
 import { updateModal } from "../redux/features/authSlice";
 import { updateDarkMode } from "../redux/features/homeSlice";
 
 import useAuth from "../hooks/useAuth";
+
 import CustomPopup from "./CustomPopup";
 import SearchBar from "./SearchBar";
 
@@ -22,24 +27,56 @@ const Navbar: FC = () => {
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+  /* =====================================================
+     SETTINGS
+     main.tsx đã load settings vào Redux
+  ===================================================== */
+
+  const settings = useAppSelector((state) => state.settings.settings);
+
+  const storeName =
+    settings?.websiteSettings?.siteName ||
+    settings?.storeName ||
+    "NHẬT KHANG BIKE";
+
+  const slogan = settings?.websiteSettings?.slogan || "Đã chạy phải chất";
+
+  const logo = settings?.logo || "";
+
+  /* =====================================================
+     CART
+  ===================================================== */
+
   const cartCount = useAppSelector(
     (state) => state.cartReducer.cartItems.length,
   );
 
-  const userInfo: any = useAppSelector((state) => state.authReducer.userInfo);
+  /* =====================================================
+     USER
+  ===================================================== */
 
-  const isDarkMode = useAppSelector((state) => state.homeReducer.isDarkMode);
-
-  const { requireAuth } = useAuth();
+  const userInfo = useAppSelector((state) => state.authReducer.userInfo);
 
   const isLoggedIn =
     userInfo &&
     typeof userInfo === "object" &&
     Object.keys(userInfo).length > 0;
 
-  /* =========================
+  /* =====================================================
+     DARK MODE
+  ===================================================== */
+
+  const isDarkMode = useAppSelector((state) => state.homeReducer.isDarkMode);
+
+  /* =====================================================
+     AUTH
+  ===================================================== */
+
+  const { requireAuth } = useAuth();
+
+  /* =====================================================
      CART
-  ========================= */
+  ===================================================== */
 
   const showCart = () => {
     requireAuth(() => {
@@ -48,9 +85,9 @@ const Navbar: FC = () => {
     });
   };
 
-  /* =========================
-     THEME
-  ========================= */
+  /* =====================================================
+     DARK MODE
+  ===================================================== */
 
   const toggleTheme = () => {
     dispatch(updateDarkMode(!isDarkMode));
@@ -58,9 +95,9 @@ const Navbar: FC = () => {
     document.body.classList.toggle("dark", !isDarkMode);
   };
 
-  /* =========================
-     CLOSE MENU
-  ========================= */
+  /* =====================================================
+     CLOSE MOBILE MENU
+  ===================================================== */
 
   const handleLinkClick = () => {
     setIsMenuOpen(false);
@@ -71,6 +108,7 @@ const Navbar: FC = () => {
       {/* =====================================================
           NAVBAR
       ===================================================== */}
+
       <header
         className="
           sticky
@@ -85,8 +123,24 @@ const Navbar: FC = () => {
           dark:bg-slate-900
         "
       >
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-[72px] items-center justify-between gap-4">
+        <div
+          className="
+            mx-auto
+            max-w-7xl
+            px-4
+            sm:px-6
+            lg:px-8
+          "
+        >
+          <div
+            className="
+              flex
+              h-[72px]
+              items-center
+              justify-between
+              gap-4
+            "
+          >
             {/* =================================================
                 LOGO
             ================================================= */}
@@ -98,54 +152,93 @@ const Navbar: FC = () => {
               data-test="main-logo"
             >
               <div className="flex items-center gap-2">
-                {/* Logo K */}
-                <div
-                  className="
-                    flex
-                    h-10
-                    w-10
-                    items-center
-                    justify-center
-                    rounded-xl
-                    bg-blue-600
-                    text-xl
-                    font-black
-                    text-white
-                    shadow-sm
-                    transition
-                    group-hover:bg-blue-700
-                  "
-                >
-                  NK
-                </div>
+                {logo ? (
+                  <img
+                    src={logo}
+                    alt={storeName}
+                    className="
+                      h-10
+                      w-10
+                      rounded-xl
+                      object-contain
+                    "
+                  />
+                ) : (
+                  <div
+                    className="
+                      flex
+                      h-10
+                      w-10
+                      items-center
+                      justify-center
+                      rounded-xl
+                      bg-blue-600
+                      text-xl
+                      font-black
+                      text-white
+                    "
+                  >
+                    NK
+                  </div>
+                )}
 
-                {/* Brand */}
                 <div className="hidden sm:block">
-                  <div className="text-lg font-black leading-none tracking-tight text-gray-900 dark:text-white">
-                    NHẬT KHANG
+                  <div
+                    className="
+                      text-lg
+                      font-black
+                      leading-none
+                      tracking-tight
+                      text-gray-900
+                      dark:text-white
+                    "
+                  >
+                    {storeName}
                   </div>
 
-                  <div className="mt-1 text-xs font-bold tracking-[0.18em] text-blue-600">
-                    BIKE
+                  <div
+                    className="
+                      mt-1
+                      text-xs
+                      font-bold
+                      tracking-[0.18em]
+                      text-blue-600
+                    "
+                  >
+                    {slogan}
                   </div>
                 </div>
               </div>
             </Link>
 
             {/* =================================================
-                SEARCH DESKTOP
+                SEARCH
             ================================================= */}
 
-            <div className="hidden flex-1 sm:block md:max-w-xl lg:max-w-2xl">
+            <div
+              className="
+                hidden
+                flex-1
+                sm:block
+                md:max-w-xl
+                lg:max-w-2xl
+              "
+            >
               <SearchBar onSearch={() => setIsMenuOpen(false)} />
             </div>
 
             {/* =================================================
-                DESKTOP ACTIONS
+                DESKTOP MENU
             ================================================= */}
 
-            <div className="hidden items-center gap-1 sm:flex">
-              {/* Products */}
+            <div
+              className="
+                hidden
+                items-center
+                gap-1
+                sm:flex
+              "
+            >
               <Link
                 to="/products"
                 data-test="main-products"
@@ -166,7 +259,6 @@ const Navbar: FC = () => {
                 Sản phẩm
               </Link>
 
-              {/* Categories */}
               <Link
                 to="/categories"
                 data-test="main-categories"
@@ -187,9 +279,7 @@ const Navbar: FC = () => {
                 Danh mục
               </Link>
 
-              {/* =================================================
-                  USER
-              ================================================= */}
+              {/* USER */}
 
               <div className="ml-1">
                 {isLoggedIn ? (
@@ -220,9 +310,7 @@ const Navbar: FC = () => {
                 )}
               </div>
 
-              {/* =================================================
-                  CART
-              ================================================= */}
+              {/* CART */}
 
               <button
                 type="button"
@@ -273,9 +361,7 @@ const Navbar: FC = () => {
                 )}
               </button>
 
-              {/* =================================================
-                  THEME
-              ================================================= */}
+              {/* DARK MODE */}
 
               <button
                 type="button"
@@ -306,7 +392,7 @@ const Navbar: FC = () => {
             </div>
 
             {/* =================================================
-                MOBILE MENU BUTTON
+                MOBILE BUTTON
             ================================================= */}
 
             <button
@@ -320,11 +406,8 @@ const Navbar: FC = () => {
                 justify-center
                 rounded-lg
                 text-gray-700
-                transition
-                hover:bg-gray-100
                 sm:hidden
                 dark:text-white
-                dark:hover:bg-slate-800
               "
               aria-label="Mở menu"
             >
@@ -335,7 +418,7 @@ const Navbar: FC = () => {
       </header>
 
       {/* =====================================================
-          MOBILE MENU
+          MOBILE DRAWER
       ===================================================== */}
 
       {isMenuOpen && (
@@ -369,9 +452,7 @@ const Navbar: FC = () => {
               dark:bg-slate-900
             "
           >
-            {/* =================================================
-                DRAWER HEADER
-            ================================================= */}
+            {/* Header */}
 
             <div
               className="
@@ -390,29 +471,55 @@ const Navbar: FC = () => {
                 onClick={handleLinkClick}
                 className="flex items-center gap-2"
               >
-                <div
-                  className="
-                    flex
-                    h-9
-                    w-9
-                    items-center
-                    justify-center
-                    rounded-lg
-                    bg-blue-600
-                    font-black
-                    text-white
-                  "
-                >
-                  K
-                </div>
+                {logo ? (
+                  <img
+                    src={logo}
+                    alt={storeName}
+                    className="
+                      h-9
+                      w-9
+                      rounded-lg
+                      object-contain
+                    "
+                  />
+                ) : (
+                  <div
+                    className="
+                      flex
+                      h-9
+                      w-9
+                      items-center
+                      justify-center
+                      rounded-lg
+                      bg-blue-600
+                      font-black
+                      text-white
+                    "
+                  >
+                    NK
+                  </div>
+                )}
 
                 <div>
-                  <div className="text-sm font-black text-gray-900 dark:text-white">
-                    NHẬT KHANG
+                  <div
+                    className="
+                      text-sm
+                      font-black
+                      text-gray-900
+                      dark:text-white
+                    "
+                  >
+                    {storeName}
                   </div>
 
-                  <div className="text-[10px] font-bold tracking-[0.15em] text-blue-600">
-                    BIKE
+                  <div
+                    className="
+                      text-[10px]
+                      font-bold
+                      text-blue-600
+                    "
+                  >
+                    {slogan}
                   </div>
                 </div>
               </Link>
@@ -429,9 +536,7 @@ const Navbar: FC = () => {
                   rounded-full
                   text-gray-500
                   hover:bg-gray-100
-                  hover:text-gray-900
                   dark:hover:bg-slate-800
-                  dark:hover:text-white
                 "
                 aria-label="Đóng menu"
               >
@@ -439,17 +544,20 @@ const Navbar: FC = () => {
               </button>
             </div>
 
-            {/* =================================================
-                SEARCH
-            ================================================= */}
+            {/* Search */}
 
-            <div className="border-b border-gray-100 p-5 dark:border-slate-700">
+            <div
+              className="
+                border-b
+                border-gray-100
+                p-5
+                dark:border-slate-700
+              "
+            >
               <SearchBar onSearch={() => setIsMenuOpen(false)} />
             </div>
 
-            {/* =================================================
-                MENU
-            ================================================= */}
+            {/* Menu */}
 
             <nav className="flex-1 overflow-y-auto p-5">
               <div className="space-y-2">
@@ -458,14 +566,11 @@ const Navbar: FC = () => {
                   onClick={handleLinkClick}
                   className="
                     flex
-                    items-center
                     rounded-xl
                     px-4
                     py-3
-                    text-base
                     font-semibold
                     text-gray-800
-                    transition
                     hover:bg-blue-50
                     hover:text-blue-600
                     dark:text-white
@@ -480,14 +585,11 @@ const Navbar: FC = () => {
                   onClick={handleLinkClick}
                   className="
                     flex
-                    items-center
                     rounded-xl
                     px-4
                     py-3
-                    text-base
                     font-semibold
                     text-gray-800
-                    transition
                     hover:bg-blue-50
                     hover:text-blue-600
                     dark:text-white
@@ -498,63 +600,61 @@ const Navbar: FC = () => {
                 </Link>
               </div>
 
-              {/* Divider */}
+              <div
+                className="
+                  my-5
+                  border-t
+                  border-gray-100
+                  dark:border-slate-700
+                "
+              />
 
-              <div className="my-5 border-t border-gray-100 dark:border-slate-700" />
+              {/* Account */}
 
-              {/* =================================================
-                  ACCOUNT
-              ================================================= */}
+              {isLoggedIn ? (
+                <div
+                  className="
+                    rounded-xl
+                    bg-gray-50
+                    p-3
+                    dark:bg-slate-800
+                  "
+                >
+                  <CustomPopup />
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    dispatch(updateModal(true));
+                    setIsMenuOpen(false);
+                  }}
+                  className="
+                    flex
+                    w-full
+                    items-center
+                    gap-3
+                    rounded-xl
+                    px-4
+                    py-3
+                    font-semibold
+                    text-gray-800
+                    hover:bg-blue-50
+                    hover:text-blue-600
+                    dark:text-white
+                    dark:hover:bg-slate-800
+                  "
+                >
+                  <FaUser size={18} />
+                  Đăng nhập
+                </button>
+              )}
 
-              <div>
-                <p className="mb-3 px-4 text-xs font-bold uppercase tracking-wider text-gray-400">
-                  Tài khoản
-                </p>
-
-                {isLoggedIn ? (
-                  <div className="rounded-xl bg-gray-50 p-3 dark:bg-slate-800">
-                    <CustomPopup />
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      dispatch(updateModal(true));
-                      setIsMenuOpen(false);
-                    }}
-                    data-test="login-btn"
-                    className="
-                      flex
-                      w-full
-                      items-center
-                      gap-3
-                      rounded-xl
-                      px-4
-                      py-3
-                      text-left
-                      font-semibold
-                      text-gray-800
-                      transition
-                      hover:bg-blue-50
-                      hover:text-blue-600
-                      dark:text-white
-                      dark:hover:bg-slate-800
-                    "
-                  >
-                    <FaUser size={18} />
-                    Đăng nhập
-                  </button>
-                )}
-              </div>
-
-              {/* =================================================
-                  CART
-              ================================================= */}
+              {/* Cart */}
 
               <button
                 type="button"
                 onClick={showCart}
-                data-test="cart-btn"
                 className="
                   mt-2
                   flex
@@ -565,7 +665,6 @@ const Navbar: FC = () => {
                   px-4
                   py-3
                   text-gray-800
-                  transition
                   hover:bg-blue-50
                   hover:text-blue-600
                   dark:text-white
@@ -574,13 +673,11 @@ const Navbar: FC = () => {
               >
                 <div className="flex items-center gap-3">
                   <AiOutlineShoppingCart size={23} />
-
                   <span className="font-semibold">Giỏ hàng</span>
                 </div>
 
                 {cartCount > 0 && (
                   <span
-                    data-test="cart-item-count"
                     className="
                       flex
                       h-6
@@ -600,9 +697,7 @@ const Navbar: FC = () => {
                 )}
               </button>
 
-              {/* =================================================
-                  THEME
-              ================================================= */}
+              {/* Theme */}
 
               <button
                 type="button"
@@ -620,7 +715,6 @@ const Navbar: FC = () => {
                   px-4
                   py-3
                   text-gray-800
-                  transition
                   hover:bg-blue-50
                   hover:text-blue-600
                   dark:text-white
@@ -643,9 +737,7 @@ const Navbar: FC = () => {
               </button>
             </nav>
 
-            {/* =================================================
-                MOBILE FOOTER
-            ================================================= */}
+            {/* Footer drawer */}
 
             <div
               className="
@@ -658,12 +750,26 @@ const Navbar: FC = () => {
                 dark:bg-slate-800
               "
             >
-              <p className="text-center text-xs text-gray-400">
-                NHẬT KHANG BIKE
+              <p
+                className="
+                  text-center
+                  text-xs
+                  text-gray-400
+                "
+              >
+                {storeName}
               </p>
 
-              <p className="mt-1 text-center text-xs font-medium text-blue-600">
-                Đã chạy phải chất
+              <p
+                className="
+                  mt-1
+                  text-center
+                  text-xs
+                  font-medium
+                  text-blue-600
+                "
+              >
+                {slogan}
               </p>
             </div>
           </div>

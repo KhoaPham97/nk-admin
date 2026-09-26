@@ -5,11 +5,13 @@ import { FaCheck, FaChevronDown } from "react-icons/fa6";
 import { toast } from "react-toastify";
 
 import { Product } from "../models/Product";
-import { useAppDispatch } from "../redux/hooks";
+import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { addToCart } from "../redux/features/cartSlice";
 import useAuth from "../hooks/useAuth";
 
 interface Variant {
+  _id?: string;
+  id?: string;
   name?: string;
   value?: string;
   label?: string;
@@ -23,7 +25,6 @@ interface Variant {
 }
 
 interface ProductCardProps extends Product {
-  id?: string;
   _id?: string;
   variants?: Variant[];
 }
@@ -37,29 +38,49 @@ const ProductCard: FC<ProductCardProps> = (product) => {
   const [isVariantOpen, setIsVariantOpen] = useState<boolean>(false);
 
   // =====================================================
+  // SETTINGS
+  // =====================================================
+
+  const settings = useAppSelector((state) => state.settings?.settings);
+
+  const showPrice = settings?.websiteSettings?.showPrice ?? false;
+
+  // =====================================================
   // PRODUCT ID
   // =====================================================
 
-  const productId = product._id || product.id || "";
+  const productId = String(product._id || "");
+
+  // Không có _id thì không render
+  if (!productId) {
+    return null;
+  }
 
   // =====================================================
   // IMAGE
   // =====================================================
 
   const getImageUrl = (image?: string) => {
-    if (!image) {
+    if (!image || typeof image !== "string") {
+      return "/images/no-image.jpg";
+    }
+
+    const value = image.trim();
+
+    if (!value) {
       return "/images/no-image.jpg";
     }
 
     if (
-      image.startsWith("http://") ||
-      image.startsWith("https://") ||
-      image.startsWith("/")
+      value.startsWith("http://") ||
+      value.startsWith("https://") ||
+      value.startsWith("/") ||
+      value.startsWith("data:image/")
     ) {
-      return image;
+      return value;
     }
 
-    return `/images/${image}`;
+    return `/images/${value}`;
   };
 
   // =====================================================
@@ -78,18 +99,60 @@ const ProductCard: FC<ProductCardProps> = (product) => {
   // VARIANT NAME
   // =====================================================
 
-  const getVariantName = (variant?: Variant | null) => {
+  const getVariantName = (variant?: Variant | null): string => {
     if (!variant) return "";
 
-    return (
-      variant.name ||
-      variant.label ||
-      variant.value ||
-      variant.code ||
-      variant.sku ||
-      ""
-    );
+    if (typeof variant.label === "string" && variant.label.trim()) {
+      return variant.label;
+    }
+
+    if (
+      typeof variant.name === "string" &&
+      typeof variant.value === "string" &&
+      variant.name.trim() &&
+      variant.value.trim()
+    ) {
+      return `${variant.name}: ${variant.value}`;
+    }
+
+    if (typeof variant.value === "string" && variant.value.trim()) {
+      return variant.value;
+    }
+
+    if (typeof variant.name === "string" && variant.name.trim()) {
+      return variant.name;
+    }
+
+    if (typeof variant.code === "string" && variant.code.trim()) {
+      return variant.code;
+    }
+
+    if (typeof variant.sku === "string" && variant.sku.trim()) {
+      return variant.sku;
+    }
+
+    return "";
   };
+
+  // =====================================================
+  // CATEGORY
+  // =====================================================
+
+  const categoryName = useMemo(() => {
+    if (!product.category) return "";
+
+    if (typeof product.category === "string") {
+      return product.category;
+    }
+
+    if (typeof product.category === "object") {
+      const category = product.category as any;
+
+      return category.name || category.title || category.label || "";
+    }
+
+    return "";
+  }, [product.category]);
 
   // =====================================================
   // STOCK
@@ -127,7 +190,11 @@ const ProductCard: FC<ProductCardProps> = (product) => {
   // =====================================================
 
   const productImage =
-    selectedVariant?.image || selectedVariant?.thumbnail || product.thumbnail;
+    selectedVariant?.image ||
+    selectedVariant?.thumbnail ||
+    product.thumbnail ||
+    product.images?.[0] ||
+    "";
 
   // =====================================================
   // SELECT VARIANT
@@ -135,6 +202,8 @@ const ProductCard: FC<ProductCardProps> = (product) => {
 
   const handleSelectVariant = (index: number) => {
     const variant = variants[index];
+
+    if (!variant) return;
 
     const variantQty = Number(variant.qty ?? variant.stock ?? 0) || 0;
 
@@ -161,21 +230,40 @@ const ProductCard: FC<ProductCardProps> = (product) => {
       const cartProduct: any = {
         ...product,
 
-        // Giữ id cho cart
+        // =================================================
+        // GIỮ _id LÀ ID CHÍNH
+        // =================================================
+        _id: productId,
+
+        // =================================================
+        // CART CŨ CÓ THỂ ĐANG DÙNG id
+        // TẠM GIỮ id ĐỂ KHÔNG LÀM HỎNG cartSlice
+        // =================================================
         id: productId,
 
-        // Giá hiện tại
+        // =================================================
+        // GIÁ HIỆN TẠI
+        // =================================================
         price: numericPrice,
 
-        // Số lượng kho hiện tại
+        // =================================================
+        // TỒN KHO HIỆN TẠI
+        // =================================================
         qty: stock,
 
-        // Variant khách chọn
+        // =================================================
+        // VARIANT ĐANG CHỌN
+        // =================================================
         selectedVariant: selectedVariant
           ? {
               ...selectedVariant,
+
+              _id: selectedVariant._id || selectedVariant.id || undefined,
+
               name: getVariantName(selectedVariant),
+
               qty: stock,
+
               price: numericPrice,
             }
           : null,
@@ -185,7 +273,7 @@ const ProductCard: FC<ProductCardProps> = (product) => {
 
       if (selectedVariant) {
         toast.success(
-          `Đã thêm ${product.title} - ${getVariantName(
+          `Đã thêm ${product.title || "sản phẩm"} - ${getVariantName(
             selectedVariant,
           )} vào giỏ hàng`,
         );
@@ -241,12 +329,16 @@ const ProductCard: FC<ProductCardProps> = (product) => {
               group-hover:scale-105
             "
             onError={(e) => {
-              e.currentTarget.src = "/images/no-image.jpg";
+              const img = e.currentTarget;
+
+              if (!img.src.includes("/images/no-image.jpg")) {
+                img.src = "/images/no-image.jpg";
+              }
             }}
           />
         </div>
 
-        {/* STOCK BADGE */}
+        {/* STOCK */}
 
         <div
           className={`
@@ -263,7 +355,7 @@ const ProductCard: FC<ProductCardProps> = (product) => {
           {isInStock ? "Còn hàng" : "Hết hàng"}
         </div>
 
-        {/* VARIANT BADGE */}
+        {/* VARIANTS */}
 
         {hasVariants && (
           <div
@@ -290,9 +382,18 @@ const ProductCard: FC<ProductCardProps> = (product) => {
       <div className="flex flex-1 flex-col p-4">
         {/* CATEGORY */}
 
-        {product.category && (
-          <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-blue-600">
-            {product.category}
+        {categoryName && (
+          <div
+            className="
+              mb-1
+              text-[11px]
+              font-medium
+              uppercase
+              tracking-wide
+              text-blue-600
+            "
+          >
+            {categoryName}
           </div>
         )}
 
@@ -313,7 +414,7 @@ const ProductCard: FC<ProductCardProps> = (product) => {
             dark:hover:text-blue-400
           "
         >
-          {product.title}
+          {typeof product.title === "string" ? product.title : "Sản phẩm"}
         </Link>
 
         {/* =================================================
@@ -322,8 +423,22 @@ const ProductCard: FC<ProductCardProps> = (product) => {
 
         {hasVariants && (
           <div className="relative mt-3">
-            <div className="mb-1.5 flex items-center justify-between">
-              <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+            <div
+              className="
+                mb-1.5
+                flex
+                items-center
+                justify-between
+              "
+            >
+              <span
+                className="
+                  text-xs
+                  font-medium
+                  text-gray-500
+                  dark:text-gray-400
+                "
+              >
                 Phân loại
               </span>
 
@@ -332,11 +447,11 @@ const ProductCard: FC<ProductCardProps> = (product) => {
               </span>
             </div>
 
-            {/* MOBILE / COMPACT SELECT */}
+            {/* SELECTED VARIANT */}
 
             <button
               type="button"
-              onClick={() => setIsVariantOpen(!isVariantOpen)}
+              onClick={() => setIsVariantOpen((value) => !value)}
               className="
                 flex w-full
                 items-center
@@ -354,23 +469,48 @@ const ProductCard: FC<ProductCardProps> = (product) => {
                 dark:bg-slate-800
               "
             >
-              <div className="flex min-w-0 items-center gap-2">
+              <div
+                className="
+                  flex
+                  min-w-0
+                  items-center
+                  gap-2
+                "
+              >
                 {selectedVariant &&
                   Number(selectedVariant.qty ?? selectedVariant.stock ?? 0) >
                     0 && (
-                    <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white">
+                    <span
+                      className="
+                        flex h-4 w-4
+                        shrink-0
+                        items-center
+                        justify-center
+                        rounded-full
+                        bg-blue-600
+                        text-white
+                      "
+                    >
                       <FaCheck className="text-[8px]" />
                     </span>
                   )}
 
-                <span className="truncate font-medium text-gray-700 dark:text-gray-200">
+                <span
+                  className="
+                    truncate
+                    font-medium
+                    text-gray-700
+                    dark:text-gray-200
+                  "
+                >
                   {getVariantName(selectedVariant) || "Chọn phân loại"}
                 </span>
               </div>
 
               <FaChevronDown
                 className={`
-                  shrink-0 text-[10px]
+                  shrink-0
+                  text-[10px]
                   text-gray-400
                   transition-transform
                   ${isVariantOpen ? "rotate-180" : ""}
@@ -387,7 +527,7 @@ const ProductCard: FC<ProductCardProps> = (product) => {
                   left-0
                   right-0
                   top-full
-                  z-30
+                  z-50
                   mt-1
                   max-h-48
                   overflow-y-auto
@@ -412,6 +552,8 @@ const ProductCard: FC<ProductCardProps> = (product) => {
                   return (
                     <button
                       key={
+                        variant._id ||
+                        variant.id ||
                         variant.code ||
                         variant.sku ||
                         `${getVariantName(variant)}-${index}`
@@ -420,7 +562,8 @@ const ProductCard: FC<ProductCardProps> = (product) => {
                       disabled={variantQty <= 0}
                       onClick={() => handleSelectVariant(index)}
                       className={`
-                          mb-1 flex
+                          mb-1
+                          flex
                           w-full
                           items-center
                           justify-between
@@ -429,11 +572,13 @@ const ProductCard: FC<ProductCardProps> = (product) => {
                           text-left
                           transition
                           last:mb-0
+
                           ${
                             isSelected
                               ? "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
                               : "hover:bg-gray-50 dark:hover:bg-slate-700"
                           }
+
                           ${
                             variantQty <= 0
                               ? "cursor-not-allowed opacity-40"
@@ -442,24 +587,55 @@ const ProductCard: FC<ProductCardProps> = (product) => {
                         `}
                     >
                       <div className="min-w-0">
-                        <div className="flex items-center gap-2">
+                        <div
+                          className="
+                              flex
+                              items-center
+                              gap-2
+                            "
+                        >
                           {isSelected && (
-                            <FaCheck className="shrink-0 text-[10px]" />
+                            <FaCheck
+                              className="
+                                  shrink-0
+                                  text-[10px]
+                                "
+                            />
                           )}
 
-                          <span className="truncate text-xs font-medium">
+                          <span
+                            className="
+                                truncate
+                                text-xs
+                                font-medium
+                              "
+                          >
                             {getVariantName(variant) ||
                               `Phân loại ${index + 1}`}
                           </span>
                         </div>
 
-                        <div className="mt-0.5 text-[10px] text-gray-400">
+                        <div
+                          className="
+                              mt-0.5
+                              text-[10px]
+                              text-gray-400
+                            "
+                        >
                           {variantQty > 0 ? `Còn ${variantQty}` : "Hết hàng"}
                         </div>
                       </div>
 
-                      {variantPrice > 0 && (
-                        <span className="ml-2 shrink-0 text-[11px] font-semibold text-blue-600">
+                      {showPrice && variantPrice > 0 && (
+                        <span
+                          className="
+                                ml-2
+                                shrink-0
+                                text-[11px]
+                                font-semibold
+                                text-blue-600
+                              "
+                        >
                           {new Intl.NumberFormat("vi-VN").format(variantPrice)}đ
                         </span>
                       )}
@@ -475,25 +651,76 @@ const ProductCard: FC<ProductCardProps> = (product) => {
             PRICE
         ================================================= */}
 
-        <div className="mt-3 flex items-end justify-between gap-2">
+        <div
+          className="
+            mt-3
+            flex
+            items-end
+            justify-between
+            gap-2
+          "
+        >
           <div>
-            <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
-              {formattedPrice}
-              {numericPrice > 0 && (
-                <span className="ml-0.5 text-xs font-medium">đ</span>
-              )}
-            </div>
+            {showPrice ? (
+              <>
+                <div
+                  className="
+                    text-lg
+                    font-bold
+                    text-blue-600
+                    dark:text-blue-400
+                  "
+                >
+                  {formattedPrice}
 
-            {hasVariants && (
-              <div className="mt-0.5 text-[10px] text-gray-400">
-                {getVariantName(selectedVariant)}
+                  {numericPrice > 0 && (
+                    <span
+                      className="
+                        ml-0.5
+                        text-xs
+                        font-medium
+                      "
+                    >
+                      đ
+                    </span>
+                  )}
+                </div>
+
+                {hasVariants && (
+                  <div
+                    className="
+                      mt-0.5
+                      text-[10px]
+                      text-gray-400
+                    "
+                  >
+                    {getVariantName(selectedVariant)}
+                  </div>
+                )}
+              </>
+            ) : (
+              <div
+                className="
+                  text-sm
+                  font-semibold
+                  text-gray-500
+                  dark:text-gray-400
+                "
+              >
+                Liên hệ để biết giá
               </div>
             )}
           </div>
 
           {/* STOCK */}
 
-          <div className="text-right text-[10px] text-gray-400">
+          <div
+            className="
+              text-right
+              text-[10px]
+              text-gray-400
+            "
+          >
             {isInStock ? `Kho: ${stock}` : "Tạm hết"}
           </div>
         </div>
@@ -508,7 +735,8 @@ const ProductCard: FC<ProductCardProps> = (product) => {
           <Link
             to={`/product/${productId}`}
             className="
-              flex flex-1
+              flex
+              flex-1
               items-center
               justify-center
               rounded-xl

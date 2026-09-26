@@ -288,10 +288,19 @@ const InventoryImport = () => {
           unitCost: Number(item.unitCost || 0),
         })),
       };
+      const token =
+        localStorage.getItem("adminToken") ||
+        localStorage.getItem("accessToken");
 
       const response = await axios.post(
-        `${API_ENDPOINTS.PRODUCTS}/inventory/import`,
+        `${API_ENDPOINTS.INVENTORY_RECEIPTS}`,
         payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        },
       );
 
       if (!response?.data?.success) {

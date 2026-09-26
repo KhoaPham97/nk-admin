@@ -21,4 +21,8 @@ export const API_ENDPOINTS = {
   CHATGPT: `${BASE_URL}/chatgpt`,
   ANALYTICS_DASHBOARD: `${BASE_URL}/analytics/dashboard`,
   ANALYTICS_TRACK: `${BASE_URL}/analytics/track`,
+  SETTINGS: `${BASE_URL}/settings`,
+  CHANGE_ADMIN_PASSWORD: `${BASE_URL}/admin/change-password`,
+  INVENTORY_HISTORY: `${BASE_URL}/inventory-history`,
+  INVENTORY_RECEIPTS: `${BASE_URL}/inventory`,
 };

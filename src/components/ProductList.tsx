@@ -14,7 +14,7 @@ import { FiArrowRight } from "react-icons/fi";
 interface ProductListProps {
   title: string;
   products: any[];
-  isSlide: boolean;
+  isSlide?: boolean;
   type?: string;
 }
 
@@ -24,33 +24,43 @@ const ProductList: FC<ProductListProps> = ({
   isSlide = false,
   type = "all",
 }) => {
-  /* =========================================================
-     PRODUCT CARD
-  ========================================================= */
+  // =========================================================
+  // PRODUCT DATA
+  // =========================================================
+
+  const productList = Array.isArray(products) ? products : [];
+
+  // =========================================================
+  // PRODUCT CARD
+  // =========================================================
 
   const renderProductCard = (product: any) => {
+    if (!product) return null;
+
     return (
       <ProductCard
-        id={product.id || product._id}
+        {...product}
+        _id={product._id || product.id}
         category={product.category}
         title={product.title}
         price={product.price}
         thumbnail={product.thumbnail}
+        images={Array.isArray(product.images) ? product.images : []}
         rating={product.rating}
         discountPercentage={product.discountPercentage}
-        qty={Number(product.qty) || 0}
+        qty={product.qty}
+        variants={Array.isArray(product.variants) ? product.variants : []}
       />
     );
   };
 
-  /* =========================================================
-     SECTION HEADER
-  ========================================================= */
+  // =========================================================
+  // HEADER
+  // =========================================================
 
   const renderHeader = () => {
     return (
       <div className="mb-5 flex items-end justify-between gap-4">
-        {/* LEFT */}
         <div className="min-w-0">
           <div className="flex items-center gap-3">
             <span className="h-7 w-1 rounded-full bg-blue-600" />
@@ -73,7 +83,6 @@ const ProductList: FC<ProductListProps> = ({
           <div className="ml-4 mt-2 h-px w-16 bg-blue-600" />
         </div>
 
-        {/* RIGHT */}
         <Link
           to={`/list-product/${type}`}
           data-test="main-categories"
@@ -110,11 +119,11 @@ const ProductList: FC<ProductListProps> = ({
     );
   };
 
-  /* =========================================================
-     EMPTY
-  ========================================================= */
+  // =========================================================
+  // EMPTY
+  // =========================================================
 
-  if (!products || products.length === 0) {
+  if (productList.length === 0) {
     return (
       <section className="mx-auto mt-8 max-w-7xl px-4 sm:px-6 lg:px-8">
         {renderHeader()}
@@ -142,9 +151,9 @@ const ProductList: FC<ProductListProps> = ({
     );
   }
 
-  /* =========================================================
-     SLIDER
-  ========================================================= */
+  // =========================================================
+  // SLIDER
+  // =========================================================
 
   const renderSlide = () => {
     return (
@@ -154,8 +163,9 @@ const ProductList: FC<ProductListProps> = ({
         <div className="relative">
           <Swiper
             slidesPerView={1.2}
+            slidesPerGroup={1}
             spaceBetween={14}
-            loop={products.length > 5}
+            loop={false}
             speed={600}
             autoplay={{
               delay: 3000,
@@ -170,48 +180,56 @@ const ProductList: FC<ProductListProps> = ({
             breakpoints={{
               480: {
                 slidesPerView: 1.5,
+                slidesPerGroup: 1,
                 spaceBetween: 16,
               },
 
               640: {
                 slidesPerView: 2,
+                slidesPerGroup: 1,
                 spaceBetween: 18,
               },
 
               768: {
                 slidesPerView: 3,
+                slidesPerGroup: 1,
                 spaceBetween: 20,
               },
 
               1024: {
                 slidesPerView: 4,
+                slidesPerGroup: 1,
                 spaceBetween: 22,
               },
 
               1280: {
                 slidesPerView: 5,
+                slidesPerGroup: 1,
                 spaceBetween: 22,
               },
             }}
             className="!pb-2"
           >
-            {products.map((product: any) => (
-              <SwiperSlide key={product.id || product._id} className="!h-auto">
+            {productList.map((product: any, index: number) => (
+              <SwiperSlide
+                key={product?._id || product?.id || `product-${index}`}
+                className="!h-auto"
+              >
                 <div
                   className="
-                    h-full
-                    overflow-hidden
-                    rounded-2xl
-                    border
-                    border-gray-100
-                    bg-white
-                    transition
-                    duration-300
-                    hover:-translate-y-1
-                    hover:shadow-lg
-                    dark:border-slate-700
-                    dark:bg-slate-800
-                  "
+                      h-full
+                      overflow-hidden
+                      rounded-2xl
+                      border
+                      border-gray-100
+                      bg-white
+                      transition
+                      duration-300
+                      hover:-translate-y-1
+                      hover:shadow-lg
+                      dark:border-slate-700
+                      dark:bg-slate-800
+                    "
                 >
                   {renderProductCard(product)}
                 </div>
@@ -220,6 +238,7 @@ const ProductList: FC<ProductListProps> = ({
           </Swiper>
 
           {/* PREV */}
+
           <button
             type="button"
             className="
@@ -265,6 +284,7 @@ const ProductList: FC<ProductListProps> = ({
           </button>
 
           {/* NEXT */}
+
           <button
             type="button"
             className="
@@ -313,9 +333,9 @@ const ProductList: FC<ProductListProps> = ({
     );
   };
 
-  /* =========================================================
-     DEFAULT GRID
-  ========================================================= */
+  // =========================================================
+  // GRID
+  // =========================================================
 
   const renderDefault = () => {
     return (
@@ -335,22 +355,22 @@ const ProductList: FC<ProductListProps> = ({
           "
           data-test="product-list-container"
         >
-          {products.map((product: any) => (
+          {productList.map((product: any, index: number) => (
             <div
-              key={product.id || product._id}
+              key={product?._id || product?.id || `product-${index}`}
               className="
-                overflow-hidden
-                rounded-2xl
-                border
-                border-gray-100
-                bg-white
-                transition
-                duration-300
-                hover:-translate-y-1
-                hover:shadow-lg
-                dark:border-slate-700
-                dark:bg-slate-800
-              "
+                  overflow-hidden
+                  rounded-2xl
+                  border
+                  border-gray-100
+                  bg-white
+                  transition
+                  duration-300
+                  hover:-translate-y-1
+                  hover:shadow-lg
+                  dark:border-slate-700
+                  dark:bg-slate-800
+                "
             >
               {renderProductCard(product)}
             </div>
@@ -360,9 +380,9 @@ const ProductList: FC<ProductListProps> = ({
     );
   };
 
-  /* =========================================================
-     RENDER
-  ========================================================= */
+  // =========================================================
+  // RENDER
+  // =========================================================
 
   return isSlide ? renderSlide() : renderDefault();
 };

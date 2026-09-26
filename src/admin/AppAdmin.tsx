@@ -19,6 +19,9 @@ import Orders from "./pages/Orders";
 import InvoiceDetail from "./pages/InvoiceDetail";
 import Inventory from "./pages/Inventory";
 import InventoryImport from "./pages/InventoryImport";
+import AdminSettings from "./pages/AdminSettings";
+import InventoryHistory from "./pages/InventoryHistory";
+import InventoryReceipts from "./pages/InventoryReceipts";
 
 export default function BasicExample() {
   return (
@@ -38,42 +41,29 @@ export default function BasicExample() {
       <Route element={<AdminProtectedRoute />}>
         <Route path="/admin" element={<AdminLayout />}>
           {/* /admin */}
-
           <Route index element={<Dashboard />} />
-
           {/* PRODUCTS */}
-
           <Route path="products" element={<Products />} />
-
           <Route path="products/bicycle" element={<Products />} />
-
           <Route path="products/electric" element={<Products />} />
-
           <Route path="products/tricycle" element={<Products />} />
-
           <Route path="products/create" element={<CreateProduct />} />
-
           {/* CATEGORY */}
-
           <Route path="categories" element={<Categories />} />
-
           {/* CUSTOMERS */}
-
           <Route path="customers" element={<Customers />} />
-
           <Route path="customers/:id" element={<CustomerDetail />} />
-
           {/* ORDERS */}
-
           <Route path="orders" element={<Orders />} />
-
           <Route path="orders/create" element={<CreateOrder />} />
 
           {/* INVOICE */}
-
           <Route path="invoices/:id" element={<InvoiceDetail />} />
           <Route path="inventory" element={<Inventory />} />
           <Route path="inventory/import" element={<InventoryImport />} />
+          <Route path="settings" element={<AdminSettings />} />
+          <Route path="inventory-history" element={<InventoryHistory />} />
+          <Route path="inventory-receipts" element={<InventoryReceipts />} />
         </Route>
       </Route>
     </Routes>

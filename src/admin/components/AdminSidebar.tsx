@@ -108,11 +108,15 @@ const AdminSidebar = ({
           icon: <AddBoxIcon />,
           path: "/admin/inventory/import",
         },
-
         {
-          label: "Xuất kho",
+          label: "Lịch sử nhập kho",
+          path: "/admin/inventory-receipts",
+          icon: <Inventory2Icon />,
+        },
+        {
+          label: "Lịch sử xuất kho",
           icon: <RemoveCircleOutlineIcon />,
-          path: "/admin/inventory/export",
+          path: "/admin/inventory-history",
         },
       ],
     },

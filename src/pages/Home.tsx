@@ -5,6 +5,7 @@ import EbikeProducts from "../components/EbikeProducts";
 import ThreeWheeleProducts from "../components/ThreeWheeleProducts";
 
 import { useAppDispatch } from "../redux/hooks";
+
 import {
   updateEbikeList,
   updateBikeList,
@@ -12,14 +13,13 @@ import {
 } from "../redux/features/productSlice";
 
 import { API_ENDPOINTS } from "../api";
+
 import toast from "react-hot-toast";
 
-// =====================================================
-// QUAN TRỌNG:
-// Promise được đặt ngoài component.
-// React StrictMode có mount lại Home thì Promise này
-// vẫn được giữ nguyên.
-// =====================================================
+/* =====================================================
+   CACHE REQUEST
+   Giúp hạn chế request trùng khi StrictMode chạy
+===================================================== */
 
 let productsRequest: Promise<any[]> | null = null;
 
@@ -27,7 +27,9 @@ const fetchProductsOnce = () => {
   if (!productsRequest) {
     productsRequest = Promise.all([
       fetch(`${API_ENDPOINTS.PRODUCTS}?type=1&limit=10`),
+
       fetch(`${API_ENDPOINTS.PRODUCTS}?type=2&limit=10`),
+
       fetch(`${API_ENDPOINTS.PRODUCTS}?type=3&limit=10`),
     ]).then(async ([bikeRes, ebikeRes, threeWRes]) => {
       if (!bikeRes.ok || !ebikeRes.ok || !threeWRes.ok) {
@@ -46,12 +48,15 @@ const Home: FC = () => {
 
   const [isMount, setMount] = useState(false);
 
+  /* =====================================================
+     LOAD PRODUCTS
+  ===================================================== */
+
   useEffect(() => {
     let cancelled = false;
 
     const loadProducts = async () => {
       try {
-        // Chỉ toast loading một lần
         toast.loading("Đang tải dữ liệu ...", {
           id: "loading-products",
         });
@@ -62,29 +67,60 @@ const Home: FC = () => {
           return;
         }
 
+        /* ================================================
+           CONVERT PRODUCT
+        ================================================ */
+
         const convertProducts = (products: any[]) => {
           return products.map((product: any) => ({
             id: product._id,
+
             title: product.title,
+
             images: product.images,
+
             price: product.price,
+
             rating: product.rating,
+
             thumbnail: product.thumbnail,
+
             description: product.description,
+
             category: product.category,
+
             discountPercentage: 0.1,
+
             qty: product.qty ?? 0,
           }));
         };
 
+        /* ================================================
+           BIKE
+        ================================================ */
+
         const productListBike = convertProducts(bikeData.products ?? []);
+
+        /* ================================================
+           EBIKE
+        ================================================ */
 
         const productListEBike = convertProducts(ebikeData.products ?? []);
 
+        /* ================================================
+           THREE WHEEL
+        ================================================ */
+
         const product3W = convertProducts(threeWData.products ?? []);
 
+        /* ================================================
+           REDUX
+        ================================================ */
+
         dispatch(updateBikeList(productListBike));
+
         dispatch(updateEbikeList(productListEBike));
+
         dispatch(updateThreeWheeleList(product3W));
 
         setMount(true);
@@ -112,19 +148,45 @@ const Home: FC = () => {
     };
   }, [dispatch]);
 
+  /* =====================================================
+     LOADING
+  ===================================================== */
+
   if (!isMount) {
     return (
-      <div className="flex min-h-[300px] items-center justify-center dark:bg-slate-800">
-        <div className="text-gray-500">Đang tải sản phẩm...</div>
+      <div
+        className="
+          flex
+          min-h-[300px]
+          items-center
+          justify-center
+          dark:bg-slate-800
+        "
+      >
+        <div
+          className="
+            text-gray-500
+            dark:text-gray-300
+          "
+        >
+          Đang tải sản phẩm...
+        </div>
       </div>
     );
   }
 
+  /* =====================================================
+     HOME
+  ===================================================== */
+
   return (
     <div className="dark:bg-slate-800">
       <BikeProducts />
+
       <EbikeProducts />
+
       <ThreeWheeleProducts />
+
       <br />
     </div>
   );

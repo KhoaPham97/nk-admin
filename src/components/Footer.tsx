@@ -1,5 +1,6 @@
 import { FC } from "react";
 import { Link } from "react-router-dom";
+
 import {
   FaFacebookF,
   FaPhone,
@@ -7,53 +8,185 @@ import {
   FaEnvelope,
 } from "react-icons/fa6";
 
+import { useAppSelector } from "../redux/hooks";
+
 const Footer: FC = () => {
-  const zaloPhone = "0773066022";
+  /* =====================================================
+     SETTINGS
+  ===================================================== */
+
+  const settings = useAppSelector((state) => state.settings.settings);
+
+  /* =====================================================
+     STORE INFO
+  ===================================================== */
+
+  const storeName =
+    settings?.websiteSettings?.siteName ||
+    settings?.storeName ||
+    "NHẬT KHANG BIKE";
+
+  const slogan = settings?.websiteSettings?.slogan || "Đã chạy phải chất";
+
+  const phone = settings?.phone || "";
+
+  const email = settings?.email || "";
+
+  const address = settings?.address || "";
+
+  const website = settings?.website || "";
+
+  const showPhone = settings?.websiteSettings?.showPhone ?? true;
+
+  const showAddress = settings?.websiteSettings?.showAddress ?? true;
+
+  const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="mt-auto border-t border-gray-200 bg-white text-gray-700">
-      {/* Main Footer */}
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-4">
-          {/* ================= BRAND ================= */}
+    <footer
+      className="
+        mt-auto
+        border-t
+        border-gray-200
+        bg-white
+        text-gray-700
+        dark:border-slate-700
+        dark:bg-slate-900
+        dark:text-gray-300
+      "
+    >
+      <div
+        className="
+          mx-auto
+          max-w-7xl
+          px-4
+          py-10
+          sm:px-6
+          lg:px-8
+        "
+      >
+        <div
+          className="
+            grid
+            grid-cols-1
+            gap-8
+            sm:grid-cols-2
+            lg:grid-cols-4
+          "
+        >
+          {/* =================================================
+              BRAND
+          ================================================= */}
+
           <div>
             <Link
               to="/"
-              className="inline-block text-2xl font-black tracking-tight text-gray-900"
+              className="
+                inline-block
+                text-xl
+                font-black
+                text-gray-900
+                dark:text-white
+              "
             >
-              NHẬT KHANG <span className="text-blue-600">BIKE</span>
+              {storeName}
             </Link>
 
-            <p className="mt-4 max-w-sm text-sm leading-6 text-gray-500">
-              Chuyên cung cấp phụ tùng xe đạp, xe điện, xe ba gác và các loại
-              linh kiện xe chất lượng.
+            <p
+              className="
+                mt-3
+                text-sm
+                leading-6
+                text-gray-500
+                dark:text-gray-400
+              "
+            >
+              Phụ tùng xe chất lượng, đa dạng sản phẩm và hỗ trợ khách hàng tận
+              tình.
             </p>
 
-            <p className="mt-4 text-sm font-semibold text-gray-900">
-              Đã chạy phải chất
+            <p
+              className="
+                mt-3
+                text-sm
+                font-semibold
+                text-blue-600
+              "
+            >
+              {slogan}
             </p>
 
-            {/* Facebook */}
-            <div className="mt-6">
+            {website && (
+              <a
+                href={website}
+                target="_blank"
+                rel="noreferrer"
+                className="
+                  mt-3
+                  inline-block
+                  text-sm
+                  text-blue-600
+                  hover:underline
+                "
+              >
+                {website}
+              </a>
+            )}
+
+            {/* FACEBOOK */}
+
+            <div className="mt-5">
               <a
                 href="#"
+                onClick={(event) => event.preventDefault()}
+                className="
+                  flex
+                  h-9
+                  w-9
+                  items-center
+                  justify-center
+                  rounded-full
+                  bg-blue-600
+                  text-white
+                  transition
+                  hover:bg-blue-700
+                "
                 aria-label="Facebook"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-all hover:-translate-y-1 hover:bg-blue-600 hover:text-white"
               >
                 <FaFacebookF size={15} />
               </a>
             </div>
           </div>
 
-          {/* ================= DANH MỤC ================= */}
-          <div>
-            <h3 className="mb-5 text-base font-bold text-gray-900">Danh mục</h3>
+          {/* =================================================
+              CATEGORY
+          ================================================= */}
 
-            <ul className="space-y-3 text-sm">
+          <div>
+            <h3
+              className="
+                text-sm
+                font-bold
+                uppercase
+                tracking-wider
+                text-gray-900
+                dark:text-white
+              "
+            >
+              Sản phẩm
+            </h3>
+
+            <ul className="mt-4 space-y-3">
               <li>
                 <Link
-                  to="/category/type/1"
-                  className="transition-colors hover:text-blue-600"
+                  to="/products?type=1"
+                  className="
+                    text-sm
+                    text-gray-500
+                    transition
+                    hover:text-blue-600
+                    dark:text-gray-400
+                  "
                 >
                   Phụ tùng xe đạp
                 </Link>
@@ -61,8 +194,14 @@ const Footer: FC = () => {
 
               <li>
                 <Link
-                  to="/category/type/2"
-                  className="transition-colors hover:text-blue-600"
+                  to="/products?type=2"
+                  className="
+                    text-sm
+                    text-gray-500
+                    transition
+                    hover:text-blue-600
+                    dark:text-gray-400
+                  "
                 >
                   Phụ tùng xe điện
                 </Link>
@@ -70,8 +209,14 @@ const Footer: FC = () => {
 
               <li>
                 <Link
-                  to="/category/type/3"
-                  className="transition-colors hover:text-blue-600"
+                  to="/products?type=3"
+                  className="
+                    text-sm
+                    text-gray-500
+                    transition
+                    hover:text-blue-600
+                    dark:text-gray-400
+                  "
                 >
                   Phụ tùng xe ba gác
                 </Link>
@@ -79,136 +224,245 @@ const Footer: FC = () => {
 
               <li>
                 <Link
-                  to="/products"
-                  className="transition-colors hover:text-blue-600"
+                  to="/categories"
+                  className="
+                    text-sm
+                    text-gray-500
+                    transition
+                    hover:text-blue-600
+                    dark:text-gray-400
+                  "
                 >
-                  Tất cả sản phẩm
+                  Tất cả danh mục
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* ================= HỖ TRỢ ================= */}
+          {/* =================================================
+              SUPPORT
+          ================================================= */}
+
           <div>
-            <h3 className="mb-5 text-base font-bold text-gray-900">
-              Hỗ trợ khách hàng
+            <h3
+              className="
+                text-sm
+                font-bold
+                uppercase
+                tracking-wider
+                text-gray-900
+                dark:text-white
+              "
+            >
+              Hỗ trợ
             </h3>
 
-            <ul className="space-y-3 text-sm">
+            <ul className="mt-4 space-y-3">
               <li>
-                <Link to="/" className="transition-colors hover:text-blue-600">
+                <Link
+                  to="/"
+                  className="
+                    text-sm
+                    text-gray-500
+                    hover:text-blue-600
+                    dark:text-gray-400
+                  "
+                >
                   Trang chủ
                 </Link>
               </li>
 
               <li>
                 <Link
-                  to="/cart"
-                  className="transition-colors hover:text-blue-600"
+                  to="/products"
+                  className="
+                    text-sm
+                    text-gray-500
+                    hover:text-blue-600
+                    dark:text-gray-400
+                  "
                 >
-                  Giỏ hàng
+                  Sản phẩm
                 </Link>
               </li>
 
               <li>
                 <Link
-                  to="/wishlist"
-                  className="transition-colors hover:text-blue-600"
+                  to="/categories"
+                  className="
+                    text-sm
+                    text-gray-500
+                    hover:text-blue-600
+                    dark:text-gray-400
+                  "
                 >
-                  Sản phẩm yêu thích
+                  Danh mục
                 </Link>
               </li>
 
               <li>
-                <Link to="/" className="transition-colors hover:text-blue-600">
-                  Chính sách mua hàng
+                <Link
+                  to="/cart"
+                  className="
+                    text-sm
+                    text-gray-500
+                    hover:text-blue-600
+                    dark:text-gray-400
+                  "
+                >
+                  Giỏ hàng
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* ================= LIÊN HỆ ================= */}
+          {/* =================================================
+              CONTACT
+          ================================================= */}
+
           <div>
-            <h3 className="mb-5 text-base font-bold text-gray-900">Liên hệ</h3>
+            <h3
+              className="
+                text-sm
+                font-bold
+                uppercase
+                tracking-wider
+                text-gray-900
+                dark:text-white
+              "
+            >
+              Liên hệ
+            </h3>
 
-            <div className="space-y-4">
-              {/* ZALO */}
-              <a
-                href={`https://zalo.me/${zaloPhone}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex items-center gap-3 rounded-xl border border-blue-100 bg-blue-50 p-3 transition-all hover:border-blue-200 hover:bg-blue-100"
-              >
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-black text-white shadow-sm transition-transform group-hover:scale-105">
-                  Zalo
-                </div>
-
-                <div>
-                  <p className="font-semibold text-gray-900">Chat qua Zalo</p>
-
-                  <p className="mt-0.5 text-xs text-gray-500">
-                    Tư vấn sản phẩm & đặt hàng
-                  </p>
-                </div>
-              </a>
-
+            <ul className="mt-4 space-y-4">
               {/* PHONE */}
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 text-blue-600">
-                  <FaPhone size={14} />
-                </div>
 
-                <div>
-                  <p className="text-xs text-gray-400">Hotline</p>
+              {showPhone && phone && (
+                <a
+                  href={`https://zalo.me/${phone}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex items-center gap-3 rounded-xl border border-blue-100 bg-blue-50 p-3 transition-all hover:border-blue-200 hover:bg-blue-100"
+                >
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-black text-white shadow-sm transition-transform group-hover:scale-105">
+                    Zalo
+                  </div>
 
-                  <p className="text-sm font-medium text-gray-900">
-                    Liên hệ qua Zalo
-                  </p>
-                </div>
-              </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">Chat qua Zalo</p>
 
-              {/* LOCATION */}
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 text-blue-600">
-                  <FaLocationDot size={14} />
-                </div>
+                    <p className="mt-0.5 text-xs text-gray-500">
+                      Tư vấn sản phẩm & đặt hàng
+                    </p>
+                  </div>
+                </a>
+              )}
 
-                <div>
-                  <p className="text-xs text-gray-400">Khu vực</p>
+              {/* ADDRESS */}
 
-                  <p className="text-sm font-medium text-gray-900">Việt Nam</p>
-                </div>
-              </div>
+              {showAddress && address && (
+                <li className="flex items-start gap-3">
+                  <FaLocationDot
+                    className="
+                      mt-1
+                      shrink-0
+                      text-blue-600
+                    "
+                    size={15}
+                  />
+
+                  <span
+                    className="
+                      text-sm
+                      leading-5
+                      text-gray-500
+                      dark:text-gray-400
+                    "
+                  >
+                    {address}
+                  </span>
+                </li>
+              )}
 
               {/* EMAIL */}
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 text-blue-600">
-                  <FaEnvelope size={14} />
-                </div>
 
-                <div>
-                  <p className="text-xs text-gray-400">Email</p>
+              {email && (
+                <li className="flex items-start gap-3">
+                  <FaEnvelope
+                    className="
+                      mt-1
+                      shrink-0
+                      text-blue-600
+                    "
+                    size={15}
+                  />
 
-                  <p className="text-sm font-medium text-gray-900">
-                    Liên hệ qua Zalo
-                  </p>
-                </div>
-              </div>
-            </div>
+                  <a
+                    href={`mailto:${email}`}
+                    className="
+                      break-all
+                      text-sm
+                      text-gray-500
+                      hover:text-blue-600
+                      dark:text-gray-400
+                    "
+                  >
+                    {email}
+                  </a>
+                </li>
+              )}
+            </ul>
           </div>
         </div>
       </div>
 
-      {/* ================= BOTTOM ================= */}
-      <div className="border-t border-gray-100 bg-gray-50">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-5 text-center text-sm text-gray-500 sm:px-6 md:flex-row lg:px-8">
-          <p>
-            © {new Date().getFullYear()}{" "}
-            <span className="font-semibold text-gray-700">NHẬT KHANG BIKE</span>
-            . All Rights Reserved.
+      {/* =====================================================
+          BOTTOM
+      ===================================================== */}
+
+      <div
+        className="
+          border-t
+          border-gray-200
+          dark:border-slate-700
+        "
+      >
+        <div
+          className="
+            mx-auto
+            flex
+            max-w-7xl
+            flex-col
+            items-center
+            justify-between
+            gap-2
+            px-4
+            py-5
+            text-center
+            sm:flex-row
+            sm:px-6
+            lg:px-8
+          "
+        >
+          <p
+            className="
+              text-xs
+              text-gray-500
+              dark:text-gray-400
+            "
+          >
+            © {currentYear} {storeName}. All rights reserved.
           </p>
 
-          <p className="font-medium text-gray-400">Đã chạy phải chất</p>
+          <p
+            className="
+              text-xs
+              font-medium
+              text-blue-600
+            "
+          >
+            {slogan}
+          </p>
         </div>
       </div>
     </footer>

@@ -3,13 +3,14 @@ import authReducer from "./features/authSlice";
 import cartReducer from "./features/cartSlice";
 import productReducer from "./features/productSlice";
 import homeReducer from "./features/homeSlice";
-
+import settingsReducer from "./features/settingsSlice";
 export const store = configureStore({
   reducer: {
     cartReducer,
     productReducer,
     authReducer,
     homeReducer,
+    settings: settingsReducer,
   },
 });
 
