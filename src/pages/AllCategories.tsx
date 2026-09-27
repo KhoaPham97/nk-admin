@@ -313,6 +313,12 @@ const AllCategories: FC = () => {
                             state={{
                               category,
                             }}
+                            onClick={() => {
+                              window.scrollTo({
+                                top: 0,
+                                behavior: "instant",
+                              });
+                            }}
                             className="group/card block h-full"
                           >
                             <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-500 hover:shadow-xl dark:border-slate-700 dark:bg-slate-800">
