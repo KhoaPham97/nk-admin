@@ -39,6 +39,7 @@ import { getRequest, patchRequest } from "../common/ApiMethod";
 interface Variant {
   name: string;
   price: number | string;
+  defaultPrice: number | string;
   qty: number | string;
   [key: string]: any;
 }
@@ -209,7 +210,7 @@ const Products = () => {
 
           // Không ép "" thành 0
           price: normalizeNumber(variant.price),
-
+          defaultPrice: normalizeNumber(variant.defaultPrice),
           // Không ép "" thành 0
           qty: normalizeNumber(variant.qty),
         }))
@@ -414,7 +415,7 @@ const Products = () => {
 
   const updateVariant = (
     index: number,
-    field: "name" | "price" | "qty",
+    field: "name" | "price" | "defaultPrice" | "qty",
     value: string,
   ) => {
     if (!selectedProduct) {
@@ -465,6 +466,7 @@ const Products = () => {
         name: "",
 
         price: "",
+        defaultPrice: "",
 
         qty: "",
       },
@@ -624,6 +626,12 @@ const Products = () => {
           variant.price === undefined
             ? "0"
             : parsePrice(variant.price),
+        defaultPrice:
+          variant.defaultPrice === "" ||
+          variant.defaultPrice === null ||
+          variant.defaultPrice === undefined
+            ? "0"
+            : variant.defaultPrice,
 
         // Khi lưu:
         // "" -> 0
@@ -1456,25 +1464,36 @@ const Products = () => {
 
                   <Stack spacing={1.5}>
                     {(selectedProduct.variants || []).map((variant, index) => (
-                      <Card key={index} variant="outlined">
+                      <Card
+                        key={variant._id || variant.id || index}
+                        variant="outlined"
+                        sx={{
+                          borderRadius: 2,
+                          backgroundColor: "background.paper",
+                        }}
+                      >
                         <CardContent
                           sx={{
-                            py: "12px !important",
+                            p: 1.5,
+                            "&:last-child": {
+                              pb: 1.5,
+                            },
                           }}
                         >
                           <Grid container spacing={1.5} alignItems="center">
-                            {/* NAME */}
-
+                            {/* ==================== PHÂN LOẠI ==================== */}
                             <Grid
                               size={{
                                 xs: 12,
-                                md: 4,
+                                sm: 6,
+                                md: 3,
                               }}
                             >
                               <TextField
                                 fullWidth
                                 size="small"
                                 label="Phân loại"
+                                placeholder="VD: 20*50"
                                 value={variant.name || ""}
                                 onChange={(e) =>
                                   updateVariant(index, "name", e.target.value)
@@ -1482,19 +1501,18 @@ const Products = () => {
                               />
                             </Grid>
 
-                            {/* PRICE */}
-
+                            {/* ==================== GIÁ BÁN ==================== */}
                             <Grid
                               size={{
                                 xs: 12,
-                                sm: 5,
+                                sm: 6,
                                 md: 3,
                               }}
                             >
                               <TextField
                                 fullWidth
                                 size="small"
-                                label="Giá (VND)"
+                                label="Giá bán"
                                 value={formatVND(variant.price)}
                                 onChange={(e) =>
                                   updateVariant(
@@ -1516,13 +1534,45 @@ const Products = () => {
                               />
                             </Grid>
 
-                            {/* QTY */}
-
+                            {/* ==================== GIÁ GỐC ==================== */}
                             <Grid
                               size={{
                                 xs: 12,
-                                sm: 5,
+                                sm: 6,
                                 md: 3,
+                              }}
+                            >
+                              <TextField
+                                fullWidth
+                                size="small"
+                                label="Giá gốc"
+                                value={variant.defaultPrice}
+                                onChange={(e) =>
+                                  updateVariant(
+                                    index,
+                                    "defaultPrice",
+                                    e.target.value,
+                                  )
+                                }
+                                InputProps={{
+                                  endAdornment: (
+                                    <InputAdornment position="end">
+                                      ₫
+                                    </InputAdornment>
+                                  ),
+                                }}
+                                inputProps={{
+                                  inputMode: "numeric",
+                                }}
+                              />
+                            </Grid>
+
+                            {/* ==================== SỐ LƯỢNG ==================== */}
+                            <Grid
+                              size={{
+                                xs: 10,
+                                sm: 5,
+                                md: 2,
                               }}
                             >
                               <TextField
@@ -1540,27 +1590,30 @@ const Products = () => {
                               />
                             </Grid>
 
-                            {/* DELETE */}
-
+                            {/* ==================== XÓA ==================== */}
                             <Grid
                               size={{
-                                xs: 12,
-                                md: 2,
+                                xs: 2,
+                                sm: 1,
+                                md: 1,
                               }}
                               sx={{
                                 display: "flex",
-
-                                justifyContent: {
-                                  xs: "flex-end",
-                                  md: "center",
-                                },
+                                justifyContent: "center",
+                                alignItems: "center",
                               }}
                             >
                               <IconButton
                                 color="error"
                                 onClick={() => deleteVariant(index)}
+                                sx={{
+                                  border: "1px solid",
+                                  borderColor: "error.light",
+                                  width: 38,
+                                  height: 38,
+                                }}
                               >
-                                <DeleteOutlineIcon />
+                                <DeleteOutlineIcon fontSize="small" />
                               </IconButton>
                             </Grid>
                           </Grid>

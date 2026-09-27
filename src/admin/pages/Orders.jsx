@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 import {
   Alert,
@@ -32,7 +32,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-
+import SyncIcon from "@mui/icons-material/Sync";
 import {
   AccountBalanceWallet,
   Add,
@@ -43,8 +43,11 @@ import {
   Payments,
   PersonOutline,
   ReceiptLong,
+  Refresh,
   Search,
   Sync,
+  TrendingDown,
+  TrendingUp,
 } from "@mui/icons-material";
 
 import axios from "axios";
@@ -72,6 +75,29 @@ const Orders = () => {
   const [rollingBackOrderId, setRollingBackOrderId] = useState(null);
 
   const [updatingStatusId, setUpdatingStatusId] = useState(null);
+
+  // =====================================================
+  // EXCHANGE RATE
+  // CNY -> VND
+  // =====================================================
+
+  const [exchangeRate, setExchangeRate] = useState(() => {
+    const savedRate = localStorage.getItem("CNY_VND_RATE");
+
+    return Number(savedRate) > 0 ? Number(savedRate) : 3650;
+  });
+
+  const [exchangeRateLoading, setExchangeRateLoading] = useState(false);
+
+  const [exchangeRateError, setExchangeRateError] = useState("");
+
+  // =====================================================
+  // PROFIT DIALOG
+  // =====================================================
+
+  const [profitDialogOpen, setProfitDialogOpen] = useState(false);
+
+  const [selectedProfitItem, setSelectedProfitItem] = useState(null);
 
   // =====================================================
   // DEBT
@@ -162,7 +188,6 @@ const Orders = () => {
   const handleAuthError = (error) => {
     if (error?.response?.status === 401) {
       localStorage.removeItem("accessToken");
-
       localStorage.removeItem("adminToken");
 
       showSnackbar(
@@ -245,6 +270,70 @@ const Orders = () => {
   }, [page, limit, status]);
 
   // =====================================================
+  // EXCHANGE RATE
+  // =====================================================
+
+  const loadExchangeRate = async () => {
+    try {
+      setExchangeRateLoading(true);
+      setExchangeRateError("");
+
+      /*
+       * API tỷ giá trực tiếp từ CNY
+       *
+       * 1 CNY = bao nhiêu VND
+       */
+
+      const response = await axios.get(
+        "https://api.exchangerate-api.com/v4/latest/CNY",
+      );
+
+      const rate = Number(response?.data?.rates?.VND);
+
+      if (!Number.isFinite(rate) || rate <= 0) {
+        throw new Error("Tỷ giá không hợp lệ");
+      }
+
+      const roundedRate = Math.round(rate);
+
+      setExchangeRate(roundedRate);
+
+      localStorage.setItem("CNY_VND_RATE", String(roundedRate));
+
+      showSnackbar(
+        `Đã cập nhật tỷ giá: 1 CNY = ${roundedRate.toLocaleString("vi-VN")} ₫`,
+        "success",
+      );
+    } catch (error) {
+      console.error("LOAD EXCHANGE RATE ERROR:", error);
+
+      setExchangeRateError(
+        "Không lấy được tỷ giá tự động. Đang sử dụng tỷ giá hiện tại.",
+      );
+
+      showSnackbar("Không lấy được tỷ giá tự động.", "warning");
+    } finally {
+      setExchangeRateLoading(false);
+    }
+  };
+
+  // =====================================================
+  // SAVE EXCHANGE RATE
+  // =====================================================
+
+  const handleExchangeRateChange = (event) => {
+    const value = event.target.value.replace(/\D/g, "");
+
+    const numberValue = Number(value);
+
+    setExchangeRate(numberValue);
+
+    if (numberValue > 0) {
+      localStorage.setItem("CNY_VND_RATE", String(numberValue));
+    }
+  };
+
+  // =====================================================
   // SEARCH
   // =====================================================
 
@@ -274,7 +363,6 @@ const Orders = () => {
 
   const handleStatusChange = (event) => {
     setStatus(event.target.value);
-
     setPage(1);
   };
 
@@ -294,6 +382,22 @@ const Orders = () => {
       currency: "VND",
       maximumFractionDigits: 0,
     });
+  };
+
+  // =====================================================
+  // CNY
+  // =====================================================
+
+  const formatCNY = (value) => {
+    const number = Number(value);
+
+    if (!Number.isFinite(number)) {
+      return "0 CNY";
+    }
+
+    return `${number.toLocaleString("vi-VN", {
+      maximumFractionDigits: 2,
+    })} CNY`;
   };
 
   // =====================================================
@@ -472,6 +576,189 @@ const Orders = () => {
         0,
     );
   };
+  const [syncingVariantsId, setSyncingVariantsId] = useState(null);
+
+  const handleSyncOrderVariants = async (orderId) => {
+    if (!orderId) return;
+
+    try {
+      setSyncingVariantsId(orderId);
+
+      const res = await axios.post(API_ENDPOINTS.SYNC_ORDER_VARIANTS, {
+        orderId,
+      });
+
+      if (res.data?.success) {
+        alert(
+          `Đồng bộ variants thành công!\n` +
+            `Đã cập nhật: ${res.data.data?.updatedItems || 0} sản phẩm`,
+        );
+
+        // Load lại danh sách order
+        await loadOrders();
+      } else {
+        alert(res.data?.message || "Đồng bộ variants thất bại");
+      }
+    } catch (error) {
+      console.error("handleSyncOrderVariants error:", error);
+
+      alert(error.response?.data?.message || "Lỗi khi đồng bộ variants");
+    } finally {
+      setSyncingVariantsId(null);
+    }
+  };
+  // =====================================================
+  // DEFAULT PRICE - GIÁ GỐC VARIANT
+  //
+  // QUAN TRỌNG:
+  // defaultPrice là giá gốc CNY của variant.
+  // =====================================================
+
+  const getVariantDefaultPrice = (item) => {
+    /*
+     * Trường hợp backend đã lưu defaultPrice trực tiếp trong order item.
+     */
+
+    if (item?.defaultPrice !== undefined && item?.defaultPrice !== null) {
+      return Number(item.defaultPrice) || 0;
+    }
+
+    /*
+     * Trường hợp order item có:
+     *
+     * variant: {
+     *   defaultPrice: ...
+     * }
+     */
+
+    if (
+      item?.variant?.defaultPrice !== undefined &&
+      item?.variant?.defaultPrice !== null
+    ) {
+      return Number(item.variant.defaultPrice) || 0;
+    }
+
+    /*
+     * Trường hợp product được populate và có variants.
+     */
+
+    const variants = item?.product?.variants;
+
+    if (Array.isArray(variants)) {
+      const variantName = String(item?.variantName || "").trim();
+
+      const matchedVariant = variants.find((variant) => {
+        const name = String(
+          variant?.name ||
+            variant?.title ||
+            variant?.label ||
+            variant?.value ||
+            "",
+        ).trim();
+
+        return name === variantName;
+      });
+
+      if (
+        matchedVariant?.defaultPrice !== undefined &&
+        matchedVariant?.defaultPrice !== null
+      ) {
+        return Number(matchedVariant.defaultPrice) || 0;
+      }
+    }
+
+    return 0;
+  };
+
+  // =====================================================
+  // COST PRICE VND
+  // =====================================================
+
+  const getCostPriceVND = (item) => {
+    const defaultPrice = getVariantDefaultPrice(item);
+
+    const rate = Number(exchangeRate);
+
+    if (
+      !Number.isFinite(defaultPrice) ||
+      !Number.isFinite(rate) ||
+      defaultPrice <= 0 ||
+      rate <= 0
+    ) {
+      return 0;
+    }
+
+    return defaultPrice * rate;
+  };
+
+  // =====================================================
+  // PROFIT / ITEM
+  // =====================================================
+
+  const getProfitPerItem = (item) => {
+    const salePrice = getItemPrice(item);
+
+    const costPriceVND = getCostPriceVND(item);
+
+    return salePrice - costPriceVND;
+  };
+
+  // =====================================================
+  // TOTAL PROFIT ITEM
+  // =====================================================
+
+  const getTotalItemProfit = (item) => {
+    const qty = Number(item?.qty || 0);
+
+    return getProfitPerItem(item) * qty;
+  };
+
+  // =====================================================
+  // ORDER PROFIT
+  // =====================================================
+
+  const getOrderProfit = (order) => {
+    if (!Array.isArray(order?.items)) {
+      return 0;
+    }
+
+    return order.items.reduce(
+      (totalProfit, item) => totalProfit + getTotalItemProfit(item),
+      0,
+    );
+  };
+
+  // =====================================================
+  // ORDER COST
+  // =====================================================
+
+  const getOrderCost = (order) => {
+    if (!Array.isArray(order?.items)) {
+      return 0;
+    }
+
+    return order.items.reduce((totalCost, item) => {
+      const qty = Number(item?.qty || 0);
+
+      return totalCost + getCostPriceVND(item) * qty;
+    }, 0);
+  };
+
+  // =====================================================
+  // ORDER REVENUE
+  // =====================================================
+
+  const getOrderRevenue = (order) => {
+    if (!Array.isArray(order?.items)) {
+      return Number(order?.totalAmount || order?.total || 0);
+    }
+
+    return order.items.reduce(
+      (totalRevenue, item) =>
+        totalRevenue + getItemPrice(item) * Number(item?.qty || 0),
+      0,
+    );
+  };
 
   // =====================================================
   // PRICE SYNC KEY
@@ -484,13 +771,31 @@ const Orders = () => {
   };
 
   // =====================================================
+  // OPEN PROFIT DIALOG
+  // =====================================================
+
+  const handleOpenProfitDialog = (order, item, index) => {
+    setSelectedProfitItem({
+      order,
+      item,
+      index,
+    });
+
+    setProfitDialogOpen(true);
+  };
+
+  // =====================================================
+  // CLOSE PROFIT DIALOG
+  // =====================================================
+
+  const handleCloseProfitDialog = () => {
+    setProfitDialogOpen(false);
+
+    setSelectedProfitItem(null);
+  };
+
+  // =====================================================
   // SYNC ITEM PRICE
-  //
-  // QUAN TRỌNG:
-  // Sau khi API thành công:
-  // await loadOrders()
-  //
-  // Không setOrders thủ công.
   // =====================================================
 
   const handleSyncItemPrice = async (order, item, index) => {
@@ -542,13 +847,8 @@ const Orders = () => {
 
       if (!token) {
         navigate("/admin/login");
-
         return;
       }
-
-      // =============================================
-      // CALL API SYNC PRICE
-      // =============================================
 
       const response = await axios.post(
         `${API_ENDPOINTS.ORDER}/sync-item-price`,
@@ -562,18 +862,11 @@ const Orders = () => {
 
       const data = response?.data || {};
 
-      // =============================================
-      // API THÀNH CÔNG
-      // LOAD LẠI DATABASE
-      // =============================================
-
       showSnackbar(
         data?.message || `Đã đồng bộ giá "${productName}" thành công.`,
         "success",
       );
 
-      // Quan trọng:
-      // Lấy lại dữ liệu mới nhất từ backend
       await loadOrders();
     } catch (error) {
       console.error("SYNC ITEM PRICE ERROR:", error);
@@ -623,7 +916,6 @@ const Orders = () => {
 
       if (!token) {
         navigate("/admin/login");
-
         return;
       }
 
@@ -706,7 +998,6 @@ const Orders = () => {
 
       if (!token) {
         navigate("/admin/login");
-
         return;
       }
 
@@ -727,7 +1018,6 @@ const Orders = () => {
         "success",
       );
 
-      // Load lại từ DB
       await loadOrders();
     } catch (error) {
       console.error("SYNC ONE ORDER STOCK ERROR:", error);
@@ -787,11 +1077,10 @@ const Orders = () => {
 
       if (!token) {
         navigate("/admin/login");
-
         return;
       }
 
-      const response = await axios.post(
+      await axios.post(
         `${API_ENDPOINTS.ORDER}/rollback-stock`,
         {
           orderId: order._id,
@@ -799,14 +1088,11 @@ const Orders = () => {
         getAuthConfig(),
       );
 
-      const data = response?.data || {};
-
       showSnackbar(
         `Rollback ${order.code || "đơn hàng"} thành công.`,
         "success",
       );
 
-      // Load lại từ DB
       await loadOrders();
     } catch (error) {
       console.error("ROLLBACK STOCK ERROR:", error);
@@ -865,7 +1151,6 @@ const Orders = () => {
 
       if (!token) {
         navigate("/admin/login");
-
         return;
       }
 
@@ -885,7 +1170,6 @@ const Orders = () => {
         "success",
       );
 
-      // Load lại dữ liệu
       await loadOrders();
     } catch (error) {
       console.error("UPDATE STATUS ERROR:", error);
@@ -1032,6 +1316,14 @@ const Orders = () => {
 
     const currentPrice = getCurrentProductPrice(item);
 
+    const defaultPrice = getVariantDefaultPrice(item);
+
+    const costPriceVND = getCostPriceVND(item);
+
+    const profitPerItem = getProfitPerItem(item);
+
+    const totalProfit = getTotalItemProfit(item);
+
     const hasPriceDifference = itemPrice !== currentPrice;
 
     const productName =
@@ -1039,15 +1331,24 @@ const Orders = () => {
 
     const variantName = String(item?.variantName || "").trim();
 
+    const profitKnown = defaultPrice > 0 && exchangeRate > 0;
+
     return (
       <Box
         key={syncKey}
         sx={{
           mt: 1,
-          p: 1,
+          p: 1.2,
           border: "1px solid",
-          borderColor: hasPriceDifference ? "warning.light" : "divider",
+          borderColor:
+            profitKnown && totalProfit < 0
+              ? "error.light"
+              : hasPriceDifference
+                ? "warning.light"
+                : "divider",
           borderRadius: 1.5,
+          backgroundColor:
+            profitKnown && totalProfit < 0 ? "error.50" : "transparent",
         }}
       >
         <Stack
@@ -1071,46 +1372,93 @@ const Orders = () => {
             </Typography>
           </Box>
 
-          <Tooltip title="Đồng bộ giá sản phẩm">
-            <span>
+          <Stack
+            direction="row"
+            spacing={0.5}
+            flexWrap="wrap"
+            justifyContent="flex-end"
+          >
+            <Tooltip title="Xem giá gốc và lợi nhuận">
               <Button
                 size="small"
-                variant={hasPriceDifference ? "contained" : "outlined"}
-                color={hasPriceDifference ? "warning" : "primary"}
-                disabled={
-                  Boolean(syncingPriceItem) ||
-                  syncingStock ||
-                  Boolean(syncingOrderId) ||
-                  Boolean(rollingBackOrderId) ||
-                  Boolean(updatingStatusId) ||
-                  payingDebt
+                variant={
+                  profitKnown
+                    ? totalProfit >= 0
+                      ? "outlined"
+                      : "contained"
+                    : "outlined"
                 }
-                onClick={() => handleSyncItemPrice(order, item, index)}
+                color={
+                  profitKnown
+                    ? totalProfit >= 0
+                      ? "success"
+                      : "error"
+                    : "primary"
+                }
+                onClick={() => handleOpenProfitDialog(order, item, index)}
                 startIcon={
-                  isSyncing ? (
-                    <CircularProgress size={14} color="inherit" />
+                  profitKnown ? (
+                    totalProfit >= 0 ? (
+                      <TrendingUp fontSize="small" />
+                    ) : (
+                      <TrendingDown fontSize="small" />
+                    )
                   ) : (
-                    <Sync fontSize="small" />
+                    <ReceiptLong fontSize="small" />
                   )
                 }
                 sx={{
-                  minWidth: 110,
+                  minWidth: 150,
                   fontSize: 11,
-                  fontWeight: 600,
+                  fontWeight: 700,
                   whiteSpace: "nowrap",
                 }}
               >
-                {isSyncing ? "Đang đồng bộ" : "Đồng bộ giá"}
+                Giá vốn & lợi nhuận
               </Button>
-            </span>
-          </Tooltip>
+            </Tooltip>
+
+            <Tooltip title="Đồng bộ giá sản phẩm">
+              <span>
+                <Button
+                  size="small"
+                  variant={hasPriceDifference ? "contained" : "outlined"}
+                  color={hasPriceDifference ? "warning" : "primary"}
+                  disabled={
+                    Boolean(syncingPriceItem) ||
+                    syncingStock ||
+                    Boolean(syncingOrderId) ||
+                    Boolean(rollingBackOrderId) ||
+                    Boolean(updatingStatusId) ||
+                    payingDebt
+                  }
+                  onClick={() => handleSyncItemPrice(order, item, index)}
+                  startIcon={
+                    isSyncing ? (
+                      <CircularProgress size={14} color="inherit" />
+                    ) : (
+                      <Sync fontSize="small" />
+                    )
+                  }
+                  sx={{
+                    minWidth: 110,
+                    fontSize: 11,
+                    fontWeight: 600,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {isSyncing ? "Đang đồng bộ" : "Đồng bộ giá"}
+                </Button>
+              </span>
+            </Tooltip>
+          </Stack>
         </Stack>
 
         <Stack
           direction="row"
           spacing={2}
           sx={{
-            mt: 0.8,
+            mt: 1,
             flexWrap: "wrap",
           }}
         >
@@ -1146,6 +1494,60 @@ const Orders = () => {
             </Typography>
           </Box>
 
+          {defaultPrice > 0 && (
+            <Box>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                display="block"
+              >
+                Giá gốc
+              </Typography>
+
+              <Typography variant="caption" fontWeight={700}>
+                {formatCNY(defaultPrice)}
+              </Typography>
+            </Box>
+          )}
+
+          {costPriceVND > 0 && (
+            <Box>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                display="block"
+              >
+                Giá vốn
+              </Typography>
+
+              <Typography variant="caption" fontWeight={700}>
+                {formatMoney(costPriceVND)}
+              </Typography>
+            </Box>
+          )}
+
+          {profitKnown && (
+            <Box>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                display="block"
+              >
+                Lãi/lỗ
+              </Typography>
+
+              <Typography
+                variant="caption"
+                fontWeight={700}
+                color={profitPerItem >= 0 ? "success.main" : "error.main"}
+              >
+                {profitPerItem >= 0 ? "+" : ""}
+                {formatMoney(profitPerItem)}
+                /sp
+              </Typography>
+            </Box>
+          )}
+
           {hasPriceDifference && (
             <Box>
               <Typography
@@ -1153,7 +1555,7 @@ const Orders = () => {
                 color="text.secondary"
                 display="block"
               >
-                Chênh lệch
+                Chênh lệch giá
               </Typography>
 
               <Typography
@@ -1167,6 +1569,37 @@ const Orders = () => {
             </Box>
           )}
         </Stack>
+
+        {profitKnown && (
+          <Box
+            sx={{
+              mt: 1,
+              pt: 1,
+              borderTop: "1px dashed",
+              borderColor: "divider",
+            }}
+          >
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              alignItems="center"
+            >
+              <Typography variant="caption" color="text.secondary">
+                Lợi nhuận x {Number(item?.qty || 0).toLocaleString("vi-VN")} sản
+                phẩm
+              </Typography>
+
+              <Typography
+                variant="body2"
+                fontWeight={800}
+                color={totalProfit >= 0 ? "success.main" : "error.main"}
+              >
+                {totalProfit >= 0 ? "+" : ""}
+                {formatMoney(totalProfit)}
+              </Typography>
+            </Stack>
+          </Box>
+        )}
       </Box>
     );
   };
@@ -1262,7 +1695,6 @@ const Orders = () => {
 
       if (!token) {
         navigate("/admin/login");
-
         return;
       }
 
@@ -1285,10 +1717,6 @@ const Orders = () => {
         data?.message || `Đã thu ${formatMoney(amount)}.`,
         "success",
       );
-
-      // =================================================
-      // LOAD LẠI DATABASE
-      // =================================================
 
       await loadOrders();
 
@@ -1336,6 +1764,39 @@ const Orders = () => {
   };
 
   // =====================================================
+  // TOTAL PROFIT CURRENT PAGE
+  // =====================================================
+
+  const currentPageProfit = useMemo(() => {
+    return orders.reduce(
+      (totalProfit, order) => totalProfit + getOrderProfit(order),
+      0,
+    );
+  }, [orders, exchangeRate]);
+
+  // =====================================================
+  // TOTAL COST CURRENT PAGE
+  // =====================================================
+
+  const currentPageCost = useMemo(() => {
+    return orders.reduce(
+      (totalCost, order) => totalCost + getOrderCost(order),
+      0,
+    );
+  }, [orders, exchangeRate]);
+
+  // =====================================================
+  // TOTAL REVENUE CURRENT PAGE
+  // =====================================================
+
+  const currentPageRevenue = useMemo(() => {
+    return orders.reduce(
+      (totalRevenue, order) => totalRevenue + getOrderRevenue(order),
+      0,
+    );
+  }, [orders]);
+
+  // =====================================================
   // RENDER
   // =====================================================
 
@@ -1373,7 +1834,7 @@ const Orders = () => {
           </Typography>
 
           <Typography variant="body2" color="text.secondary">
-            Quản lý đơn hàng, giá, tồn kho và công nợ
+            Quản lý đơn hàng, giá, tồn kho, công nợ và lợi nhuận
           </Typography>
         </Box>
 
@@ -1416,6 +1877,87 @@ const Orders = () => {
           </Button>
         </Stack>
       </Stack>
+
+      {/* =================================================
+          EXCHANGE RATE
+      ================================================= */}
+
+      <Card
+        sx={{
+          mb: 2,
+          border: "1px solid",
+          borderColor: "divider",
+        }}
+      >
+        <CardContent>
+          <Stack
+            direction={{
+              xs: "column",
+              md: "row",
+            }}
+            spacing={2}
+            alignItems={{
+              xs: "stretch",
+              md: "center",
+            }}
+            justifyContent="space-between"
+          >
+            <Box>
+              <Typography variant="subtitle1" fontWeight={700}>
+                Tỷ giá CNY → VND
+              </Typography>
+
+              <Typography variant="caption" color="text.secondary">
+                Giá gốc variant
+                <strong> defaultPrice</strong> được tính là CNY.
+              </Typography>
+            </Box>
+
+            <Stack direction="row" spacing={1} alignItems="center">
+              <TextField
+                size="small"
+                label="1 CNY ="
+                value={exchangeRate || ""}
+                onChange={handleExchangeRateChange}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">₫</InputAdornment>
+                  ),
+                }}
+                sx={{
+                  width: 180,
+                }}
+              />
+
+              <Button
+                variant="outlined"
+                startIcon={
+                  exchangeRateLoading ? (
+                    <CircularProgress size={17} />
+                  ) : (
+                    <Refresh />
+                  )
+                }
+                disabled={exchangeRateLoading}
+                onClick={loadExchangeRate}
+              >
+                {exchangeRateLoading ? "Đang lấy..." : "Cập nhật tỷ giá"}
+              </Button>
+            </Stack>
+          </Stack>
+
+          {exchangeRateError && (
+            <Alert
+              severity="warning"
+              sx={{
+                mt: 1.5,
+              }}
+            >
+              {exchangeRateError}
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
 
       {/* =================================================
           FILTER
@@ -1515,7 +2057,7 @@ const Orders = () => {
           mb: 2,
         }}
       >
-        <Grid item xs={12} sm={4}>
+        <Grid item xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
               <Stack direction="row" spacing={2} alignItems="center">
@@ -1535,7 +2077,7 @@ const Orders = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={4}>
+        <Grid item xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
               <Stack direction="row" spacing={2} alignItems="center">
@@ -1555,7 +2097,38 @@ const Orders = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={4}>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card>
+            <CardContent>
+              <Stack direction="row" spacing={2} alignItems="center">
+                {currentPageProfit >= 0 ? (
+                  <TrendingUp color="success" />
+                ) : (
+                  <TrendingDown color="error" />
+                )}
+
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Lãi/lỗ trang này
+                  </Typography>
+
+                  <Typography
+                    variant="h6"
+                    fontWeight={700}
+                    color={
+                      currentPageProfit >= 0 ? "success.main" : "error.main"
+                    }
+                  >
+                    {currentPageProfit >= 0 ? "+" : ""}
+                    {formatMoney(currentPageProfit)}
+                  </Typography>
+                </Box>
+              </Stack>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
               <Stack direction="row" spacing={2} alignItems="center">
@@ -1577,6 +2150,57 @@ const Orders = () => {
       </Grid>
 
       {/* =================================================
+          PROFIT SUMMARY
+      ================================================= */}
+
+      <Card
+        sx={{
+          mb: 2,
+          border: "1px solid",
+          borderColor: "divider",
+        }}
+      >
+        <CardContent>
+          <Grid container spacing={2}>
+            <Grid item xs={12} md={4}>
+              <Typography variant="caption" color="text.secondary">
+                Doanh thu trang hiện tại
+              </Typography>
+
+              <Typography variant="h6" fontWeight={700}>
+                {formatMoney(currentPageRevenue)}
+              </Typography>
+            </Grid>
+
+            <Grid item xs={12} md={4}>
+              <Typography variant="caption" color="text.secondary">
+                Giá vốn trang hiện tại
+              </Typography>
+
+              <Typography variant="h6" fontWeight={700}>
+                {formatMoney(currentPageCost)}
+              </Typography>
+            </Grid>
+
+            <Grid item xs={12} md={4}>
+              <Typography variant="caption" color="text.secondary">
+                Lợi nhuận thực tế
+              </Typography>
+
+              <Typography
+                variant="h6"
+                fontWeight={800}
+                color={currentPageProfit >= 0 ? "success.main" : "error.main"}
+              >
+                {currentPageProfit >= 0 ? "+" : ""}
+                {formatMoney(currentPageProfit)}
+              </Typography>
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
+
+      {/* =================================================
           TABLE
       ================================================= */}
 
@@ -1585,7 +2209,7 @@ const Orders = () => {
           <Table
             size="small"
             sx={{
-              minWidth: 1550,
+              minWidth: 1750,
             }}
           >
             <TableHead>
@@ -1600,7 +2224,7 @@ const Orders = () => {
 
                 <TableCell
                   sx={{
-                    minWidth: 480,
+                    minWidth: 600,
                   }}
                 >
                   <strong>Sản phẩm & giá</strong>
@@ -1608,6 +2232,14 @@ const Orders = () => {
 
                 <TableCell>
                   <strong>Tổng tiền</strong>
+                </TableCell>
+
+                <TableCell>
+                  <strong>Giá vốn</strong>
+                </TableCell>
+
+                <TableCell>
+                  <strong>Lãi/lỗ</strong>
                 </TableCell>
 
                 <TableCell>
@@ -1640,7 +2272,7 @@ const Orders = () => {
               {loading ? (
                 <TableRow>
                   <TableCell
-                    colSpan={10}
+                    colSpan={12}
                     align="center"
                     sx={{
                       py: 6,
@@ -1662,7 +2294,7 @@ const Orders = () => {
               ) : orders.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={10}
+                    colSpan={12}
                     align="center"
                     sx={{
                       py: 6,
@@ -1685,6 +2317,10 @@ const Orders = () => {
                   const isCancelled = order.status === "cancelled";
 
                   const orderDebt = Number(order.debt || 0);
+
+                  const orderProfit = getOrderProfit(order);
+
+                  const orderCost = getOrderCost(order);
 
                   return (
                     <TableRow
@@ -1744,6 +2380,48 @@ const Orders = () => {
                       <TableCell>
                         <Typography fontWeight={700}>
                           {formatMoney(order.totalAmount || order.total || 0)}
+                        </Typography>
+                      </TableCell>
+
+                      {/* GIÁ VỐN */}
+
+                      <TableCell>
+                        <Typography fontWeight={700}>
+                          {formatMoney(orderCost)}
+                        </Typography>
+
+                        <Typography variant="caption" color="text.secondary">
+                          Theo defaultPrice × tỷ giá
+                        </Typography>
+                      </TableCell>
+
+                      {/* LÃI / LỖ */}
+
+                      <TableCell>
+                        <Stack
+                          direction="row"
+                          spacing={0.5}
+                          alignItems="center"
+                        >
+                          {orderProfit >= 0 ? (
+                            <TrendingUp fontSize="small" color="success" />
+                          ) : (
+                            <TrendingDown fontSize="small" color="error" />
+                          )}
+
+                          <Typography
+                            fontWeight={800}
+                            color={
+                              orderProfit >= 0 ? "success.main" : "error.main"
+                            }
+                          >
+                            {orderProfit >= 0 ? "+" : ""}
+                            {formatMoney(orderProfit)}
+                          </Typography>
+                        </Stack>
+
+                        <Typography variant="caption" color="text.secondary">
+                          Tỷ giá {exchangeRate.toLocaleString("vi-VN")}
                         </Typography>
                       </TableCell>
 
@@ -1904,7 +2582,32 @@ const Orders = () => {
                               </span>
                             </Tooltip>
                           )}
-
+                          {/* NÚT MỚI: ĐỒNG BỘ VARIANT */}
+                          <Tooltip title="Đồng bộ variant">
+                            <span>
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                color="secondary"
+                                disabled={syncingVariantsId === order._id}
+                                onClick={() => handleSyncOrderVariants(order)}
+                                startIcon={
+                                  syncingVariantsId === order._id ? (
+                                    <CircularProgress
+                                      size={15}
+                                      color="inherit"
+                                    />
+                                  ) : (
+                                    <Sync />
+                                  )
+                                }
+                              >
+                                {syncingVariantsId === order._id
+                                  ? "Đang đồng bộ"
+                                  : "Đồng bộ variant"}
+                              </Button>
+                            </span>
+                          </Tooltip>
                           <Tooltip title="Xem đơn hàng">
                             <IconButton
                               size="small"
@@ -1954,6 +2657,270 @@ const Orders = () => {
           />
         </Box>
       </Card>
+
+      {/* =================================================
+          PROFIT DIALOG
+      ================================================= */}
+
+      <Dialog
+        open={profitDialogOpen}
+        onClose={handleCloseProfitDialog}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>
+          <Stack direction="row" spacing={1} alignItems="center">
+            {selectedProfitItem &&
+            getProfitPerItem(selectedProfitItem.item) >= 0 ? (
+              <TrendingUp color="success" />
+            ) : (
+              <TrendingDown color="error" />
+            )}
+
+            <Box>
+              <Typography variant="h6" fontWeight={700}>
+                Giá vốn & lợi nhuận
+              </Typography>
+
+              {selectedProfitItem && (
+                <Typography variant="body2" color="text.secondary">
+                  {selectedProfitItem.item?.title ||
+                    selectedProfitItem.item?.productTitle ||
+                    selectedProfitItem.item?.product?.title ||
+                    "Sản phẩm"}
+                </Typography>
+              )}
+            </Box>
+          </Stack>
+        </DialogTitle>
+
+        <Divider />
+
+        <DialogContent>
+          {selectedProfitItem && (
+            <Stack
+              spacing={2}
+              sx={{
+                pt: 1,
+              }}
+            >
+              {(() => {
+                const item = selectedProfitItem.item;
+
+                const defaultPrice = getVariantDefaultPrice(item);
+
+                const costPriceVND = getCostPriceVND(item);
+
+                const salePrice = getItemPrice(item);
+
+                const qty = Number(item?.qty || 0);
+
+                const profitPerItem = getProfitPerItem(item);
+
+                const totalProfit = getTotalItemProfit(item);
+
+                return (
+                  <>
+                    <Box
+                      sx={{
+                        p: 2,
+                        borderRadius: 2,
+                        backgroundColor: "grey.50",
+                        border: "1px solid",
+                        borderColor: "divider",
+                      }}
+                    >
+                      <Typography variant="body2" color="text.secondary">
+                        Phân loại
+                      </Typography>
+
+                      <Typography variant="h6" fontWeight={700}>
+                        {item?.variantName || "Mặc định"}
+                      </Typography>
+                    </Box>
+
+                    <Grid container spacing={1.5}>
+                      <Grid item xs={12} sm={4}>
+                        <Box
+                          sx={{
+                            p: 1.5,
+                            borderRadius: 2,
+                            backgroundColor: "grey.50",
+                          }}
+                        >
+                          <Typography variant="caption" color="text.secondary">
+                            Giá gốc variant
+                          </Typography>
+
+                          <Typography variant="h6" fontWeight={700}>
+                            {formatCNY(defaultPrice)}
+                          </Typography>
+                        </Box>
+                      </Grid>
+
+                      <Grid item xs={12} sm={4}>
+                        <Box
+                          sx={{
+                            p: 1.5,
+                            borderRadius: 2,
+                            backgroundColor: "warning.50",
+                          }}
+                        >
+                          <Typography variant="caption" color="text.secondary">
+                            Tỷ giá
+                          </Typography>
+
+                          <Typography variant="h6" fontWeight={700}>
+                            {exchangeRate.toLocaleString("vi-VN")}
+                          </Typography>
+
+                          <Typography variant="caption" color="text.secondary">
+                            VND / CNY
+                          </Typography>
+                        </Box>
+                      </Grid>
+
+                      <Grid item xs={12} sm={4}>
+                        <Box
+                          sx={{
+                            p: 1.5,
+                            borderRadius: 2,
+                            backgroundColor: "primary.50",
+                          }}
+                        >
+                          <Typography variant="caption" color="text.secondary">
+                            Giá vốn VND
+                          </Typography>
+
+                          <Typography variant="h6" fontWeight={700}>
+                            {formatMoney(costPriceVND)}
+                          </Typography>
+                        </Box>
+                      </Grid>
+                    </Grid>
+
+                    <Divider />
+
+                    <Grid container spacing={1.5}>
+                      <Grid item xs={12} sm={4}>
+                        <Box
+                          sx={{
+                            p: 1.5,
+                            borderRadius: 2,
+                            backgroundColor: "grey.50",
+                          }}
+                        >
+                          <Typography variant="caption" color="text.secondary">
+                            Giá bán
+                          </Typography>
+
+                          <Typography variant="h6" fontWeight={700}>
+                            {formatMoney(salePrice)}
+                          </Typography>
+                        </Box>
+                      </Grid>
+
+                      <Grid item xs={12} sm={4}>
+                        <Box
+                          sx={{
+                            p: 1.5,
+                            borderRadius: 2,
+                            backgroundColor:
+                              profitPerItem >= 0 ? "success.50" : "error.50",
+                          }}
+                        >
+                          <Typography variant="caption" color="text.secondary">
+                            Lãi/lỗ mỗi SP
+                          </Typography>
+
+                          <Typography
+                            variant="h6"
+                            fontWeight={800}
+                            color={
+                              profitPerItem >= 0 ? "success.main" : "error.main"
+                            }
+                          >
+                            {profitPerItem >= 0 ? "+" : ""}
+                            {formatMoney(profitPerItem)}
+                          </Typography>
+                        </Box>
+                      </Grid>
+
+                      <Grid item xs={12} sm={4}>
+                        <Box
+                          sx={{
+                            p: 1.5,
+                            borderRadius: 2,
+                            backgroundColor:
+                              totalProfit >= 0 ? "success.50" : "error.50",
+                          }}
+                        >
+                          <Typography variant="caption" color="text.secondary">
+                            SL
+                          </Typography>
+
+                          <Typography variant="h6" fontWeight={700}>
+                            {qty.toLocaleString("vi-VN")}
+                          </Typography>
+                        </Box>
+                      </Grid>
+                    </Grid>
+
+                    <Box
+                      sx={{
+                        p: 2,
+                        borderRadius: 2,
+                        border: "2px solid",
+                        borderColor:
+                          totalProfit >= 0 ? "success.main" : "error.main",
+                        backgroundColor:
+                          totalProfit >= 0 ? "success.50" : "error.50",
+                      }}
+                    >
+                      <Stack
+                        direction="row"
+                        justifyContent="space-between"
+                        alignItems="center"
+                      >
+                        <Box>
+                          <Typography variant="body2" color="text.secondary">
+                            Tổng lãi/lỗ
+                          </Typography>
+
+                          <Typography variant="caption" color="text.secondary">
+                            Giá bán − giá vốn × số lượng
+                          </Typography>
+                        </Box>
+
+                        <Typography
+                          variant="h5"
+                          fontWeight={900}
+                          color={
+                            totalProfit >= 0 ? "success.main" : "error.main"
+                          }
+                        >
+                          {totalProfit >= 0 ? "+" : ""}
+                          {formatMoney(totalProfit)}
+                        </Typography>
+                      </Stack>
+                    </Box>
+                  </>
+                );
+              })()}
+            </Stack>
+          )}
+        </DialogContent>
+
+        <Divider />
+
+        <DialogActions
+          sx={{
+            p: 2,
+          }}
+        >
+          <Button onClick={handleCloseProfitDialog}>Đóng</Button>
+        </DialogActions>
+      </Dialog>
 
       {/* =================================================
           DEBT DIALOG

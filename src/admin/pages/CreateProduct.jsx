@@ -52,6 +52,7 @@ const TYPE_NAME = {
 
 const emptyVariant = () => ({
   name: "",
+  defaultPrice: "",
   price: "",
   qty: 0,
 });
@@ -449,7 +450,7 @@ export default function CreateProduct() {
           name: String(variant.name || "").trim(),
 
           price: String(variant.price || "0"),
-
+          defaultPrice: String(variant.defaultPrice || "0"),
           qty: Number(variant.qty || 0),
         })),
       };
@@ -920,6 +921,24 @@ export default function CreateProduct() {
                       value={formatVND(variant.price)}
                       onChange={(e) =>
                         updateVariant(index, "price", parseVND(e.target.value))
+                      }
+                      placeholder="VD: 150.000"
+                      InputProps={{
+                        endAdornment: "₫",
+                      }}
+                    />
+                  </Grid>
+
+                  {/* GIÁ */}
+
+                  <Grid item xs={12} md={3}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="Giá gốc"
+                      value={variant.defaultPrice}
+                      onChange={(e) =>
+                        updateVariant(index, "defaultPrice", e.target.value)
                       }
                       placeholder="VD: 150.000"
                       InputProps={{
