@@ -1,5 +1,5 @@
 import { FC, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 
 import {
   AiOutlineShoppingCart,
@@ -14,7 +14,7 @@ import { MdOutlineDarkMode, MdOutlineLightMode } from "react-icons/md";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 
 import { setCartState } from "../redux/features/cartSlice";
-import { updateModal } from "../redux/features/authSlice";
+
 import { updateDarkMode } from "../redux/features/homeSlice";
 
 import useAuth from "../hooks/useAuth";
@@ -24,6 +24,8 @@ import SearchBar from "./SearchBar";
 
 const Navbar: FC = () => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -77,13 +79,6 @@ const Navbar: FC = () => {
      CART
   ===================================================== */
 
-  const showCart = () => {
-    requireAuth(() => {
-      dispatch(setCartState(true));
-      setIsMenuOpen(false);
-    });
-  };
-
   /* =====================================================
      DARK MODE
   ===================================================== */
@@ -103,17 +98,32 @@ const Navbar: FC = () => {
   };
 
   /* =====================================================
-     OPEN AUTH
+     OPEN LOGIN PAGE
   ===================================================== */
 
   const openLogin = () => {
-    dispatch(updateModal(true));
     setIsMenuOpen(false);
+    navigate("/login", {
+      state: {
+        from: location.pathname + location.search,
+      },
+    });
   };
+  const showCart = () => {
+    // dispatch(setCartState(true));
+    openLogin();
+  };
+  /* =====================================================
+     OPEN REGISTER PAGE
+  ===================================================== */
 
   const openRegister = () => {
-    dispatch(updateModal(true));
     setIsMenuOpen(false);
+    navigate("/register", {
+      state: {
+        from: location.pathname + location.search,
+      },
+    });
   };
 
   return (
@@ -589,9 +599,7 @@ const Navbar: FC = () => {
             ================================================= */}
 
             <nav className="flex-1 overflow-y-auto p-5">
-              {/* =================================================
-                  MAIN MENU
-              ================================================= */}
+              {/* MAIN MENU */}
 
               <div className="space-y-2">
                 <Link
@@ -637,9 +645,7 @@ const Navbar: FC = () => {
                 </Link>
               </div>
 
-              {/* =================================================
-                  DIVIDER
-              ================================================= */}
+              {/* DIVIDER */}
 
               <div
                 className="
@@ -667,8 +673,6 @@ const Navbar: FC = () => {
                     dark:bg-slate-800
                   "
                 >
-                  {/* Account header */}
-
                   <div
                     className="
                       bg-gradient-to-r
@@ -731,9 +735,7 @@ const Navbar: FC = () => {
                     dark:to-slate-900
                   "
                 >
-                  {/* =================================================
-                      ACCOUNT HEADER
-                  ================================================= */}
+                  {/* ACCOUNT HEADER */}
 
                   <div className="px-4 pt-5">
                     <div className="flex items-center gap-3">
@@ -781,9 +783,7 @@ const Navbar: FC = () => {
                     </div>
                   </div>
 
-                  {/* =================================================
-                      AUTH ACTIONS
-                  ================================================= */}
+                  {/* AUTH ACTIONS */}
 
                   <div className="grid grid-cols-2 gap-2 p-4">
                     {/* LOGIN */}
@@ -791,6 +791,7 @@ const Navbar: FC = () => {
                     <button
                       type="button"
                       onClick={openLogin}
+                      data-test="mobile-login-btn"
                       className="
                         flex
                         h-11
@@ -821,6 +822,7 @@ const Navbar: FC = () => {
                     <button
                       type="button"
                       onClick={openRegister}
+                      data-test="mobile-register-btn"
                       className="
                         flex
                         h-11
@@ -844,9 +846,7 @@ const Navbar: FC = () => {
                     </button>
                   </div>
 
-                  {/* =================================================
-                      ACCOUNT NOTE
-                  ================================================= */}
+                  {/* ACCOUNT NOTE */}
 
                   <div
                     className="

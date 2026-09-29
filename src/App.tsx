@@ -30,6 +30,10 @@ import Wishlist from "./pages/Wishlist";
 import Profile from "./pages/Profile";
 import AnalyticsTracker from "./pages/AnalyticsTracker";
 import { ToastContainer } from "react-toastify";
+import AuthModal from "./components/AuthModal";
+import LoginForm from "./components/LoginForm";
+import RegisterForm from "./components/RegisterForm";
+
 import "react-toastify/dist/ReactToastify.css";
 // ================================
 // ADMIN
@@ -120,6 +124,8 @@ const CheckAccount = () => {
         <Route path="/account" element={<ProtectedRoute />}>
           <Route index element={<Profile />} />
         </Route>
+        <Route path="/login" element={<LoginForm />} />
+        <Route path="/register" element={<RegisterForm />} />
       </Routes>
       <Toaster position="bottom-center" reverseOrder={false} />
       {/* ================================
@@ -139,6 +145,7 @@ const CheckAccount = () => {
         pauseOnHover
       />
       <AnalyticsTracker />
+      <AuthModal />
     </>
   );
 };
