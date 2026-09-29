@@ -1,5 +1,5 @@
 import { FC, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 
 import { addCategories } from "../redux/features/productSlice";
@@ -102,6 +102,18 @@ const getCategoryImage = (category: Category): string => {
 const AllCategories: FC = () => {
   const dispatch = useAppDispatch();
 
+  // =========================================================
+  // LẤY TYPE TỪ URL
+  // =========================================================
+
+  const [searchParams] = useSearchParams();
+
+  const selectedType = searchParams.get("type");
+
+  // =========================================================
+  // REDUX
+  // =========================================================
+
   const allCategories = useAppSelector(
     (state) => state.productReducer.categories,
   ) as Category[];
@@ -191,6 +203,22 @@ const AllCategories: FC = () => {
   };
 
   // =========================================================
+  // FILTER GROUP THEO TYPE
+  // =========================================================
+
+  const visibleGroups = CATEGORY_GROUPS.filter((group) => {
+    // Không có ?type=
+    // => Hiển thị tất cả
+    if (!selectedType) {
+      return true;
+    }
+
+    // Có ?type=
+    // => Chỉ hiển thị đúng type
+    return String(group.type) === String(selectedType);
+  });
+
+  // =========================================================
   // RENDER
   // =========================================================
 
@@ -236,7 +264,7 @@ const AllCategories: FC = () => {
                 CATEGORY GROUP
             ================================================= */}
 
-            {CATEGORY_GROUPS.map((group) => {
+            {visibleGroups.map((group) => {
               const categories = getCategories(group.type);
 
               return (

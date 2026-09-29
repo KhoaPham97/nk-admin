@@ -298,6 +298,12 @@ const Home: FC = () => {
                 <Link
                   to="/products"
                   className="rounded-xl bg-blue-600 px-6 py-3.5 text-sm font-semibold text-white shadow-lg transition hover:bg-blue-700"
+                  onClick={() => {
+                    window.scrollTo({
+                      top: 0,
+                      behavior: "instant",
+                    });
+                  }}
                 >
                   Xem sản phẩm
                 </Link>
@@ -305,6 +311,12 @@ const Home: FC = () => {
                 <Link
                   to="/categories"
                   className="rounded-xl border border-white/30 bg-white/10 px-6 py-3.5 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/20"
+                  onClick={() => {
+                    window.scrollTo({
+                      top: 0,
+                      behavior: "instant",
+                    });
+                  }}
                 >
                   Xem danh mục
                 </Link>
@@ -359,6 +371,12 @@ const Home: FC = () => {
           <Link
             to="/categories"
             className="hidden text-sm font-semibold text-blue-600 hover:text-blue-700 sm:block"
+            onClick={() => {
+              window.scrollTo({
+                top: 0,
+                behavior: "instant",
+              });
+            }}
           >
             Xem tất cả →
           </Link>
@@ -414,6 +432,12 @@ const Home: FC = () => {
                     <Link
                       to={`/categories?type=${group.type}`}
                       className="mt-5 inline-flex items-center text-sm font-semibold text-white"
+                      onClick={() => {
+                        window.scrollTo({
+                          top: 0,
+                          behavior: "instant",
+                        });
+                      }}
                     >
                       Xem phụ tùng
                       <span className="ml-2 transition-transform group-hover:translate-x-1">
@@ -586,6 +610,12 @@ const Home: FC = () => {
             <Link
               to="/products"
               className="shrink-0 rounded-xl bg-white px-7 py-3.5 text-sm font-bold text-blue-600 shadow-lg transition hover:bg-gray-100"
+              onClick={() => {
+                window.scrollTo({
+                  top: 0,
+                  behavior: "instant",
+                });
+              }}
             >
               Xem sản phẩm
             </Link>

@@ -46,7 +46,7 @@ const SingleCategory: FC = () => {
           <span> {">"} </span>
           <span className="font-bold">{data.state.category.name}</span>
         </div>
-        <SortProducts products={productList} onChange={setProductList} />
+        {/* <SortProducts products={productList} onChange={setProductList} /> */}
       </div>
       {/* {isLoading ? (
         <div className="flex items-center justify-center">

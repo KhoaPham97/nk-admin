@@ -8,6 +8,9 @@ const MAX_WIDTH = 800;
 const MAX_HEIGHT = 800;
 const QUALITY = 82;
 
+// Ảnh nhỏ hơn hoặc bằng mức này sẽ bỏ qua
+const MAX_FILE_SIZE = 300 * 1024; // 300 KB
+
 async function getAllFiles(dir) {
   const entries = await fs.promises.readdir(dir, {
     withFileTypes: true,
@@ -41,6 +44,21 @@ async function optimizeImage(filePath) {
   try {
     const before = (await fs.promises.stat(filePath)).size;
 
+    // ==========================================
+    // 1. ẢNH ĐÃ NHỎ → BỎ QUA NGAY
+    // ==========================================
+    if (before <= MAX_FILE_SIZE) {
+      console.log(
+        `○ ${path.basename(filePath)} | ` +
+          `${(before / 1024).toFixed(1)} KB | bỏ qua`,
+      );
+
+      return;
+    }
+
+    // ==========================================
+    // 2. ẢNH LỚN → TIẾN HÀNH OPTIMIZE
+    // ==========================================
     await sharp(filePath)
       .resize({
         width: MAX_WIDTH,
@@ -56,6 +74,9 @@ async function optimizeImage(filePath) {
 
     const after = (await fs.promises.stat(tempPath)).size;
 
+    // ==========================================
+    // 3. FILE MỚI NHỎ HƠN → THAY FILE CŨ
+    // ==========================================
     if (after < before) {
       await fs.promises.rm(filePath);
 
@@ -67,13 +88,17 @@ async function optimizeImage(filePath) {
           `${(after / 1024).toFixed(1)} KB`,
       );
     } else {
+      // File optimize không nhỏ hơn → giữ nguyên
       await fs.promises.rm(tempPath);
 
-      console.log(`- ${path.basename(filePath)} | giữ nguyên`);
+      console.log(
+        `- ${path.basename(filePath)} | ` +
+          `${(before / 1024).toFixed(1)} KB → ` +
+          `${(after / 1024).toFixed(1)} KB | giữ nguyên`,
+      );
     }
   } catch (error) {
     console.error(`✗ ${path.basename(filePath)}`);
-
     console.error(error.message);
 
     if (fs.existsSync(tempPath)) {
@@ -90,14 +115,15 @@ async function main() {
   console.log("");
 
   console.log(`Thư mục: ${IMAGE_DIR}`);
+  console.log(`Bỏ qua ảnh ≤ ${(MAX_FILE_SIZE / 1024).toFixed(0)} KB`);
+  console.log(`Max size: ${MAX_WIDTH}x${MAX_HEIGHT}`);
+  console.log(`JPEG quality: ${QUALITY}`);
 
   console.log("");
 
   if (!fs.existsSync(IMAGE_DIR)) {
     console.error("❌ Không tìm thấy thư mục:");
-
     console.error(IMAGE_DIR);
-
     return;
   }
 
@@ -110,7 +136,6 @@ async function main() {
   });
 
   console.log(`Tìm thấy ${images.length} ảnh JPG/JPEG`);
-
   console.log("");
 
   for (const image of images) {
@@ -118,13 +143,9 @@ async function main() {
   }
 
   console.log("");
-
   console.log("======================================");
-
   console.log("              HOÀN THÀNH");
-
   console.log("======================================");
-
   console.log("");
 }
 

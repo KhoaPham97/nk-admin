@@ -1,12 +1,6 @@
 import { FC } from "react";
-import { Link } from "react-router-dom";
 
-import {
-  FaFacebookF,
-  FaPhone,
-  FaLocationDot,
-  FaEnvelope,
-} from "react-icons/fa6";
+import { FaFacebookF, FaLocationDot, FaEnvelope } from "react-icons/fa6";
 
 import { useAppSelector } from "../redux/hooks";
 
@@ -79,8 +73,8 @@ const Footer: FC = () => {
           ================================================= */}
 
           <div>
-            <Link
-              to="/"
+            <a
+              href="/"
               className="
                 inline-block
                 text-xl
@@ -90,7 +84,7 @@ const Footer: FC = () => {
               "
             >
               {storeName}
-            </Link>
+            </a>
 
             <p
               className="
@@ -133,12 +127,16 @@ const Footer: FC = () => {
               </a>
             )}
 
-            {/* FACEBOOK */}
+            {/* =================================================
+                FACEBOOK
+            ================================================= */}
 
             <div className="mt-5">
               <a
                 href="#"
-                onClick={(event) => event.preventDefault()}
+                onClick={(event) => {
+                  event.preventDefault();
+                }}
                 className="
                   flex
                   h-9
@@ -177,9 +175,11 @@ const Footer: FC = () => {
             </h3>
 
             <ul className="mt-4 space-y-3">
+              {/* TYPE 1 */}
+
               <li>
-                <Link
-                  to="/products?type=1"
+                <a
+                  href="/products?type=1"
                   className="
                     text-sm
                     text-gray-500
@@ -189,12 +189,14 @@ const Footer: FC = () => {
                   "
                 >
                   Phụ tùng xe đạp
-                </Link>
+                </a>
               </li>
 
+              {/* TYPE 2 */}
+
               <li>
-                <Link
-                  to="/products?type=2"
+                <a
+                  href="/products?type=2"
                   className="
                     text-sm
                     text-gray-500
@@ -204,12 +206,14 @@ const Footer: FC = () => {
                   "
                 >
                   Phụ tùng xe điện
-                </Link>
+                </a>
               </li>
 
+              {/* TYPE 3 */}
+
               <li>
-                <Link
-                  to="/products?type=3"
+                <a
+                  href="/products?type=3"
                   className="
                     text-sm
                     text-gray-500
@@ -219,12 +223,14 @@ const Footer: FC = () => {
                   "
                 >
                   Phụ tùng xe ba gác
-                </Link>
+                </a>
               </li>
 
+              {/* ALL CATEGORIES */}
+
               <li>
-                <Link
-                  to="/categories"
+                <a
+                  href="/categories"
                   className="
                     text-sm
                     text-gray-500
@@ -234,7 +240,7 @@ const Footer: FC = () => {
                   "
                 >
                   Tất cả danh mục
-                </Link>
+                </a>
               </li>
             </ul>
           </div>
@@ -258,9 +264,11 @@ const Footer: FC = () => {
             </h3>
 
             <ul className="mt-4 space-y-3">
+              {/* HOME */}
+
               <li>
-                <Link
-                  to="/"
+                <a
+                  href="/"
                   className="
                     text-sm
                     text-gray-500
@@ -269,12 +277,14 @@ const Footer: FC = () => {
                   "
                 >
                   Trang chủ
-                </Link>
+                </a>
               </li>
 
+              {/* PRODUCTS */}
+
               <li>
-                <Link
-                  to="/products"
+                <a
+                  href="/products"
                   className="
                     text-sm
                     text-gray-500
@@ -283,12 +293,14 @@ const Footer: FC = () => {
                   "
                 >
                   Sản phẩm
-                </Link>
+                </a>
               </li>
 
+              {/* CATEGORIES */}
+
               <li>
-                <Link
-                  to="/categories"
+                <a
+                  href="/categories"
                   className="
                     text-sm
                     text-gray-500
@@ -297,12 +309,14 @@ const Footer: FC = () => {
                   "
                 >
                   Danh mục
-                </Link>
+                </a>
               </li>
 
+              {/* CART */}
+
               <li>
-                <Link
-                  to="/cart"
+                <a
+                  href="/cart"
                   className="
                     text-sm
                     text-gray-500
@@ -311,7 +325,7 @@ const Footer: FC = () => {
                   "
                 >
                   Giỏ hàng
-                </Link>
+                </a>
               </li>
             </ul>
           </div>
@@ -335,30 +349,68 @@ const Footer: FC = () => {
             </h3>
 
             <ul className="mt-4 space-y-4">
-              {/* PHONE */}
+              {/* =================================================
+                  ZALO
+              ================================================= */}
 
               {showPhone && phone && (
-                <a
-                  href={`https://zalo.me/${phone}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group flex items-center gap-3 rounded-xl border border-blue-100 bg-blue-50 p-3 transition-all hover:border-blue-200 hover:bg-blue-100"
-                >
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-black text-white shadow-sm transition-transform group-hover:scale-105">
-                    Zalo
-                  </div>
+                <li>
+                  <a
+                    href={`https://zalo.me/${phone}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="
+                      group
+                      flex
+                      items-center
+                      gap-3
+                      rounded-xl
+                      border
+                      border-blue-100
+                      bg-blue-50
+                      p-3
+                      transition-all
+                      hover:border-blue-200
+                      hover:bg-blue-100
+                    "
+                  >
+                    <div
+                      className="
+                        flex
+                        h-11
+                        w-11
+                        shrink-0
+                        items-center
+                        justify-center
+                        rounded-full
+                        bg-blue-600
+                        text-xs
+                        font-black
+                        text-white
+                        shadow-sm
+                        transition-transform
+                        group-hover:scale-105
+                      "
+                    >
+                      Zalo
+                    </div>
 
-                  <div>
-                    <p className="font-semibold text-gray-900">Chat qua Zalo</p>
+                    <div>
+                      <p className="font-semibold text-gray-900">
+                        Chat qua Zalo
+                      </p>
 
-                    <p className="mt-0.5 text-xs text-gray-500">
-                      Tư vấn sản phẩm & đặt hàng
-                    </p>
-                  </div>
-                </a>
+                      <p className="mt-0.5 text-xs text-gray-500">
+                        Tư vấn sản phẩm & đặt hàng
+                      </p>
+                    </div>
+                  </a>
+                </li>
               )}
 
-              {/* ADDRESS */}
+              {/* =================================================
+                  ADDRESS
+              ================================================= */}
 
               {showAddress && address && (
                 <li className="flex items-start gap-3">
@@ -384,7 +436,9 @@ const Footer: FC = () => {
                 </li>
               )}
 
-              {/* EMAIL */}
+              {/* =================================================
+                  EMAIL
+              ================================================= */}
 
               {email && (
                 <li className="flex items-start gap-3">

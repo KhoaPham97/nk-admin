@@ -2,7 +2,6 @@ import { FC, useCallback, useEffect, useRef, useState } from "react";
 import axios from "axios";
 
 import ProductCard from "../components/ProductCard";
-import SortProducts from "../components/SortProducts";
 import { API_ENDPOINTS } from "../api";
 import { Product } from "../models/Product";
 
@@ -14,6 +13,29 @@ const AllProducts: FC = () => {
   const [hasMore, setHasMore] = useState(true);
 
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+
+  // =========================================================
+  // LẤY TYPE TỪ URL
+  //
+  // /products              => all
+  // /products?type=1       => 1
+  // /products?type=2       => 2
+  // /products?type=3       => 3
+  // =========================================================
+
+  const getTypeFromUrl = () => {
+    const params = new URLSearchParams(window.location.search);
+
+    const urlType = params.get("type");
+
+    if (urlType === "1" || urlType === "2" || urlType === "3") {
+      return urlType;
+    }
+
+    return "all";
+  };
+
+  const productType = getTypeFromUrl();
 
   // =========================================================
   // REF
@@ -28,147 +50,147 @@ const AllProducts: FC = () => {
   // LOAD PRODUCTS
   // =========================================================
 
-  const loadProducts = useCallback(async (pageNumber: number) => {
-    // Đang loading
-    if (loadingRef.current) {
-      console.log("⛔ Đang loading");
-      return;
-    }
-
-    // Hết sản phẩm
-    if (!hasMoreRef.current && pageNumber !== 1) {
-      console.log("⛔ Hết sản phẩm");
-      return;
-    }
-
-    loadingRef.current = true;
-    setLoading(true);
-
-    console.log("=================================");
-    console.log("🔥 LOAD PRODUCTS");
-    console.log("📄 Page:", pageNumber);
-    console.log("=================================");
-
-    try {
-      const res = await axios.get(API_ENDPOINTS.PRODUCTS, {
-        params: {
-          page: pageNumber,
-          limit: 15,
-        },
-      });
-
-      console.log("📥 API RESPONSE:", res.data);
-
-      // =====================================================
-      // LẤY PRODUCTS
-      // =====================================================
-
-      const newProducts: Product[] = Array.isArray(res.data?.products)
-        ? res.data.products
-        : Array.isArray(res.data?.data)
-          ? res.data.data
-          : [];
-
-      // =====================================================
-      // BACKEND CỦA BẠN ĐANG TRẢ:
-      //
-      // {
-      //   products,
-      //   total,
-      //   page,
-      //   limit,
-      //   totalPages,
-      //   hasMore
-      // }
-      //
-      // Không phải:
-      //
-      // {
-      //   pagination: {
-      //      hasMore
-      //   }
-      // }
-      // =====================================================
-
-      const nextHasMore =
-        typeof res.data?.hasMore === "boolean"
-          ? res.data.hasMore
-          : typeof res.data?.pagination?.hasMore === "boolean"
-            ? res.data.pagination.hasMore
-            : typeof res.data?.totalPages === "number"
-              ? pageNumber < res.data.totalPages
-              : newProducts.length >= 15;
-
-      console.log("📦 Products nhận được:", newProducts.length);
-      console.log("📄 Page:", pageNumber);
-      console.log("➡️ hasMore:", nextHasMore);
-      console.log("📊 Total:", res.data?.total);
-      console.log("📊 Total pages:", res.data?.totalPages);
-
-      // =====================================================
-      // MERGE PRODUCT
-      // =====================================================
-
-      setProducts((prev) => {
-        // Page 1 thì reset
-        if (pageNumber === 1) {
-          return newProducts;
-        }
-
-        const existingIds = new Set(
-          prev.map((item: any) => String(item?._id || item?.id)),
-        );
-
-        const uniqueProducts = newProducts.filter((item: any) => {
-          const id = String(item?._id || item?.id);
-
-          if (!id || id === "undefined" || id === "null") {
-            return true;
-          }
-
-          return !existingIds.has(id);
-        });
-
-        return [...prev, ...uniqueProducts];
-      });
-
-      // =====================================================
-      // PAGINATION
-      // =====================================================
-
-      pageRef.current = pageNumber;
-
-      hasMoreRef.current = nextHasMore;
-
-      setHasMore(nextHasMore);
-    } catch (error) {
-      console.error("❌ LOAD PRODUCTS ERROR:", error);
-
-      if (axios.isAxiosError(error)) {
-        console.error("❌ Status:", error.response?.status);
-        console.error("❌ Response:", error.response?.data);
+  const loadProducts = useCallback(
+    async (pageNumber: number) => {
+      // Đang loading
+      if (loadingRef.current) {
+        console.log("⛔ Đang loading");
+        return;
       }
 
-      // Nếu lỗi thì không tự coi là hết sản phẩm
-      hasMoreRef.current = true;
-      setHasMore(true);
-    } finally {
-      loadingRef.current = false;
-      setLoading(false);
+      // Hết sản phẩm
+      if (!hasMoreRef.current && pageNumber !== 1) {
+        console.log("⛔ Hết sản phẩm");
+        return;
+      }
 
-      // =====================================================
-      // KIỂM TRA VIEWPORT
-      // Nếu 15 sản phẩm vẫn chưa đủ cao màn hình
-      // thì tự load page tiếp theo
-      // =====================================================
+      loadingRef.current = true;
+      setLoading(true);
 
-      requestAnimationFrame(() => {
-        setTimeout(() => {
-          checkNeedMore();
-        }, 100);
-      });
-    }
-  }, []);
+      console.log("=================================");
+      console.log("🔥 LOAD PRODUCTS");
+      console.log("📄 Page:", pageNumber);
+      console.log("🏷️ Type:", productType);
+      console.log("=================================");
+
+      try {
+        const res = await axios.get(API_ENDPOINTS.PRODUCTS, {
+          params: {
+            type: productType,
+            page: pageNumber,
+            limit: 15,
+          },
+        });
+
+        console.log("📥 API RESPONSE:", res.data);
+
+        // =====================================================
+        // LẤY PRODUCTS
+        // =====================================================
+
+        const newProducts: Product[] = Array.isArray(res.data?.products)
+          ? res.data.products
+          : Array.isArray(res.data?.data)
+            ? res.data.data
+            : [];
+
+        // =====================================================
+        // LẤY PAGINATION
+        //
+        // Backend hiện tại:
+        //
+        // {
+        //   products: [],
+        //   pagination: {
+        //      page,
+        //      limit,
+        //      total,
+        //      totalPages,
+        //      hasMore
+        //   }
+        // }
+        // =====================================================
+
+        const nextHasMore =
+          typeof res.data?.pagination?.hasMore === "boolean"
+            ? res.data.pagination.hasMore
+            : typeof res.data?.hasMore === "boolean"
+              ? res.data.hasMore
+              : typeof res.data?.pagination?.totalPages === "number"
+                ? pageNumber < res.data.pagination.totalPages
+                : newProducts.length >= 15;
+
+        console.log("📦 Products nhận được:", newProducts.length);
+        console.log("📄 Page:", pageNumber);
+        console.log("🏷️ Type:", productType);
+        console.log("➡️ hasMore:", nextHasMore);
+        console.log("📊 Total:", res.data?.pagination?.total);
+        console.log("📊 Total pages:", res.data?.pagination?.totalPages);
+
+        // =====================================================
+        // MERGE PRODUCT
+        // =====================================================
+
+        setProducts((prev) => {
+          // Page 1 thì reset
+          if (pageNumber === 1) {
+            return newProducts;
+          }
+
+          const existingIds = new Set(
+            prev.map((item: any) => String(item?._id || item?.id)),
+          );
+
+          const uniqueProducts = newProducts.filter((item: any) => {
+            const id = String(item?._id || item?.id);
+
+            if (!id || id === "undefined" || id === "null") {
+              return true;
+            }
+
+            return !existingIds.has(id);
+          });
+
+          return [...prev, ...uniqueProducts];
+        });
+
+        // =====================================================
+        // PAGINATION
+        // =====================================================
+
+        pageRef.current = pageNumber;
+
+        hasMoreRef.current = nextHasMore;
+
+        setHasMore(nextHasMore);
+      } catch (error) {
+        console.error("❌ LOAD PRODUCTS ERROR:", error);
+
+        if (axios.isAxiosError(error)) {
+          console.error("❌ Status:", error.response?.status);
+          console.error("❌ Response:", error.response?.data);
+        }
+
+        // Nếu lỗi thì không tự coi là hết sản phẩm
+        hasMoreRef.current = true;
+        setHasMore(true);
+      } finally {
+        loadingRef.current = false;
+        setLoading(false);
+
+        // =====================================================
+        // KIỂM TRA VIEWPORT
+        // =====================================================
+
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            checkNeedMore();
+          }, 100);
+        });
+      }
+    },
+    [productType],
+  );
 
   // =========================================================
   // CHECK NEED MORE
@@ -215,7 +237,8 @@ const AllProducts: FC = () => {
 
     initializedRef.current = true;
 
-    console.log("🟢 INIT ALL PRODUCTS");
+    console.log("🟢 INIT PRODUCTS");
+    console.log("🏷️ TYPE:", productType);
 
     // Reset
     setProducts([]);
@@ -227,7 +250,7 @@ const AllProducts: FC = () => {
     setHasMore(true);
 
     loadProducts(1);
-  }, [loadProducts]);
+  }, [loadProducts, productType]);
 
   // =========================================================
   // SYNC CURRENT PRODUCTS
@@ -271,6 +294,7 @@ const AllProducts: FC = () => {
         const nextPage = pageRef.current + 1;
 
         console.log("🚀 INTERSECTION LOAD:", nextPage);
+        console.log("🏷️ TYPE:", productType);
 
         loadProducts(nextPage);
       },
@@ -286,7 +310,7 @@ const AllProducts: FC = () => {
     return () => {
       observer.disconnect();
     };
-  }, [loadProducts]);
+  }, [loadProducts, productType]);
 
   // =========================================================
   // RENDER
@@ -304,6 +328,12 @@ const AllProducts: FC = () => {
             <h1 className="text-lg font-semibold text-gray-800 dark:text-white">
               Danh sách sản phẩm
             </h1>
+
+            {productType !== "all" && (
+              <p className="mt-1 text-sm text-gray-500">
+                Loại sản phẩm: {productType}
+              </p>
+            )}
 
             {products.length > 0 && (
               <p className="mt-1 text-sm text-gray-500">
@@ -361,7 +391,7 @@ const AllProducts: FC = () => {
                 product?._id || product?.id || `product-${index}`;
 
               return (
-                <div key={String(productId)} className="flex min-w-0 h-full">
+                <div key={String(productId)} className="flex h-full min-w-0">
                   <ProductCard
                     {...product}
                     _id={product?._id || product?.id}

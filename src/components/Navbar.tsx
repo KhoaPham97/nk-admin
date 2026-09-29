@@ -29,7 +29,6 @@ const Navbar: FC = () => {
 
   /* =====================================================
      SETTINGS
-     main.tsx đã load settings vào Redux
   ===================================================== */
 
   const settings = useAppSelector((state) => state.settings.settings);
@@ -100,6 +99,20 @@ const Navbar: FC = () => {
   ===================================================== */
 
   const handleLinkClick = () => {
+    setIsMenuOpen(false);
+  };
+
+  /* =====================================================
+     OPEN AUTH
+  ===================================================== */
+
+  const openLogin = () => {
+    dispatch(updateModal(true));
+    setIsMenuOpen(false);
+  };
+
+  const openRegister = () => {
+    dispatch(updateModal(true));
     setIsMenuOpen(false);
   };
 
@@ -279,7 +292,9 @@ const Navbar: FC = () => {
                 Danh mục
               </Link>
 
-              {/* USER */}
+              {/* =================================================
+                  USER DESKTOP
+              ================================================= */}
 
               <div className="ml-1">
                 {isLoggedIn ? (
@@ -287,7 +302,7 @@ const Navbar: FC = () => {
                 ) : (
                   <button
                     type="button"
-                    onClick={() => dispatch(updateModal(true))}
+                    onClick={openLogin}
                     data-test="login-btn"
                     className="
                       flex
@@ -310,7 +325,9 @@ const Navbar: FC = () => {
                 )}
               </div>
 
-              {/* CART */}
+              {/* =================================================
+                  CART DESKTOP
+              ================================================= */}
 
               <button
                 type="button"
@@ -361,7 +378,9 @@ const Navbar: FC = () => {
                 )}
               </button>
 
-              {/* DARK MODE */}
+              {/* =================================================
+                  DARK MODE
+              ================================================= */}
 
               <button
                 type="button"
@@ -423,7 +442,9 @@ const Navbar: FC = () => {
 
       {isMenuOpen && (
         <div className="fixed inset-0 z-[100] sm:hidden">
-          {/* Overlay */}
+          {/* =================================================
+              OVERLAY
+          ================================================= */}
 
           <div
             className="
@@ -435,7 +456,9 @@ const Navbar: FC = () => {
             onClick={() => setIsMenuOpen(false)}
           />
 
-          {/* Drawer */}
+          {/* =================================================
+              DRAWER
+          ================================================= */}
 
           <div
             className="
@@ -452,7 +475,9 @@ const Navbar: FC = () => {
               dark:bg-slate-900
             "
           >
-            {/* Header */}
+            {/* =================================================
+                HEADER
+            ================================================= */}
 
             <div
               className="
@@ -544,7 +569,9 @@ const Navbar: FC = () => {
               </button>
             </div>
 
-            {/* Search */}
+            {/* =================================================
+                SEARCH
+            ================================================= */}
 
             <div
               className="
@@ -557,20 +584,28 @@ const Navbar: FC = () => {
               <SearchBar onSearch={() => setIsMenuOpen(false)} />
             </div>
 
-            {/* Menu */}
+            {/* =================================================
+                MENU
+            ================================================= */}
 
             <nav className="flex-1 overflow-y-auto p-5">
+              {/* =================================================
+                  MAIN MENU
+              ================================================= */}
+
               <div className="space-y-2">
                 <Link
                   to="/products"
                   onClick={handleLinkClick}
                   className="
                     flex
+                    items-center
                     rounded-xl
                     px-4
                     py-3
                     font-semibold
                     text-gray-800
+                    transition
                     hover:bg-blue-50
                     hover:text-blue-600
                     dark:text-white
@@ -585,11 +620,13 @@ const Navbar: FC = () => {
                   onClick={handleLinkClick}
                   className="
                     flex
+                    items-center
                     rounded-xl
                     px-4
                     py-3
                     font-semibold
                     text-gray-800
+                    transition
                     hover:bg-blue-50
                     hover:text-blue-600
                     dark:text-white
@@ -600,6 +637,10 @@ const Navbar: FC = () => {
                 </Link>
               </div>
 
+              {/* =================================================
+                  DIVIDER
+              ================================================= */}
+
               <div
                 className="
                   my-5
@@ -609,54 +650,238 @@ const Navbar: FC = () => {
                 "
               />
 
-              {/* Account */}
+              {/* =================================================
+                  ACCOUNT
+              ================================================= */}
 
               {isLoggedIn ? (
                 <div
                   className="
-                    rounded-xl
-                    bg-gray-50
-                    p-3
+                    overflow-hidden
+                    rounded-2xl
+                    border
+                    border-gray-100
+                    bg-white
+                    shadow-sm
+                    dark:border-slate-700
                     dark:bg-slate-800
                   "
                 >
-                  <CustomPopup />
+                  {/* Account header */}
+
+                  <div
+                    className="
+                      bg-gradient-to-r
+                      from-blue-600
+                      to-blue-500
+                      px-4
+                      py-4
+                    "
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="
+                          flex
+                          h-11
+                          w-11
+                          shrink-0
+                          items-center
+                          justify-center
+                          rounded-full
+                          bg-white/20
+                          text-white
+                          ring-1
+                          ring-white/30
+                        "
+                      >
+                        <FaUser size={20} />
+                      </div>
+
+                      <div className="min-w-0">
+                        <p className="text-xs font-medium text-blue-100">
+                          Tài khoản
+                        </p>
+
+                        <p className="truncate text-sm font-bold text-white">
+                          Xin chào 👋
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-3">
+                    <CustomPopup />
+                  </div>
                 </div>
               ) : (
-                <button
-                  type="button"
-                  onClick={() => {
-                    dispatch(updateModal(true));
-                    setIsMenuOpen(false);
-                  }}
+                <div
                   className="
-                    flex
-                    w-full
-                    items-center
-                    gap-3
-                    rounded-xl
-                    px-4
-                    py-3
-                    font-semibold
-                    text-gray-800
-                    hover:bg-blue-50
-                    hover:text-blue-600
-                    dark:text-white
-                    dark:hover:bg-slate-800
+                    overflow-hidden
+                    rounded-2xl
+                    border
+                    border-blue-100
+                    bg-gradient-to-br
+                    from-blue-50
+                    via-white
+                    to-white
+                    shadow-sm
+                    dark:border-slate-700
+                    dark:from-slate-800
+                    dark:via-slate-800
+                    dark:to-slate-900
                   "
                 >
-                  <FaUser size={18} />
-                  Đăng nhập
-                </button>
+                  {/* =================================================
+                      ACCOUNT HEADER
+                  ================================================= */}
+
+                  <div className="px-4 pt-5">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="
+                          flex
+                          h-12
+                          w-12
+                          shrink-0
+                          items-center
+                          justify-center
+                          rounded-full
+                          bg-blue-600
+                          text-white
+                          shadow-sm
+                        "
+                      >
+                        <FaUser size={20} />
+                      </div>
+
+                      <div className="min-w-0">
+                        <h3
+                          className="
+                            text-sm
+                            font-bold
+                            text-gray-900
+                            dark:text-white
+                          "
+                        >
+                          Tài khoản khách hàng
+                        </h3>
+
+                        <p
+                          className="
+                            mt-0.5
+                            text-xs
+                            leading-5
+                            text-gray-500
+                            dark:text-gray-400
+                          "
+                        >
+                          Đăng nhập hoặc tạo tài khoản để mua hàng
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* =================================================
+                      AUTH ACTIONS
+                  ================================================= */}
+
+                  <div className="grid grid-cols-2 gap-2 p-4">
+                    {/* LOGIN */}
+
+                    <button
+                      type="button"
+                      onClick={openLogin}
+                      className="
+                        flex
+                        h-11
+                        items-center
+                        justify-center
+                        gap-2
+                        rounded-xl
+                        border
+                        border-blue-600
+                        bg-white
+                        text-sm
+                        font-bold
+                        text-blue-600
+                        transition-all
+                        hover:bg-blue-50
+                        active:scale-[0.98]
+                        dark:bg-slate-800
+                        dark:hover:bg-slate-700
+                      "
+                    >
+                      <FaUser size={15} />
+
+                      <span>Đăng nhập</span>
+                    </button>
+
+                    {/* REGISTER */}
+
+                    <button
+                      type="button"
+                      onClick={openRegister}
+                      className="
+                        flex
+                        h-11
+                        items-center
+                        justify-center
+                        gap-2
+                        rounded-xl
+                        bg-blue-600
+                        text-sm
+                        font-bold
+                        text-white
+                        shadow-sm
+                        transition-all
+                        hover:bg-blue-700
+                        active:scale-[0.98]
+                      "
+                    >
+                      <span className="text-lg leading-none">+</span>
+
+                      <span>Đăng ký</span>
+                    </button>
+                  </div>
+
+                  {/* =================================================
+                      ACCOUNT NOTE
+                  ================================================= */}
+
+                  <div
+                    className="
+                      border-t
+                      border-blue-100
+                      px-4
+                      pb-4
+                      pt-3
+                      dark:border-slate-700
+                    "
+                  >
+                    <p
+                      className="
+                        text-center
+                        text-[11px]
+                        leading-5
+                        text-gray-400
+                      "
+                    >
+                      Đăng ký tài khoản để quản lý đơn hàng và thông tin mua
+                      hàng.
+                    </p>
+                  </div>
+                </div>
               )}
 
-              {/* Cart */}
+              {/* =================================================
+                  CART
+              ================================================= */}
 
               <button
                 type="button"
                 onClick={showCart}
                 className="
-                  mt-2
+                  mt-4
                   flex
                   w-full
                   items-center
@@ -665,6 +890,7 @@ const Navbar: FC = () => {
                   px-4
                   py-3
                   text-gray-800
+                  transition
                   hover:bg-blue-50
                   hover:text-blue-600
                   dark:text-white
@@ -673,6 +899,7 @@ const Navbar: FC = () => {
               >
                 <div className="flex items-center gap-3">
                   <AiOutlineShoppingCart size={23} />
+
                   <span className="font-semibold">Giỏ hàng</span>
                 </div>
 
@@ -697,7 +924,9 @@ const Navbar: FC = () => {
                 )}
               </button>
 
-              {/* Theme */}
+              {/* =================================================
+                  THEME
+              ================================================= */}
 
               <button
                 type="button"
@@ -715,6 +944,7 @@ const Navbar: FC = () => {
                   px-4
                   py-3
                   text-gray-800
+                  transition
                   hover:bg-blue-50
                   hover:text-blue-600
                   dark:text-white
@@ -737,7 +967,9 @@ const Navbar: FC = () => {
               </button>
             </nav>
 
-            {/* Footer drawer */}
+            {/* =================================================
+                FOOTER DRAWER
+            ================================================= */}
 
             <div
               className="
