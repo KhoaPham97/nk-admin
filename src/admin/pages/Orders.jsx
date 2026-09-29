@@ -1418,7 +1418,7 @@ const Orders = () => {
               </Button>
             </Tooltip>
 
-            <Tooltip title="Đồng bộ giá sản phẩm">
+            {/* <Tooltip title="Đồng bộ giá sản phẩm">
               <span>
                 <Button
                   size="small"
@@ -1450,7 +1450,7 @@ const Orders = () => {
                   {isSyncing ? "Đang đồng bộ" : "Đồng bộ giá"}
                 </Button>
               </span>
-            </Tooltip>
+            </Tooltip> */}
           </Stack>
         </Stack>
 
@@ -1845,7 +1845,7 @@ const Orders = () => {
           }}
           spacing={1}
         >
-          <Button
+          {/* <Button
             variant="contained"
             color="warning"
             startIcon={
@@ -1866,7 +1866,7 @@ const Orders = () => {
             onClick={handleSyncStock}
           >
             {syncingStock ? "Đang đồng bộ kho..." : "Đồng bộ tồn kho"}
-          </Button>
+          </Button> */}
 
           <Button
             variant="contained"
