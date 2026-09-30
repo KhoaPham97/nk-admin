@@ -1,29 +1,39 @@
 import { FC, useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
+
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { addToCart, setCartState } from "../redux/features/cartSlice";
+import { addToWishlist } from "../redux/features/productSlice";
+import { updateLoading } from "../redux/features/homeSlice";
+
 import { Product } from "../models/Product";
 import RatingStar from "../components/RatingStar";
 import PriceSection from "../components/PriceSection";
+import ProductList from "../components/ProductList";
+
 import toast from "react-hot-toast";
+
 import { AiOutlineShoppingCart } from "react-icons/ai";
+
 import {
   FaHandHoldingDollar,
   FaChevronLeft,
-  FaChevronRight,
   FaXmark,
   FaCheck,
 } from "react-icons/fa6";
-import ProductList from "../components/ProductList";
-import useAuth from "../hooks/useAuth";
+
 import {
   MdFavoriteBorder,
   MdOutlineInventory2,
   MdLocalShipping,
 } from "react-icons/md";
-import { addToWishlist } from "../redux/features/productSlice";
-import { updateLoading } from "../redux/features/homeSlice";
+
+import useAuth from "../hooks/useAuth";
 import { API_ENDPOINTS } from "../api";
+
+/* =====================================================
+   VARIANT
+===================================================== */
 
 interface ProductVariant {
   _id?: string;
@@ -43,28 +53,66 @@ interface ProductVariant {
   image?: string;
 }
 
+/* =====================================================
+   TOKEN
+===================================================== */
+
+const getToken = () => {
+  return (
+    localStorage.getItem("accessToken") ||
+    localStorage.getItem("adminToken") ||
+    ""
+  );
+};
+
+/* =====================================================
+   COMPONENT
+===================================================== */
+
 const SingleProduct: FC = () => {
   const dispatch = useAppDispatch();
 
   const { productID } = useParams();
   const navigate = useNavigate();
 
+  const { requireAuth } = useAuth();
+
+  /* ===================================================
+     REDUX
+  =================================================== */
+
+  const isLoading = useAppSelector((state) => state.homeReducer.isLoading);
+
+  /*
+   * Lấy setting từ Redux
+   *
+   * Nếu chưa load settings thì mặc định true
+   * để sản phẩm vẫn hiển thị giá.
+   */
+  const showPrice = useAppSelector(
+    (state) => state.settings.settings.websiteSettings.showPrice,
+  );
+  /* ===================================================
+     PRODUCT
+  =================================================== */
+
   const [product, setProduct]: any = useState(null);
 
   const [imgs, setImgs] = useState<string[]>([]);
+
   const [selectedImg, setSelectedImg] = useState<string>();
 
   const [similar, setSimilar] = useState<Product[]>([]);
 
-  // =====================================================
-  // VARIANT
-  // =====================================================
+  /* ===================================================
+     VARIANT
+  =================================================== */
 
   const [selectedVariantIndex, setSelectedVariantIndex] = useState<number>(0);
 
-  // =====================================================
-  // ZOOM IMAGE
-  // =====================================================
+  /* ===================================================
+     ZOOM
+  =================================================== */
 
   const [isZooming, setIsZooming] = useState(false);
 
@@ -75,13 +123,9 @@ const SingleProduct: FC = () => {
 
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
-  const { requireAuth } = useAuth();
-
-  const isLoading = useAppSelector((state) => state.homeReducer.isLoading);
-
-  // =====================================================
-  // IMAGE URL
-  // =====================================================
+  /* ===================================================
+     IMAGE URL
+  =================================================== */
 
   const getImageUrl = (image?: string) => {
     if (!image) {
@@ -99,25 +143,39 @@ const SingleProduct: FC = () => {
     return `/images/${image}`;
   };
 
-  // =====================================================
-  // SCROLL TOP
-  // =====================================================
+  /* ===================================================
+     SCROLL TOP
+  =================================================== */
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [productID]);
 
-  // =====================================================
-  // GET PRODUCT
-  // =====================================================
+  /* ===================================================
+     GET PRODUCT
+  =================================================== */
 
   useEffect(() => {
     const fetchProductDetails = async () => {
       try {
         dispatch(updateLoading(true));
 
+        const token = getToken();
+
         const response = await fetch(
           `${API_ENDPOINTS.PRODUCTS_ID.replace(":id", productID || "")}`,
+          {
+            method: "GET",
+
+            headers: token
+              ? {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                }
+              : {
+                  "Content-Type": "application/json",
+                },
+          },
         );
 
         if (!response.ok) {
@@ -133,16 +191,15 @@ const SingleProduct: FC = () => {
 
         setProduct(pro);
 
-        const productImages = data.images || [];
+        const productImages = Array.isArray(data.images) ? data.images : [];
 
         setImgs(productImages);
 
         setSelectedImg(data.thumbnail || productImages?.[0] || undefined);
 
-        // =================================================
-        // RESET VARIANT
-        // =================================================
-
+        /*
+         * Luôn chọn variant đầu tiên
+         */
         setSelectedVariantIndex(0);
       } catch (error) {
         console.error("Lỗi lấy sản phẩm:", error);
@@ -158,20 +215,34 @@ const SingleProduct: FC = () => {
     }
   }, [productID, dispatch]);
 
-  // =====================================================
-  // SIMILAR PRODUCTS
-  // =====================================================
+  /* ===================================================
+     SIMILAR PRODUCTS
+  =================================================== */
 
   useEffect(() => {
     const fetchPreferences = async () => {
       try {
         if (!product?.categoryId) return;
 
+        const token = getToken();
+
         const response = await fetch(
           `${API_ENDPOINTS.PRODUCTS_CATEGORY_ID.replace(
             ":id",
             product.categoryId,
           )}`,
+          {
+            method: "GET",
+
+            headers: token
+              ? {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                }
+              : {
+                  "Content-Type": "application/json",
+                },
+          },
         );
 
         if (!response.ok) return;
@@ -194,9 +265,9 @@ const SingleProduct: FC = () => {
     fetchPreferences();
   }, [product?.categoryId, productID]);
 
-  // =====================================================
-  // VARIANTS
-  // =====================================================
+  /* ===================================================
+     VARIANTS
+  =================================================== */
 
   const variants: ProductVariant[] = Array.isArray(product?.variants)
     ? product.variants
@@ -208,9 +279,9 @@ const SingleProduct: FC = () => {
     ? variants[selectedVariantIndex] || variants[0]
     : null;
 
-  // =====================================================
-  // VARIANT NAME
-  // =====================================================
+  /* ===================================================
+     VARIANT NAME
+  =================================================== */
 
   const getVariantName = (variant?: ProductVariant | null) => {
     if (!variant) return "";
@@ -225,17 +296,17 @@ const SingleProduct: FC = () => {
     );
   };
 
-  // =====================================================
-  // VARIANT PRICE
-  // =====================================================
+  /* ===================================================
+     VARIANT PRICE
+  =================================================== */
 
   const currentPrice = selectedVariant
     ? Number(selectedVariant.price) || Number(product?.price) || 0
     : Number(product?.price) || 0;
 
-  // =====================================================
-  // VARIANT QTY
-  // =====================================================
+  /* ===================================================
+     VARIANT QTY
+  =================================================== */
 
   const currentQty = selectedVariant
     ? Number(selectedVariant.qty) || 0
@@ -243,9 +314,9 @@ const SingleProduct: FC = () => {
 
   const isInStock = currentQty > 0;
 
-  // =====================================================
-  // SELECT VARIANT
-  // =====================================================
+  /* ===================================================
+     SELECT VARIANT
+  =================================================== */
 
   const handleSelectVariant = (index: number) => {
     const variant = variants[index];
@@ -262,15 +333,14 @@ const SingleProduct: FC = () => {
 
     setSelectedVariantIndex(index);
 
-    // Nếu variant có hình riêng
     if (variant.image || variant.thumbnail) {
       setSelectedImg(variant.image || variant.thumbnail);
     }
   };
 
-  // =====================================================
-  // IMAGE ZOOM
-  // =====================================================
+  /* ===================================================
+     IMAGE ZOOM
+  =================================================== */
 
   const handleImageMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -285,9 +355,9 @@ const SingleProduct: FC = () => {
     });
   };
 
-  // =====================================================
-  // CART PRODUCT
-  // =====================================================
+  /* ===================================================
+     CART PRODUCT
+  =================================================== */
 
   const createCartProduct = () => {
     if (!product) return null;
@@ -308,30 +378,30 @@ const SingleProduct: FC = () => {
 
       discountPercentage: product.discountPercentage,
 
-      // ================================================
-      // GIÁ SAU KHI CHỌN VARIANT
-      // ================================================
-
+      /*
+       * Giá vẫn lưu vào cart.
+       * showPrice chỉ quyết định UI có hiển thị
+       * giá cho khách hay không.
+       */
       price: currentPrice,
-
-      // ================================================
-      // VARIANT ĐƯỢC CHỌN
-      // ================================================
 
       selectedVariant: selectedVariant
         ? {
             ...selectedVariant,
+
             name: getVariantName(selectedVariant),
+
             price: currentPrice,
+
             qty: currentQty,
           }
         : null,
     };
   };
 
-  // =====================================================
-  // ADD CART
-  // =====================================================
+  /* ===================================================
+     ADD CART
+  =================================================== */
 
   const addCart = () => {
     requireAuth(() => {
@@ -366,9 +436,9 @@ const SingleProduct: FC = () => {
     });
   };
 
-  // =====================================================
-  // BUY NOW
-  // =====================================================
+  /* ===================================================
+     BUY NOW
+  =================================================== */
 
   const buyNow = () => {
     requireAuth(() => {
@@ -390,9 +460,9 @@ const SingleProduct: FC = () => {
     });
   };
 
-  // =====================================================
-  // WISHLIST
-  // =====================================================
+  /* ===================================================
+     WISHLIST
+  =================================================== */
 
   const addWishlist = () => {
     requireAuth(() => {
@@ -406,9 +476,9 @@ const SingleProduct: FC = () => {
     });
   };
 
-  // =====================================================
-  // LOADING
-  // =====================================================
+  /* ===================================================
+     LOADING
+  =================================================== */
 
   if (isLoading) {
     return (
@@ -424,9 +494,9 @@ const SingleProduct: FC = () => {
     );
   }
 
-  // =====================================================
-  // NOT FOUND
-  // =====================================================
+  /* ===================================================
+     NOT FOUND
+  =================================================== */
 
   if (!product) {
     return (
@@ -452,9 +522,9 @@ const SingleProduct: FC = () => {
   const imageList =
     imgs.length > 0 ? imgs : product.thumbnail ? [product.thumbnail] : [];
 
-  // =====================================================
-  // RENDER
-  // =====================================================
+  /* ===================================================
+     RENDER
+  =================================================== */
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
@@ -611,8 +681,7 @@ const SingleProduct: FC = () => {
                     <RatingStar rating={product.rating} />
 
                     <span className="text-sm text-gray-500 dark:text-gray-400">
-                      {product.rating}
-                      /5
+                      {product.rating}/5
                     </span>
                   </div>
                 )}
@@ -702,7 +771,7 @@ const SingleProduct: FC = () => {
 
                           {/* PRICE */}
 
-                          {Number(variant.price) > 0 && (
+                          {showPrice && Number(variant.price) > 0 && (
                             <div className="mt-1 text-xs font-medium text-blue-600 dark:text-blue-400">
                               {Number(variant.price).toLocaleString("vi-VN")}₫
                             </div>
@@ -725,7 +794,11 @@ const SingleProduct: FC = () => {
                   {/* SELECTED VARIANT */}
 
                   {selectedVariant && (
-                    <div className="mt-4 flex items-center justify-between rounded-xl bg-blue-50 px-4 py-3 dark:bg-blue-900/20">
+                    <div
+                      className={`mt-4 flex items-center rounded-xl bg-blue-50 px-4 py-3 dark:bg-blue-900/20 ${
+                        showPrice ? "justify-between" : ""
+                      }`}
+                    >
                       <div>
                         <p className="text-[11px] text-gray-500 dark:text-gray-400">
                           Đã chọn
@@ -736,18 +809,20 @@ const SingleProduct: FC = () => {
                         </p>
                       </div>
 
-                      <div className="text-right">
-                        <p className="text-[11px] text-gray-500 dark:text-gray-400">
-                          Giá
-                        </p>
+                      {showPrice && (
+                        <div className="text-right">
+                          <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                            Giá
+                          </p>
 
-                        <p className="text-base font-bold text-red-600">
-                          {currentPrice > 0
-                            ? currentPrice.toLocaleString("vi-VN")
-                            : "Liên hệ"}{" "}
-                          {currentPrice > 0 && "₫"}
-                        </p>
-                      </div>
+                          <p className="text-base font-bold text-red-600">
+                            {currentPrice > 0
+                              ? currentPrice.toLocaleString("vi-VN")
+                              : "Liên hệ"}{" "}
+                            {currentPrice > 0 && "₫"}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -757,32 +832,34 @@ const SingleProduct: FC = () => {
                   PRICE
               ================================================= */}
 
-              <div className="mt-6 rounded-2xl bg-gray-50 p-5 dark:bg-slate-900">
-                <p className="mb-1 text-xs font-medium uppercase tracking-wide text-gray-400">
-                  Giá bán
-                </p>
-
-                {hasVariants ? (
-                  <p className="text-3xl font-bold text-red-600">
-                    {currentPrice > 0
-                      ? currentPrice.toLocaleString("vi-VN")
-                      : "Liên hệ"}
-
-                    {currentPrice > 0 && (
-                      <span className="ml-1 text-base">₫</span>
-                    )}
+              {showPrice && (
+                <div className="mt-6 rounded-2xl bg-gray-50 p-5 dark:bg-slate-900">
+                  <p className="mb-1 text-xs font-medium uppercase tracking-wide text-gray-400">
+                    Giá bán
                   </p>
-                ) : product.discountPercentage ? (
-                  <PriceSection
-                    discountPercentage={product.discountPercentage}
-                    price={product.price}
-                  />
-                ) : (
-                  <p className="text-3xl font-bold text-red-600">
-                    {Number(product.price || 0).toLocaleString("vi-VN")} ₫
-                  </p>
-                )}
-              </div>
+
+                  {hasVariants ? (
+                    <p className="text-3xl font-bold text-red-600">
+                      {currentPrice > 0
+                        ? currentPrice.toLocaleString("vi-VN")
+                        : "Liên hệ"}
+
+                      {currentPrice > 0 && (
+                        <span className="ml-1 text-base">₫</span>
+                      )}
+                    </p>
+                  ) : product.discountPercentage ? (
+                    <PriceSection
+                      discountPercentage={product.discountPercentage}
+                      price={product.price}
+                    />
+                  ) : (
+                    <p className="text-3xl font-bold text-red-600">
+                      {Number(product.price || 0).toLocaleString("vi-VN")} ₫
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* =================================================
                   INFO
@@ -921,7 +998,9 @@ const SingleProduct: FC = () => {
                 Thêm vào yêu thích
               </button>
 
-              {/* TRUST */}
+              {/* =================================================
+                  TRUST
+              ================================================= */}
 
               <div className="mt-6 border-t border-gray-100 pt-5 dark:border-slate-700">
                 <div className="flex flex-wrap gap-5 text-xs text-gray-500 dark:text-gray-400">

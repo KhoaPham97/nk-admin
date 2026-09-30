@@ -53,6 +53,13 @@ export interface StoreSettings {
     siteName: string;
     slogan: string;
     maintenanceMode: boolean;
+
+    /*
+     * true  = khách hàng được xem giá
+     * false = ẩn giá sản phẩm
+     */
+    showPrice: boolean;
+
     showPhone: boolean;
     showAddress: boolean;
     announcement: string;
@@ -114,6 +121,10 @@ export const DEFAULT_SETTINGS: StoreSettings = {
     siteName: "NHẬT KHANG BIKE",
     slogan: "Đã chạy phải chất",
     maintenanceMode: false,
+
+    // Mặc định vẫn cho khách xem giá
+    showPrice: true,
+
     showPhone: true,
     showAddress: true,
     announcement: "",
@@ -131,13 +142,6 @@ interface SettingsState {
 
   error: string | null;
 
-  /*
-   * false:
-   * Chưa gọi API settings lần nào
-   *
-   * true:
-   * Đã gọi API rồi
-   */
   initialized: boolean;
 }
 
@@ -156,6 +160,18 @@ const initialState: SettingsState = {
 };
 
 /* =====================================================
+   TOKEN
+===================================================== */
+
+const getToken = () => {
+  return (
+    localStorage.getItem("accessToken") ||
+    localStorage.getItem("adminToken") ||
+    ""
+  );
+};
+
+/* =====================================================
    FETCH SETTINGS
 ===================================================== */
 
@@ -165,43 +181,31 @@ export const fetchSettings = createAsyncThunk<
   {
     rejectValue: string;
   }
->(
-  "settings/fetchSettings",
+>("settings/fetchSettings", async (_, { rejectWithValue }) => {
+  try {
+    const token = getToken();
 
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await axios.get(API_ENDPOINTS.SETTINGS);
+    const response = await axios.get(API_ENDPOINTS.SETTINGS, {
+      headers: token
+        ? {
+            Authorization: `Bearer ${token}`,
+          }
+        : {},
+    });
 
-      /*
-       * Một số backend trả:
-       *
-       * {
-       *   data: {...}
-       * }
-       *
-       * Một số backend trả trực tiếp:
-       *
-       * {
-       *   storeName: ...
-       * }
-       *
-       * Hỗ trợ cả 2.
-       */
+    const data = response.data?.data ?? response.data;
 
-      const data = response.data?.data ?? response.data;
+    return data as StoreSettings;
+  } catch (error: any) {
+    console.error("Fetch settings error:", error);
 
-      return data as StoreSettings;
-    } catch (error: any) {
-      console.error("Fetch settings error:", error);
-
-      return rejectWithValue(
-        error?.response?.data?.message ||
-          error?.message ||
-          "Không thể tải cấu hình website",
-      );
-    }
-  },
-);
+    return rejectWithValue(
+      error?.response?.data?.message ||
+        error?.message ||
+        "Không thể tải cấu hình website",
+    );
+  }
+});
 
 /* =====================================================
    SLICE
@@ -213,9 +217,6 @@ const settingsSlice = createSlice({
   initialState,
 
   reducers: {
-    /*
-     * Cập nhật settings trực tiếp trong Redux
-     */
     updateSettings: (state, action: PayloadAction<Partial<StoreSettings>>) => {
       state.settings = {
         ...state.settings,
@@ -223,9 +224,6 @@ const settingsSlice = createSlice({
       };
     },
 
-    /*
-     * Reset settings về mặc định
-     */
     resetSettingsState: (state) => {
       state.settings = DEFAULT_SETTINGS;
 
@@ -258,13 +256,6 @@ const settingsSlice = createSlice({
       state.initialized = true;
 
       state.error = null;
-
-      /*
-       * Merge với DEFAULT_SETTINGS
-       *
-       * Tránh trường hợp backend thiếu một field
-       * làm frontend bị undefined.
-       */
 
       state.settings = {
         ...DEFAULT_SETTINGS,
@@ -304,13 +295,6 @@ const settingsSlice = createSlice({
 
     builder.addCase(fetchSettings.rejected, (state, action) => {
       state.loading = false;
-
-      /*
-       * Đánh dấu đã thử gọi API.
-       *
-       * Nếu API lỗi thì frontend vẫn sử dụng
-       * DEFAULT_SETTINGS.
-       */
 
       state.initialized = true;
 
