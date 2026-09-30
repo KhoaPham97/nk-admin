@@ -50,6 +50,10 @@ const CreateOrder = () => {
   const [customers, setCustomers] = useState([]);
   const [products, setProducts] = useState([]);
 
+  // Search sản phẩm trực tiếp từ API
+  const [productSearch, setProductSearch] = useState("");
+  const [loadingProducts, setLoadingProducts] = useState(false);
+
   const [loadingData, setLoadingData] = useState(true);
   const [loadingOrder, setLoadingOrder] = useState(false);
 
@@ -88,29 +92,18 @@ const CreateOrder = () => {
       try {
         setLoadingData(true);
 
-        const [customerRes, productRes] = await Promise.all([
-          axios.get(API_ENDPOINTS.CUSTOMERS, {
-            params: {
-              page: 1,
-              limit: 100,
-            },
-          }),
-
-          axios.get(API_ENDPOINTS.PRODUCTS, {
-            params: {
-              type: "all",
-            },
-          }),
-        ]);
+        const customerRes = await axios.get(API_ENDPOINTS.CUSTOMERS, {
+          params: {
+            page: 1,
+            limit: 100,
+          },
+        });
 
         const customerData =
           customerRes?.data?.customers || customerRes?.data?.data || [];
 
-        const productData =
-          productRes?.data?.products || productRes?.data?.data || [];
-
         setCustomers(Array.isArray(customerData) ? customerData : []);
-        setProducts(Array.isArray(productData) ? productData : []);
+        setProducts([]);
       } catch (error) {
         console.error("Load create order data:", error);
 
@@ -125,6 +118,47 @@ const CreateOrder = () => {
 
     loadData();
   }, []);
+
+  // =========================================================
+  // SEARCH PRODUCTS
+  // =========================================================
+  useEffect(() => {
+    const keyword = productSearch.trim();
+
+    // Chưa nhập gì thì không gọi API
+    if (!keyword) {
+      setProducts([]);
+      setLoadingProducts(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        setLoadingProducts(true);
+
+        const response = await axios.get(API_ENDPOINTS.PRODUCTS, {
+          params: {
+            search: keyword,
+            type: "all",
+            page: 1,
+            limit: 20,
+          },
+        });
+
+        const productData =
+          response?.data?.products || response?.data?.data || [];
+
+        setProducts(Array.isArray(productData) ? productData : []);
+      } catch (error) {
+        console.error("Search products:", error);
+        setProducts([]);
+      } finally {
+        setLoadingProducts(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [productSearch]);
 
   // =========================================================
   // VARIANTS
@@ -180,8 +214,23 @@ const CreateOrder = () => {
   // =========================================================
   const handleSelectProduct = (_, value) => {
     setSelectedProduct(value);
-    setSelectedVariant("");
     setQuantity(1);
+
+    // Tự động chọn phân loại đầu tiên
+    if (
+      value?.variants &&
+      Array.isArray(value.variants) &&
+      value.variants.length > 0
+    ) {
+      const firstVariant = value.variants[0];
+
+      setSelectedVariant(firstVariant?.name ? String(firstVariant.name) : "");
+    } else {
+      setSelectedVariant("");
+    }
+
+    // Giữ ô search gọn sau khi chọn
+    setProductSearch("");
   };
 
   // =========================================================
@@ -578,11 +627,27 @@ const CreateOrder = () => {
                   fullWidth
                   options={products}
                   value={selectedProduct}
+                  loading={loadingProducts}
                   onChange={handleSelectProduct}
-                  getOptionLabel={(option) => option?.title || ""}
+                  onInputChange={(_, value) => {
+                    setProductSearch(value);
+                  }}
+                  // BE đã search nên không lọc lại ở MUI
+                  filterOptions={(options) => options}
+                  getOptionLabel={(option) => {
+                    if (!option) return "";
+
+                    return option.title || option.name || option.code || "";
+                  }}
                   isOptionEqualToValue={(option, value) =>
                     option?._id === value?._id
                   }
+                  noOptionsText={
+                    productSearch.trim()
+                      ? "Không tìm thấy sản phẩm"
+                      : "Nhập tên hoặc mã sản phẩm để tìm"
+                  }
+                  loadingText="Đang tìm sản phẩm..."
                   renderOption={(props, option) => (
                     <Box
                       component="li"
@@ -598,7 +663,7 @@ const CreateOrder = () => {
                         <Box
                           component="img"
                           src={"/images/" + option.thumbnail}
-                          alt={option.title}
+                          alt={option.title || option.name || ""}
                           sx={{
                             width: 45,
                             height: 45,
@@ -606,6 +671,7 @@ const CreateOrder = () => {
                             borderRadius: 1,
                             border: "1px solid",
                             borderColor: "divider",
+                            flexShrink: 0,
                           }}
                         />
                       ) : (
@@ -615,17 +681,34 @@ const CreateOrder = () => {
                             height: 45,
                             borderRadius: 1,
                             backgroundColor: "grey.100",
+                            flexShrink: 0,
                           }}
                         />
                       )}
 
-                      <Box sx={{ minWidth: 0 }}>
+                      <Box sx={{ minWidth: 0, flex: 1 }}>
                         <Typography fontWeight={600} noWrap>
-                          {option.title}
+                          {option.title || option.name || "-"}
                         </Typography>
 
+                        {option.code && (
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            display="block"
+                          >
+                            Mã: {option.code}
+                          </Typography>
+                        )}
+
                         <Typography variant="caption" color="text.secondary">
-                          {formatMoney(option.price)}
+                          {formatMoney(
+                            option?.variants?.length > 0
+                              ? option.variants[0]?.price
+                              : option.price,
+                          )}
+                          {" · "}
+                          Còn {getNumber(option.qty)}
                         </Typography>
                       </Box>
                     </Box>
@@ -634,8 +717,20 @@ const CreateOrder = () => {
                     <TextField
                       {...params}
                       label="Tìm sản phẩm"
-                      placeholder="Nhập tên sản phẩm..."
+                      placeholder="Nhập tên, mã, thương hiệu, phân loại..."
                       fullWidth
+                      InputProps={{
+                        ...params.InputProps,
+                        endAdornment: (
+                          <>
+                            {loadingProducts ? (
+                              <CircularProgress color="inherit" size={20} />
+                            ) : null}
+
+                            {params.InputProps.endAdornment}
+                          </>
+                        ),
+                      }}
                     />
                   )}
                 />

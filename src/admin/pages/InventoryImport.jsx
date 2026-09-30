@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
+
 import {
   Alert,
   Autocomplete,
@@ -57,13 +58,23 @@ const getProductVariants = (product) => {
 const InventoryImport = () => {
   const navigate = useNavigate();
 
+  // ============================================================
+  // PRODUCTS
+  // ============================================================
   const [products, setProducts] = useState([]);
+  const [productSearch, setProductSearch] = useState("");
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // ============================================================
+  // SELECTED PRODUCT
+  // ============================================================
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedVariant, setSelectedVariant] = useState("");
 
+  // ============================================================
+  // IMPORT INPUT
+  // ============================================================
   const [qty, setQty] = useState("");
   const [unitCost, setUnitCost] = useState("");
 
@@ -72,6 +83,9 @@ const InventoryImport = () => {
 
   const [items, setItems] = useState([]);
 
+  // ============================================================
+  // SNACKBAR
+  // ============================================================
   const [snackbar, setSnackbar] = useState({
     open: false,
     severity: "success",
@@ -79,39 +93,7 @@ const InventoryImport = () => {
   });
 
   // ============================================================
-  // LOAD PRODUCTS
-  // ============================================================
-  const loadProducts = async () => {
-    try {
-      setLoadingProducts(true);
-
-      const response = await axios.get(API_ENDPOINTS.PRODUCTS, {
-        params: {
-          type: "all",
-        },
-      });
-
-      const data = response?.data;
-
-      const productList =
-        data?.products || data?.data?.products || data?.data || [];
-
-      setProducts(Array.isArray(productList) ? productList : []);
-    } catch (error) {
-      console.error("loadProducts:", error);
-
-      showSnackbar("Không thể tải danh sách sản phẩm", "error");
-    } finally {
-      setLoadingProducts(false);
-    }
-  };
-
-  useEffect(() => {
-    loadProducts();
-  }, []);
-
-  // ============================================================
-  // SNACKBAR
+  // SNACKBAR FUNCTION
   // ============================================================
   const showSnackbar = (message, severity = "success") => {
     setSnackbar({
@@ -122,6 +104,69 @@ const InventoryImport = () => {
   };
 
   // ============================================================
+  // SEARCH PRODUCTS FROM API
+  // ============================================================
+  const searchProducts = async (keyword) => {
+    const search = String(keyword || "").trim();
+
+    if (!search) {
+      setProducts([]);
+      setLoadingProducts(false);
+      return;
+    }
+
+    try {
+      setLoadingProducts(true);
+
+      const response = await axios.get(API_ENDPOINTS.PRODUCTS, {
+        params: {
+          search,
+          type: "all",
+          page: 1,
+          limit: 20,
+        },
+      });
+
+      const data = response?.data;
+
+      const productList =
+        data?.products || data?.data?.products || data?.data || [];
+
+      setProducts(Array.isArray(productList) ? productList : []);
+    } catch (error) {
+      console.error("searchProducts:", error);
+
+      setProducts([]);
+
+      showSnackbar(
+        error?.response?.data?.message || "Không thể tìm kiếm sản phẩm",
+        "error",
+      );
+    } finally {
+      setLoadingProducts(false);
+    }
+  };
+
+  // ============================================================
+  // DEBOUNCE SEARCH
+  // ============================================================
+  useEffect(() => {
+    const keyword = productSearch.trim();
+
+    if (!keyword) {
+      setProducts([]);
+      setLoadingProducts(false);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      searchProducts(keyword);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [productSearch]);
+
+  // ============================================================
   // VARIANTS
   // ============================================================
   const variants = useMemo(() => {
@@ -130,10 +175,22 @@ const InventoryImport = () => {
 
   // ============================================================
   // SELECT PRODUCT
+  // AUTO SELECT FIRST VARIANT
   // ============================================================
   const handleProductChange = (_, product) => {
     setSelectedProduct(product);
-    setSelectedVariant("");
+
+    if (
+      product?.variants &&
+      Array.isArray(product.variants) &&
+      product.variants.length > 0
+    ) {
+      const firstVariant = product.variants[0];
+
+      setSelectedVariant(firstVariant?.name ? String(firstVariant.name) : "");
+    } else {
+      setSelectedVariant("");
+    }
   };
 
   // ============================================================
@@ -160,7 +217,9 @@ const InventoryImport = () => {
     }
 
     const variant =
-      variants.find((item) => item.name === selectedVariant) || null;
+      variants.find(
+        (item) => String(item.name || "") === String(selectedVariant || ""),
+      ) || null;
 
     const newItem = {
       productId: selectedProduct._id,
@@ -223,7 +282,9 @@ const InventoryImport = () => {
 
     setItems((prev) =>
       prev.map((item, i) => {
-        if (i !== index) return item;
+        if (i !== index) {
+          return item;
+        }
 
         return {
           ...item,
@@ -242,7 +303,9 @@ const InventoryImport = () => {
 
     setItems((prev) =>
       prev.map((item, i) => {
-        if (i !== index) return item;
+        if (i !== index) {
+          return item;
+        }
 
         return {
           ...item,
@@ -254,12 +317,15 @@ const InventoryImport = () => {
   };
 
   // ============================================================
-  // TOTAL
+  // TOTAL QTY
   // ============================================================
   const totalQty = useMemo(() => {
     return items.reduce((sum, item) => sum + Number(item.qty || 0), 0);
   }, [items]);
 
+  // ============================================================
+  // TOTAL AMOUNT
+  // ============================================================
   const totalAmount = useMemo(() => {
     return items.reduce((sum, item) => sum + Number(item.total || 0), 0);
   }, [items]);
@@ -288,12 +354,11 @@ const InventoryImport = () => {
           unitCost: Number(item.unitCost || 0),
         })),
       };
-      const token =
-        localStorage.getItem("adminToken") ||
-        localStorage.getItem("accessToken");
+
+      const token = localStorage.getItem("adminToken");
 
       const response = await axios.post(
-        `${API_ENDPOINTS.INVENTORY_RECEIPTS}`,
+        API_ENDPOINTS.INVENTORY_RECEIPTS,
         payload,
         {
           headers: {
@@ -319,7 +384,8 @@ const InventoryImport = () => {
       setQty("");
       setUnitCost("");
 
-      await loadProducts();
+      setProducts([]);
+      setProductSearch("");
     } catch (error) {
       console.error("handleSave:", error);
 
@@ -334,6 +400,9 @@ const InventoryImport = () => {
     }
   };
 
+  // ============================================================
+  // RENDER
+  // ============================================================
   return (
     <Box>
       {/* ======================================================
@@ -421,30 +490,120 @@ const InventoryImport = () => {
                 loading={loadingProducts}
                 value={selectedProduct}
                 onChange={handleProductChange}
-                getOptionLabel={(option) => option?.title || option?.name || ""}
+                onInputChange={(_, value, reason) => {
+                  if (reason === "input") {
+                    setProductSearch(value);
+                  }
+
+                  if (reason === "clear") {
+                    setProductSearch("");
+                    setProducts([]);
+                    setSelectedProduct(null);
+                    setSelectedVariant("");
+                  }
+                }}
+                filterOptions={(options) => options}
+                getOptionLabel={(option) =>
+                  option?.title || option?.name || option?.code || ""
+                }
                 isOptionEqualToValue={(option, value) =>
                   option?._id === value?._id
                 }
+                noOptionsText={
+                  productSearch.trim()
+                    ? "Không tìm thấy sản phẩm"
+                    : "Nhập tên, mã hoặc thương hiệu để tìm"
+                }
+                loadingText="Đang tìm sản phẩm..."
                 renderOption={(props, option) => (
                   <li {...props} key={option._id}>
-                    <Box>
-                      <Typography fontWeight={600}>
-                        {option.title || option.name}
-                      </Typography>
-
-                      {option.brand && (
-                        <Typography variant="caption" color="text.secondary">
-                          {option.brand}
-                        </Typography>
+                    <Stack
+                      direction="row"
+                      spacing={1.5}
+                      alignItems="center"
+                      sx={{
+                        width: "100%",
+                      }}
+                    >
+                      {option.thumbnail && (
+                        <Box
+                          component="img"
+                          src={
+                            option.thumbnail.startsWith("http")
+                              ? option.thumbnail
+                              : `/images/${option.thumbnail}`
+                          }
+                          alt={option.title || option.name || ""}
+                          sx={{
+                            width: 44,
+                            height: 44,
+                            borderRadius: 1,
+                            objectFit: "cover",
+                            flexShrink: 0,
+                          }}
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                          }}
+                        />
                       )}
-                    </Box>
+
+                      <Box
+                        sx={{
+                          minWidth: 0,
+                          flex: 1,
+                        }}
+                      >
+                        <Typography fontWeight={600} noWrap>
+                          {option.title || option.name || "Sản phẩm"}
+                        </Typography>
+
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          flexWrap="wrap"
+                          alignItems="center"
+                        >
+                          {option.code && (
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              Mã: {option.code}
+                            </Typography>
+                          )}
+
+                          {option.brand && (
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              • {option.brand}
+                            </Typography>
+                          )}
+
+                          <Typography
+                            variant="caption"
+                            color="primary"
+                            fontWeight={600}
+                          >
+                            Tồn:{" "}
+                            {Number(option.qty || 0).toLocaleString("vi-VN")}
+                          </Typography>
+                        </Stack>
+                      </Box>
+                    </Stack>
                   </li>
                 )}
                 renderInput={(params) => (
                   <TextField
                     {...params}
                     label="Sản phẩm"
-                    placeholder="Tìm sản phẩm..."
+                    placeholder="Nhập tên, mã, thương hiệu..."
+                    helperText={
+                      productSearch.trim()
+                        ? "Đang tìm sản phẩm trên server"
+                        : "Nhập từ khóa để tìm sản phẩm"
+                    }
                   />
                 )}
               />
@@ -735,6 +894,9 @@ const InventoryImport = () => {
         </CardContent>
       </Card>
 
+      {/* ======================================================
+          SNACKBAR
+      ====================================================== */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={3500}
