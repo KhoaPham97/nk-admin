@@ -49,6 +49,9 @@ interface ProductCardProps extends Product {
   id?: string;
 
   variants?: Variant[];
+
+  soldQty?: number | string;
+  soldCount?: number | string;
 }
 
 /* =========================================================
@@ -89,6 +92,14 @@ const ProductCard: FC<ProductCardProps> = (product) => {
   const variants = Array.isArray(product.variants) ? product.variants : [];
 
   const hasVariants = variants.length > 0;
+
+  /* =======================================================
+     SOLD QTY
+  ======================================================= */
+
+  const soldQty = useMemo(() => {
+    return Number(product.soldQty ?? product.soldCount ?? 0) || 0;
+  }, [product.soldQty, product.soldCount]);
 
   /* =======================================================
      TÌM VARIANT ĐẦU TIÊN CÒN HÀNG
@@ -290,11 +301,13 @@ const ProductCard: FC<ProductCardProps> = (product) => {
   const handleAddToCart = () => {
     if (!productId) {
       toast.error("Không xác định được sản phẩm");
+
       return;
     }
 
     if (!selectedVariant) {
       toast.error("Vui lòng chọn phân loại");
+
       return;
     }
 
@@ -304,6 +317,7 @@ const ProductCard: FC<ProductCardProps> = (product) => {
 
     if (variantStock <= 0) {
       toast.error("Phân loại này đã hết hàng");
+
       return;
     }
 
@@ -344,6 +358,7 @@ const ProductCard: FC<ProductCardProps> = (product) => {
       `Đã thêm ${product.title || product.name || "sản phẩm"} vào giỏ`,
     );
   };
+
   /* =======================================================
      INVALID PRODUCT
   ======================================================= */
@@ -458,6 +473,28 @@ const ProductCard: FC<ProductCardProps> = (product) => {
             "
           >
             {variants.length} phân loại
+          </div>
+        )}
+
+        {/* SOLD BADGE */}
+
+        {soldQty > 0 && (
+          <div
+            className="
+              absolute
+              bottom-3
+              left-3
+              rounded-full
+              bg-orange-500
+              px-2.5
+              py-1
+              text-[11px]
+              font-semibold
+              text-white
+              shadow-md
+            "
+          >
+            🔥 Đã bán {soldQty.toLocaleString("vi-VN")}
           </div>
         )}
       </Link>
@@ -837,17 +874,41 @@ const ProductCard: FC<ProductCardProps> = (product) => {
               )}
             </div>
 
-            {/* STOCK */}
+            {/* STOCK + SOLD */}
 
             <div
               className="
                 shrink-0
                 text-right
-                text-[10px]
-                text-gray-400
               "
             >
-              {isInStock ? `Kho: ${stock}` : "Tạm hết"}
+              {soldQty > 0 && (
+                <div
+                  className="
+                    flex
+                    items-center
+                    justify-end
+                    gap-1
+                    text-[10px]
+                    font-semibold
+                    text-orange-500
+                  "
+                >
+                  <span>🔥</span>
+
+                  <span>Đã bán {soldQty.toLocaleString("vi-VN")}</span>
+                </div>
+              )}
+
+              <div
+                className="
+                  mt-0.5
+                  text-[10px]
+                  text-gray-400
+                "
+              >
+                {isInStock ? `Kho: ${stock}` : "Tạm hết"}
+              </div>
             </div>
           </div>
 
