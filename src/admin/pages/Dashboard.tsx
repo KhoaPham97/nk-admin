@@ -62,6 +62,7 @@ interface Product {
   name?: string;
   qty?: number | string;
   price?: number | string;
+  soldQty?: number | string;
 }
 
 interface OrderItem {
@@ -774,49 +775,21 @@ const AdminStatistics: React.FC = () => {
   // ==========================================================
 
   const topProducts = useMemo(() => {
-    const map: Record<
-      string,
-      {
-        title: string;
-        qty: number;
-        revenue: number;
-      }
-    > = {};
+    return products
+      .map((product) => {
+        const soldCount = Number(product.soldQty || 0);
+        const price = Number(product.price || 0);
 
-    orders.forEach((order) => {
-      if (order.status === "cancelled") {
-        return;
-      }
-
-      if (!Array.isArray(order.items)) {
-        return;
-      }
-
-      order.items.forEach((item) => {
-        const key = item.productId || item.productTitle || "unknown";
-
-        if (!key) {
-          return;
-        }
-
-        if (!map[key]) {
-          map[key] = {
-            title: item.productTitle || "Sản phẩm",
-            qty: 0,
-            revenue: 0,
-          };
-        }
-
-        map[key].qty += Number(item.qty || 0);
-
-        map[key].revenue += Number(item.total || 0);
-      });
-    });
-
-    return Object.values(map)
-      .sort((a, b) => b.qty - a.qty)
-      .slice(0, 5);
-  }, [orders]);
+        return {
+          ...product,
+          soldCount,
+          revenue: soldCount * price,
+        };
+      })
+      .filter((product) => product.soldCount > 0)
+      .sort((a, b) => b.soldCount - a.soldCount)
+      .slice(0, 30);
+  }, [products]);
 
   // ==========================================================
   // ANALYTICS SAFE DATA
@@ -1472,7 +1445,7 @@ const AdminStatistics: React.FC = () => {
                 />
 
                 <Stack spacing={1.5}>
-                  {analyticsData.devices.slice(0, 5).map((item, index) => {
+                  {analyticsData.devices.slice(0, 10).map((item, index) => {
                     const count = Number(item.count || 0);
 
                     const percent =
@@ -1576,7 +1549,7 @@ const AdminStatistics: React.FC = () => {
 
                     <Stack spacing={1}>
                       {analyticsData.operatingSystems
-                        .slice(0, 5)
+                        .slice(0, 10)
                         .map((item, index) => (
                           <Stack
                             key={`${item.os}-${index}`}

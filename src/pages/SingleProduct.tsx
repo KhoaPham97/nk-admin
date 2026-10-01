@@ -989,14 +989,14 @@ const SingleProduct: FC = () => {
                   WISHLIST
               ================================================= */}
 
-              <button
+              {/* <button
                 type="button"
                 onClick={addWishlist}
                 className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 px-5 py-3 text-sm font-semibold text-gray-600 transition hover:border-red-300 hover:bg-red-50 hover:text-red-500 dark:border-slate-700 dark:text-gray-300 dark:hover:bg-red-900/20"
               >
                 <MdFavoriteBorder className="text-xl" />
                 Thêm vào yêu thích
-              </button>
+              </button> */}
 
               {/* =================================================
                   TRUST

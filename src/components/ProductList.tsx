@@ -10,13 +10,44 @@ import { Autoplay, Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 
-import { FiArrowRight } from "react-icons/fi";
+import { FiArrowRight, FiTrendingUp } from "react-icons/fi";
 
 interface ProductListProps {
   title: string;
   products: any[];
+
   isSlide?: boolean;
+
   type?: string;
+
+  /**
+   * Hiển thị nút "Xem tất cả"
+   *
+   * Mặc định:
+   * - true với các section bình thường
+   * - false với "Sản phẩm bán chạy nhất"
+   */
+  showViewAll?: boolean;
+
+  /**
+   * Hiển thị số lượng đã bán
+   */
+  showSoldCount?: boolean;
+
+  /**
+   * Hiển thị doanh thu
+   */
+  showRevenue?: boolean;
+
+  /**
+   * Badge phía trên tiêu đề
+   */
+  badge?: string;
+
+  /**
+   * Class custom riêng cho section
+   */
+  className?: string;
 }
 
 const ProductList: FC<ProductListProps> = ({
@@ -24,6 +55,14 @@ const ProductList: FC<ProductListProps> = ({
   products = [],
   isSlide = false,
   type = "all",
+
+  showViewAll,
+  showSoldCount = false,
+  showRevenue = false,
+
+  badge,
+
+  className = "",
 }) => {
   // =========================================================
   // PRODUCT DATA
@@ -32,11 +71,34 @@ const ProductList: FC<ProductListProps> = ({
   const productList = Array.isArray(products) ? products.filter(Boolean) : [];
 
   // =========================================================
+  // VIEW ALL
+  // =========================================================
+
+  const shouldShowViewAll =
+    showViewAll !== undefined
+      ? showViewAll
+      : title !== "Sản phẩm bán chạy nhất";
+
+  // =========================================================
   // PRODUCT ID
   // =========================================================
 
   const getProductId = (product: any, index: number) => {
     return String(product?._id || product?.id || `product-${index}`);
+  };
+
+  // =========================================================
+  // FORMAT NUMBER
+  // =========================================================
+
+  const formatNumber = (value: any) => {
+    const number = Number(value || 0);
+
+    if (!Number.isFinite(number)) {
+      return "0";
+    }
+
+    return number.toLocaleString("vi-VN");
   };
 
   // =========================================================
@@ -52,21 +114,79 @@ const ProductList: FC<ProductListProps> = ({
       return null;
     }
 
+    const soldQty = Number(product.soldQty ?? product.soldCount ?? 0);
+
+    const revenue = Number(product.revenue || 0);
+
     return (
-      <ProductCard
-        {...product}
-        _id={productId}
-        id={productId}
-        category={product.category}
-        title={product.title || "Sản phẩm"}
-        price={product.price}
-        thumbnail={product.thumbnail}
-        images={Array.isArray(product.images) ? product.images : []}
-        rating={product.rating}
-        discountPercentage={product.discountPercentage}
-        qty={product.qty}
-        variants={Array.isArray(product.variants) ? product.variants : []}
-      />
+      <div className="flex h-full w-full min-w-0 flex-col">
+        {/* =================================================
+            PRODUCT CARD
+        ================================================= */}
+
+        <div className="min-w-0 flex-1">
+          <ProductCard
+            {...product}
+            _id={productId}
+            id={productId}
+            category={product.category}
+            title={product.title || "Sản phẩm"}
+            price={product.price}
+            thumbnail={product.thumbnail}
+            images={Array.isArray(product.images) ? product.images : []}
+            rating={product.rating}
+            discountPercentage={product.discountPercentage}
+            qty={product.qty}
+            variants={Array.isArray(product.variants) ? product.variants : []}
+          />
+        </div>
+
+        {/* =================================================
+            SELLING INFO
+        ================================================= */}
+
+        {(showSoldCount || showRevenue) && (
+          <div className="mt-2 rounded-xl border border-gray-100 bg-gray-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-800">
+            {/* SOLD */}
+
+            {showSoldCount && (
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex min-w-0 items-center gap-1.5">
+                  <FiTrendingUp size={14} className="shrink-0 text-blue-600" />
+
+                  <span className="truncate text-xs text-gray-500 dark:text-gray-400">
+                    Đã bán
+                  </span>
+                </div>
+
+                <span className="shrink-0 text-xs font-bold text-blue-600">
+                  {formatNumber(soldQty)}
+                </span>
+              </div>
+            )}
+
+            {/* REVENUE */}
+
+            {showRevenue && (
+              <div
+                className={
+                  showSoldCount
+                    ? "mt-1.5 flex items-center justify-between gap-2 border-t border-gray-200 pt-1.5 dark:border-slate-700"
+                    : "flex items-center justify-between gap-2"
+                }
+              >
+                <span className="truncate text-xs text-gray-500 dark:text-gray-400">
+                  Doanh thu
+                </span>
+
+                <span className="shrink-0 text-xs font-bold text-gray-900 dark:text-white">
+                  {formatNumber(revenue)} ₫
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     );
   };
 
@@ -77,9 +197,21 @@ const ProductList: FC<ProductListProps> = ({
   const renderHeader = () => {
     return (
       <div className="mb-5 flex items-end justify-between gap-4">
-        {/* TITLE */}
+        {/* =================================================
+            TITLE
+        ================================================= */}
 
         <div className="min-w-0">
+          {badge && (
+            <div className="mb-2 flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-blue-600" />
+
+              <span className="text-xs font-semibold uppercase tracking-widest text-blue-600">
+                {badge}
+              </span>
+            </div>
+          )}
+
           <div className="flex items-center gap-3">
             <span
               className="
@@ -117,40 +249,44 @@ const ProductList: FC<ProductListProps> = ({
           />
         </div>
 
-        {/* VIEW ALL */}
+        {/* =================================================
+            VIEW ALL
+        ================================================= */}
 
-        <Link
-          to={`/list-product/${type || "all"}`}
-          data-test="main-categories"
-          className="
-            group
-            flex
-            shrink-0
-            items-center
-            gap-1.5
-            rounded-lg
-            px-2
-            py-2
-            text-sm
-            font-semibold
-            text-blue-600
-            transition
-            hover:bg-blue-50
-            hover:text-blue-700
-            dark:hover:bg-slate-800
-          "
-        >
-          <span>Xem tất cả</span>
-
-          <FiArrowRight
-            size={17}
+        {shouldShowViewAll && (
+          <Link
+            to={`/list-product/${type || "all"}`}
+            data-test="main-categories"
             className="
-              transition-transform
-              duration-200
-              group-hover:translate-x-1
+              group
+              flex
+              shrink-0
+              items-center
+              gap-1.5
+              rounded-lg
+              px-2
+              py-2
+              text-sm
+              font-semibold
+              text-blue-600
+              transition
+              hover:bg-blue-50
+              hover:text-blue-700
+              dark:hover:bg-slate-800
             "
-          />
-        </Link>
+          >
+            <span>Xem tất cả</span>
+
+            <FiArrowRight
+              size={17}
+              className="
+                transition-transform
+                duration-200
+                group-hover:translate-x-1
+              "
+            />
+          </Link>
+        )}
       </div>
     );
   };
@@ -162,14 +298,15 @@ const ProductList: FC<ProductListProps> = ({
   if (productList.length === 0) {
     return (
       <section
-        className="
+        className={`
           mx-auto
           mt-8
           max-w-7xl
           px-4
           sm:px-6
           lg:px-8
-        "
+          ${className}
+        `}
       >
         {renderHeader()}
 
@@ -203,14 +340,15 @@ const ProductList: FC<ProductListProps> = ({
   const renderSlide = () => {
     return (
       <section
-        className="
+        className={`
           mx-auto
           mt-10
           max-w-7xl
           px-4
           sm:px-6
           lg:px-8
-        "
+          ${className}
+        `}
       >
         {renderHeader()}
 
@@ -269,14 +407,7 @@ const ProductList: FC<ProductListProps> = ({
 
               return (
                 <SwiperSlide key={productId} className="!flex !h-auto">
-                  <div
-                    className="
-                        flex
-                        h-full
-                        w-full
-                        min-w-0
-                      "
-                  >
+                  <div className="flex h-full w-full min-w-0">
                     {renderProductCard(product)}
                   </div>
                 </SwiperSlide>
@@ -391,14 +522,15 @@ const ProductList: FC<ProductListProps> = ({
   const renderDefault = () => {
     return (
       <section
-        className="
+        className={`
           mx-auto
           mt-10
           max-w-7xl
           px-4
           sm:px-6
           lg:px-8
-        "
+          ${className}
+        `}
       >
         {renderHeader()}
 
