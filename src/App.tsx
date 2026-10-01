@@ -6,10 +6,9 @@ import { store } from "./redux/store";
 
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-import Cart from "./components/Cart";
+import Cart from "./pages/Cart";
 import LoginModal from "./components/LoginModal";
 import ScrollToTopButton from "./components/ScrollToTopButton";
-import BannerPopup from "./components/BannerPopup";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 import { Route, Routes, useLocation } from "react-router-dom";
@@ -27,13 +26,14 @@ import AllCategories from "./pages/AllCategories";
 import SingleProduct from "./pages/SingleProduct";
 import SingleCategory from "./pages/SingleCategory";
 import Wishlist from "./pages/Wishlist";
-import Profile from "./pages/Profile";
+import Checkout from "./pages/Checkout";
 import AnalyticsTracker from "./pages/AnalyticsTracker";
 import { ToastContainer } from "react-toastify";
 import AuthModal from "./components/AuthModal";
 import LoginForm from "./components/LoginForm";
 import RegisterForm from "./components/RegisterForm";
-
+import Account from "./pages/Account";
+import OrderSuccess from "./pages/OrderSuccess";
 import "react-toastify/dist/ReactToastify.css";
 // ================================
 // ADMIN
@@ -82,57 +82,44 @@ const CheckAccount = () => {
         {/* ================================
             HOME
         ================================= */}
-
         <Route path="/" element={<Home />} />
-
         {/* ================================
             SEARCH
         ================================= */}
-
         <Route path="/search" element={<SearchPage />} />
-
         {/* ================================
             PRODUCTS
         ================================= */}
-
         <Route path="/list-product/:type" element={<LazyloadProducts />} />
-
         <Route path="/products" element={<AllProducts />} />
-
         <Route path="/product/:productID" element={<SingleProduct />} />
-
         {/* ================================
             CATEGORY
         ================================= */}
-
         <Route path="/categories" element={<AllCategories />} />
-
         <Route path="/category/:slug" element={<SingleCategory />} />
-
         {/* ================================
             WISHLIST
         ================================= */}
-
         <Route path="/wishlist" element={<ProtectedRoute />}>
           <Route index element={<Wishlist />} />
         </Route>
-
         {/* ================================
             ACCOUNT
         ================================= */}
-
-        <Route path="/account" element={<ProtectedRoute />}>
-          <Route index element={<Profile />} />
-        </Route>
+        <Route path="/account" element={<Account />} />
         <Route path="/login" element={<LoginForm />} />
         <Route path="/register" element={<RegisterForm />} />
+        <Route path="/cart" element={<Cart />} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/order-success" element={<OrderSuccess />} />
+        <Route path="/order-success/:id" element={<OrderSuccess />} />
       </Routes>
       <Toaster position="bottom-center" reverseOrder={false} />
       {/* ================================
           WEBSITE COMPONENTS
       ================================= */}
       <Footer />
-      <Cart />
       <LoginModal />
       <ScrollToTopButton />
       {/* <BannerPopup />{" "} */}

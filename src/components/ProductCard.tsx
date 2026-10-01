@@ -1,65 +1,133 @@
-import { FC, useMemo, useState } from "react";
+import { FC, useEffect, useMemo, useState } from "react";
+
 import { Link } from "react-router-dom";
+
 import { AiOutlineShoppingCart } from "react-icons/ai";
+
 import { FaCheck, FaChevronDown } from "react-icons/fa6";
+
 import { toast } from "react-toastify";
 
 import { Product } from "../models/Product";
+
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
+
 import { addToCart } from "../redux/features/cartSlice";
+
 import useAuth from "../hooks/useAuth";
+
+/* =========================================================
+   VARIANT
+========================================================= */
 
 interface Variant {
   _id?: string;
   id?: string;
+
   name?: string;
   value?: string;
   label?: string;
+
   price?: number | string;
+
   qty?: number | string;
   stock?: number | string;
+
   code?: string;
   sku?: string;
+
   image?: string;
   thumbnail?: string;
 }
 
+/* =========================================================
+   PRODUCT CARD PROPS
+========================================================= */
+
 interface ProductCardProps extends Product {
   _id?: string;
+  id?: string;
+
   variants?: Variant[];
 }
 
+/* =========================================================
+   COMPONENT
+========================================================= */
+
 const ProductCard: FC<ProductCardProps> = (product) => {
   const dispatch = useAppDispatch();
+
   const { requireAuth } = useAuth();
+
+  /* =======================================================
+     STATE
+  ======================================================= */
 
   const [selectedVariantIndex, setSelectedVariantIndex] = useState<number>(0);
 
   const [isVariantOpen, setIsVariantOpen] = useState<boolean>(false);
 
-  // =====================================================
-  // SETTINGS
-  // =====================================================
+  /* =======================================================
+     SETTINGS
+  ======================================================= */
 
   const settings = useAppSelector((state) => state.settings?.settings);
 
   const showPrice = settings?.websiteSettings?.showPrice ?? false;
 
-  // =====================================================
-  // PRODUCT ID
-  // =====================================================
+  /* =======================================================
+     PRODUCT ID
+  ======================================================= */
 
-  const productId = String(product._id || "");
+  const productId = String(product._id || product.id || "");
 
-  if (!productId) {
-    return null;
-  }
+  /* =======================================================
+     VARIANTS
+  ======================================================= */
 
-  // =====================================================
-  // IMAGE
-  // =====================================================
+  const variants = Array.isArray(product.variants) ? product.variants : [];
 
-  const getImageUrl = (image?: string) => {
+  const hasVariants = variants.length > 0;
+
+  /* =======================================================
+     TÌM VARIANT ĐẦU TIÊN CÒN HÀNG
+  ======================================================= */
+
+  useEffect(() => {
+    if (!hasVariants) {
+      setSelectedVariantIndex(0);
+      return;
+    }
+
+    const firstAvailableIndex = variants.findIndex((variant) => {
+      const qty = Number(variant.qty ?? variant.stock ?? 0) || 0;
+
+      return qty > 0;
+    });
+
+    if (firstAvailableIndex >= 0) {
+      setSelectedVariantIndex(firstAvailableIndex);
+    } else {
+      setSelectedVariantIndex(0);
+    }
+
+    setIsVariantOpen(false);
+  }, [productId, hasVariants, variants]);
+
+  /* =======================================================
+     SELECTED VARIANT
+  ======================================================= */
+
+  const selectedVariant = hasVariants
+    ? variants[selectedVariantIndex] || variants[0]
+    : null;
+
+  /* =======================================================
+     IMAGE URL
+  ======================================================= */
+
+  const getImageUrl = (image?: string): string => {
     if (!image || typeof image !== "string") {
       return "/images/no-image.jpg";
     }
@@ -82,27 +150,17 @@ const ProductCard: FC<ProductCardProps> = (product) => {
     return `/images/${value}`;
   };
 
-  // =====================================================
-  // VARIANTS
-  // =====================================================
-
-  const variants = Array.isArray(product.variants) ? product.variants : [];
-
-  const hasVariants = variants.length > 0;
-
-  const selectedVariant = hasVariants
-    ? variants[selectedVariantIndex] || variants[0]
-    : null;
-
-  // =====================================================
-  // VARIANT NAME
-  // =====================================================
+  /* =======================================================
+     VARIANT NAME
+  ======================================================= */
 
   const getVariantName = (variant?: Variant | null): string => {
-    if (!variant) return "";
+    if (!variant) {
+      return "";
+    }
 
     if (typeof variant.label === "string" && variant.label.trim()) {
-      return variant.label;
+      return variant.label.trim();
     }
 
     if (
@@ -111,34 +169,36 @@ const ProductCard: FC<ProductCardProps> = (product) => {
       variant.name.trim() &&
       variant.value.trim()
     ) {
-      return `${variant.name}: ${variant.value}`;
+      return `${variant.name.trim()}: ${variant.value.trim()}`;
     }
 
     if (typeof variant.value === "string" && variant.value.trim()) {
-      return variant.value;
+      return variant.value.trim();
     }
 
     if (typeof variant.name === "string" && variant.name.trim()) {
-      return variant.name;
+      return variant.name.trim();
     }
 
     if (typeof variant.code === "string" && variant.code.trim()) {
-      return variant.code;
+      return variant.code.trim();
     }
 
     if (typeof variant.sku === "string" && variant.sku.trim()) {
-      return variant.sku;
+      return variant.sku.trim();
     }
 
     return "";
   };
 
-  // =====================================================
-  // CATEGORY
-  // =====================================================
+  /* =======================================================
+     CATEGORY
+  ======================================================= */
 
   const categoryName = useMemo(() => {
-    if (!product.category) return "";
+    if (!product.category) {
+      return "";
+    }
 
     if (typeof product.category === "string") {
       return product.category;
@@ -153,9 +213,9 @@ const ProductCard: FC<ProductCardProps> = (product) => {
     return "";
   }, [product.category]);
 
-  // =====================================================
-  // STOCK
-  // =====================================================
+  /* =======================================================
+     STOCK
+  ======================================================= */
 
   const stock = useMemo(() => {
     if (selectedVariant) {
@@ -167,13 +227,17 @@ const ProductCard: FC<ProductCardProps> = (product) => {
 
   const isInStock = stock > 0;
 
-  // =====================================================
-  // PRICE
-  // =====================================================
+  /* =======================================================
+     PRICE
+  ======================================================= */
 
   const numericPrice = useMemo(() => {
     if (selectedVariant) {
-      return Number(selectedVariant.price) || Number(product.price) || 0;
+      const variantPrice = Number(selectedVariant.price) || 0;
+
+      if (variantPrice > 0) {
+        return variantPrice;
+      }
     }
 
     return Number(product.price) || 0;
@@ -184,9 +248,9 @@ const ProductCard: FC<ProductCardProps> = (product) => {
       ? new Intl.NumberFormat("vi-VN").format(numericPrice)
       : "Liên hệ";
 
-  // =====================================================
-  // IMAGE
-  // =====================================================
+  /* =======================================================
+     PRODUCT IMAGE
+  ======================================================= */
 
   const productImage =
     selectedVariant?.image ||
@@ -195,96 +259,102 @@ const ProductCard: FC<ProductCardProps> = (product) => {
     product.images?.[0] ||
     "";
 
-  // =====================================================
-  // SELECT VARIANT
-  // =====================================================
+  /* =======================================================
+     SELECT VARIANT
+  ======================================================= */
 
   const handleSelectVariant = (index: number) => {
     const variant = variants[index];
 
-    if (!variant) return;
+    if (!variant) {
+      return;
+    }
 
     const variantQty = Number(variant.qty ?? variant.stock ?? 0) || 0;
 
     if (variantQty <= 0) {
       toast.info("Phân loại này hiện đã hết hàng");
+
       return;
     }
 
     setSelectedVariantIndex(index);
+
     setIsVariantOpen(false);
   };
 
-  // =====================================================
-  // ADD TO CART
-  // =====================================================
+  /* =======================================================
+     ADD TO CART
+  ======================================================= */
 
   const handleAddToCart = () => {
-    if (!isInStock) {
-      toast.warning("Sản phẩm hiện đã hết hàng");
+    if (!productId) {
+      toast.error("Không xác định được sản phẩm");
       return;
     }
 
-    requireAuth(() => {
-      const cartProduct: any = {
-        ...product,
+    if (!selectedVariant) {
+      toast.error("Vui lòng chọn phân loại");
+      return;
+    }
 
-        // =================================================
-        // ID
-        // =================================================
+    const variantStock = Number(
+      selectedVariant.qty ?? selectedVariant.stock ?? 0,
+    );
 
-        _id: productId,
+    if (variantStock <= 0) {
+      toast.error("Phân loại này đã hết hàng");
+      return;
+    }
 
-        id: productId,
+    const variantId = String(selectedVariant._id || selectedVariant.id || "");
 
-        // =================================================
-        // CURRENT PRICE
-        // =================================================
+    const cartProduct = {
+      ...product,
 
-        price: numericPrice,
+      _id: productId,
+      id: productId,
 
-        // =================================================
-        // CURRENT STOCK
-        // =================================================
+      price: Number(selectedVariant.price ?? product.price ?? 0),
 
-        qty: stock,
+      qty: variantStock,
 
-        // =================================================
-        // SELECTED VARIANT
-        // =================================================
+      quantity: 1,
 
-        selectedVariant: selectedVariant
-          ? {
-              ...selectedVariant,
+      variantId: variantId || undefined,
 
-              _id: selectedVariant._id || selectedVariant.id || undefined,
+      variant: {
+        ...selectedVariant,
 
-              name: getVariantName(selectedVariant),
+        _id: selectedVariant._id || selectedVariant.id || undefined,
 
-              qty: stock,
+        id: selectedVariant.id || selectedVariant._id || undefined,
 
-              price: numericPrice,
-            }
-          : null,
-      };
+        name: getVariantName(selectedVariant),
 
-      dispatch(addToCart(cartProduct));
+        qty: variantStock,
 
-      if (selectedVariant) {
-        toast.success(
-          `Đã thêm ${product.title || "sản phẩm"} - ${getVariantName(
-            selectedVariant,
-          )} vào giỏ hàng`,
-        );
-      } else {
-        toast.success("Đã thêm sản phẩm vào giỏ hàng");
-      }
-    });
+        price: Number(selectedVariant.price ?? product.price ?? 0),
+      },
+    };
+
+    dispatch(addToCart(cartProduct));
+
+    toast.success(
+      `Đã thêm ${product.title || product.name || "sản phẩm"} vào giỏ`,
+    );
   };
+  /* =======================================================
+     INVALID PRODUCT
+  ======================================================= */
 
-  // =====================================================
-  // RENDER
-  // =====================================================
+  if (!productId) {
+    return null;
+  }
+
+  /* =======================================================
+     RENDER
+  ======================================================= */
 
   return (
     <div
@@ -369,7 +439,7 @@ const ProductCard: FC<ProductCardProps> = (product) => {
           {isInStock ? "Còn hàng" : "Hết hàng"}
         </div>
 
-        {/* VARIANTS */}
+        {/* VARIANT COUNT */}
 
         {hasVariants && (
           <div
@@ -404,9 +474,7 @@ const ProductCard: FC<ProductCardProps> = (product) => {
           p-4
         "
       >
-        {/* =================================================
-            TOP CONTENT
-        ================================================= */}
+        {/* TOP */}
 
         <div>
           {/* CATEGORY */}
@@ -452,6 +520,8 @@ const ProductCard: FC<ProductCardProps> = (product) => {
 
           {hasVariants && (
             <div className="relative mt-3">
+              {/* LABEL */}
+
               <div
                 className="
                   mb-1.5
@@ -481,7 +551,7 @@ const ProductCard: FC<ProductCardProps> = (product) => {
                 </span>
               </div>
 
-              {/* SELECTED VARIANT */}
+              {/* SELECTED */}
 
               <button
                 type="button"
@@ -691,8 +761,7 @@ const ProductCard: FC<ProductCardProps> = (product) => {
         </div>
 
         {/* =================================================
-            BOTTOM AREA
-            Luôn nằm dưới cùng
+            BOTTOM
         ================================================= */}
 
         <div
@@ -701,9 +770,7 @@ const ProductCard: FC<ProductCardProps> = (product) => {
             pt-4
           "
         >
-          {/* =================================================
-              PRICE + STOCK
-          ================================================= */}
+          {/* PRICE */}
 
           <div
             className="
@@ -784,9 +851,7 @@ const ProductCard: FC<ProductCardProps> = (product) => {
             </div>
           </div>
 
-          {/* =================================================
-              ACTIONS
-          ================================================= */}
+          {/* ACTION */}
 
           <div
             className="

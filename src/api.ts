@@ -26,4 +26,5 @@ export const API_ENDPOINTS = {
   INVENTORY_HISTORY: `${BASE_URL}/inventory-history`,
   INVENTORY_RECEIPTS: `${BASE_URL}/inventory`,
   SYNC_ORDER_VARIANTS: `${BASE_URL}/order/sync-variants`,
+  LOGIN: `${BASE_URL}/customers/login`,
 };

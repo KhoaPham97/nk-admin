@@ -15,6 +15,7 @@ import {
   Divider,
   IconButton,
   InputAdornment,
+  MenuItem,
   Paper,
   Snackbar,
   Stack,
@@ -35,13 +36,17 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import PeopleIcon from "@mui/icons-material/People";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import SaveIcon from "@mui/icons-material/Save";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
-import PaymentsIcon from "@mui/icons-material/Payments";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import CloseIcon from "@mui/icons-material/Close";
+import PersonIcon from "@mui/icons-material/Person";
+import EmailIcon from "@mui/icons-material/Email";
+import PhoneIcon from "@mui/icons-material/Phone";
+import LockIcon from "@mui/icons-material/Lock";
 
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -50,11 +55,15 @@ import { API_ENDPOINTS } from "../../api";
 
 const API_URL = API_ENDPOINTS.CUSTOMERS || "";
 
+const DEFAULT_PASSWORD = "nhatkhangbike";
+
 const emptyForm = {
   name: "",
   phone: "",
   email: "",
   address: "",
+  username: "",
+  status: "pending",
   note: "",
 };
 
@@ -82,6 +91,22 @@ const Customers = () => {
   const [savingCustomer, setSavingCustomer] = useState(false);
 
   // =====================================================
+  // CHANGE PASSWORD
+  // =====================================================
+
+  const [openPasswordDialog, setOpenPasswordDialog] = useState(false);
+
+  const [password, setPassword] = useState("");
+
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const [showPassword, setShowPassword] = useState(false);
+
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const [changingPassword, setChangingPassword] = useState(false);
+
+  // =====================================================
   // DEBT
   // =====================================================
 
@@ -95,8 +120,11 @@ const Customers = () => {
   // =====================================================
 
   const [openOrdersDialog, setOpenOrdersDialog] = useState(false);
+
   const [selectedOrderCustomer, setSelectedOrderCustomer] = useState(null);
+
   const [customerOrders, setCustomerOrders] = useState([]);
+
   const [loadingOrders, setLoadingOrders] = useState(false);
 
   // =====================================================
@@ -126,7 +154,11 @@ const Customers = () => {
 
     return {
       headers: {
-        Authorization: `Bearer ${token}`,
+        ...(token
+          ? {
+              Authorization: `Bearer ${token}`,
+            }
+          : {}),
         "Content-Type": "application/json",
       },
     };
@@ -179,14 +211,27 @@ const Customers = () => {
     });
   };
 
+  const formatDateTime = (value) => {
+    if (!value) return "Chưa có";
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return "Chưa có";
+    }
+
+    return date.toLocaleString("vi-VN");
+  };
+
   // =====================================================
-  // STATUS
+  // ORDER STATUS
   // =====================================================
 
   const getStatusLabel = (status) => {
     const map = {
       pending: "Chờ xử lý",
       confirmed: "Đã xác nhận",
+      processing: "Đang xử lý",
       shipping: "Đang giao",
       completed: "Hoàn thành",
       cancelled: "Đã hủy",
@@ -204,6 +249,9 @@ const Customers = () => {
       case "confirmed":
         return "info";
 
+      case "processing":
+        return "info";
+
       case "shipping":
         return "primary";
 
@@ -212,6 +260,42 @@ const Customers = () => {
 
       case "cancelled":
       case "canceled":
+        return "error";
+
+      default:
+        return "default";
+    }
+  };
+
+  // =====================================================
+  // CUSTOMER STATUS
+  // =====================================================
+
+  const getCustomerStatusLabel = (status) => {
+    switch (status) {
+      case "active":
+        return "Đang hoạt động";
+
+      case "pending":
+        return "Chờ duyệt";
+
+      case "blocked":
+        return "Đã khóa";
+
+      default:
+        return "Chưa xác định";
+    }
+  };
+
+  const getCustomerStatusColor = (status) => {
+    switch (status) {
+      case "active":
+        return "success";
+
+      case "pending":
+        return "warning";
+
+      case "blocked":
         return "error";
 
       default:
@@ -243,8 +327,17 @@ const Customers = () => {
         ...getAuthConfig(),
       });
 
-      setCustomers(response.data?.customers || []);
-      setTotal(response.data?.total || 0);
+      const data = response?.data || {};
+
+      setCustomers(
+        Array.isArray(data.customers)
+          ? data.customers
+          : Array.isArray(data.data)
+            ? data.data
+            : [],
+      );
+
+      setTotal(Number(data.total || 0));
     } catch (error) {
       console.error("Load customers:", error);
 
@@ -317,6 +410,8 @@ const Customers = () => {
       phone: customer.phone || "",
       email: customer.email || "",
       address: customer.address || "",
+      username: customer.username || "",
+      status: customer.status || "pending",
       note: customer.note || "",
     });
 
@@ -369,18 +464,31 @@ const Customers = () => {
         return;
       }
 
+      const payload = {
+        name: form.name.trim(),
+        phone: form.phone.trim(),
+        email: form.email.trim(),
+        address: form.address.trim(),
+        username: form.username.trim(),
+        status: form.status,
+        note: form.note.trim(),
+      };
+
       if (editingCustomer) {
         await axios.put(
           `${API_URL}/${editingCustomer._id}`,
-          form,
+          payload,
           getAuthConfig(),
         );
 
         showSnackbar("Cập nhật khách hàng thành công", "success");
       } else {
-        await axios.post(API_URL, form, getAuthConfig());
+        await axios.post(API_URL, payload, getAuthConfig());
 
-        showSnackbar("Thêm khách hàng thành công", "success");
+        showSnackbar(
+          `Thêm khách hàng thành công. Mật khẩu mặc định: ${DEFAULT_PASSWORD}`,
+          "success",
+        );
       }
 
       handleClose();
@@ -400,6 +508,100 @@ const Customers = () => {
       );
     } finally {
       setSavingCustomer(false);
+    }
+  };
+
+  // =====================================================
+  // PASSWORD
+  // =====================================================
+
+  const handleOpenPasswordDialog = () => {
+    if (!editingCustomer?._id) {
+      showSnackbar("Vui lòng lưu khách hàng trước khi đổi mật khẩu", "warning");
+      return;
+    }
+
+    setOpenDialog(false);
+
+    setPassword("");
+    setConfirmPassword("");
+
+    setShowPassword(false);
+    setShowConfirmPassword(false);
+
+    setOpenPasswordDialog(true);
+  };
+
+  const handleClosePasswordDialog = () => {
+    if (changingPassword) return;
+
+    setOpenPasswordDialog(false);
+
+    setPassword("");
+    setConfirmPassword("");
+
+    setShowPassword(false);
+    setShowConfirmPassword(false);
+  };
+
+  const handleChangePassword = async () => {
+    if (!editingCustomer?._id) {
+      showSnackbar("Không xác định được khách hàng", "error");
+      return;
+    }
+
+    if (!password.trim()) {
+      showSnackbar("Vui lòng nhập mật khẩu mới", "error");
+      return;
+    }
+
+    if (password.length < 6) {
+      showSnackbar("Mật khẩu phải có ít nhất 6 ký tự", "error");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      showSnackbar("Mật khẩu xác nhận không khớp", "error");
+      return;
+    }
+
+    try {
+      setChangingPassword(true);
+
+      const token = getToken();
+
+      if (!token) {
+        navigate("/admin/login");
+        return;
+      }
+
+      await axios.put(
+        `${API_URL}/${editingCustomer._id}/password`,
+        {
+          password: password.trim(),
+        },
+        getAuthConfig(),
+      );
+
+      showSnackbar("Đổi mật khẩu thành công", "success");
+
+      handleClosePasswordDialog();
+
+      await loadCustomers();
+    } catch (error) {
+      console.error("Change customer password:", error);
+
+      if (error?.response?.status === 401) {
+        navigate("/admin/login");
+        return;
+      }
+
+      showSnackbar(
+        error?.response?.data?.message || "Không thể đổi mật khẩu",
+        "error",
+      );
+    } finally {
+      setChangingPassword(false);
     }
   };
 
@@ -446,9 +648,7 @@ const Customers = () => {
 
   const handleOpenDebt = (customer) => {
     setSelectedDebtCustomer(customer);
-
     setDebt(Number(customer?.debt || 0));
-
     setOpenDebtDialog(true);
   };
 
@@ -562,7 +762,13 @@ const Customers = () => {
 
       console.log("CUSTOMER ORDERS:", data);
 
-      setCustomerOrders(Array.isArray(data.orders) ? data.orders : []);
+      setCustomerOrders(
+        Array.isArray(data.orders)
+          ? data.orders
+          : Array.isArray(data.data)
+            ? data.data
+            : [],
+      );
     } catch (error) {
       console.error("Load customer orders:", error);
 
@@ -648,7 +854,7 @@ const Customers = () => {
               </Typography>
 
               <Typography variant="body2" color="text.secondary">
-                Quản lý khách hàng và lịch sử mua hàng
+                Quản lý khách hàng, tài khoản và lịch sử mua hàng
               </Typography>
             </Box>
           </Stack>
@@ -685,8 +891,6 @@ const Customers = () => {
           mb: 3,
         }}
       >
-        {/* CUSTOMERS */}
-
         <Card
           sx={{
             borderRadius: 3,
@@ -718,8 +922,6 @@ const Customers = () => {
             </Stack>
           </CardContent>
         </Card>
-
-        {/* ORDERS */}
 
         <Card
           sx={{
@@ -753,8 +955,6 @@ const Customers = () => {
           </CardContent>
         </Card>
 
-        {/* PURCHASE */}
-
         <Card
           sx={{
             borderRadius: 3,
@@ -786,8 +986,6 @@ const Customers = () => {
             </Stack>
           </CardContent>
         </Card>
-
-        {/* DEBT */}
 
         <Card
           sx={{
@@ -845,7 +1043,7 @@ const Customers = () => {
           <TextField
             fullWidth
             value={search}
-            placeholder="Tìm tên, số điện thoại, email..."
+            placeholder="Tìm tên, username, số điện thoại, email..."
             onChange={(event) => {
               setSearch(event.target.value);
               setPage(0);
@@ -878,8 +1076,16 @@ const Customers = () => {
           boxShadow: "0 2px 15px rgba(0,0,0,0.05)",
         }}
       >
-        <TableContainer>
-          <Table>
+        <TableContainer
+          sx={{
+            overflowX: "auto",
+          }}
+        >
+          <Table
+            sx={{
+              minWidth: 1250,
+            }}
+          >
             <TableHead>
               <TableRow
                 sx={{
@@ -895,11 +1101,15 @@ const Customers = () => {
                 </TableCell>
 
                 <TableCell>
-                  <Typography fontWeight={700}>Số điện thoại</Typography>
+                  <Typography fontWeight={700}>Tài khoản</Typography>
                 </TableCell>
 
                 <TableCell>
-                  <Typography fontWeight={700}>Địa chỉ</Typography>
+                  <Typography fontWeight={700}>Liên hệ</Typography>
+                </TableCell>
+
+                <TableCell align="center">
+                  <Typography fontWeight={700}>Trạng thái</Typography>
                 </TableCell>
 
                 <TableCell align="center">
@@ -923,13 +1133,13 @@ const Customers = () => {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={8} align="center" sx={{ py: 8 }}>
+                  <TableCell colSpan={9} align="center" sx={{ py: 8 }}>
                     <CircularProgress />
                   </TableCell>
                 </TableRow>
               ) : customers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} align="center" sx={{ py: 8 }}>
+                  <TableCell colSpan={9} align="center" sx={{ py: 8 }}>
                     <PeopleIcon
                       sx={{
                         fontSize: 52,
@@ -961,15 +1171,11 @@ const Customers = () => {
                         },
                       }}
                     >
-                      {/* STT */}
-
                       <TableCell>
                         <Typography variant="body2" color="text.secondary">
                           {page * rowsPerPage + index + 1}
                         </Typography>
                       </TableCell>
-
-                      {/* CUSTOMER */}
 
                       <TableCell>
                         <Stack
@@ -979,8 +1185,8 @@ const Customers = () => {
                         >
                           <Box
                             sx={{
-                              width: 40,
-                              height: 40,
+                              width: 42,
+                              height: 42,
                               borderRadius: "50%",
                               display: "flex",
                               alignItems: "center",
@@ -988,14 +1194,21 @@ const Customers = () => {
                               backgroundColor: "primary.50",
                               color: "primary.main",
                               fontWeight: 800,
+                              flexShrink: 0,
                             }}
                           >
                             {(customer.name || "?").charAt(0).toUpperCase()}
                           </Box>
 
-                          <Box>
-                            <Typography fontWeight={700} noWrap>
-                              {customer.name}
+                          <Box sx={{ minWidth: 0 }}>
+                            <Typography
+                              fontWeight={700}
+                              noWrap
+                              sx={{
+                                maxWidth: 180,
+                              }}
+                            >
+                              {customer.name || "-"}
                             </Typography>
 
                             {customer.email && (
@@ -1003,40 +1216,101 @@ const Customers = () => {
                                 variant="caption"
                                 color="text.secondary"
                                 noWrap
+                                sx={{
+                                  display: "block",
+                                  maxWidth: 180,
+                                }}
                               >
                                 {customer.email}
                               </Typography>
                             )}
+
+                            <Typography
+                              variant="caption"
+                              color="text.disabled"
+                              noWrap
+                              sx={{
+                                display: "block",
+                                maxWidth: 180,
+                              }}
+                            >
+                              {customer.address || "Chưa có địa chỉ"}
+                            </Typography>
                           </Box>
                         </Stack>
                       </TableCell>
 
-                      {/* PHONE */}
-
                       <TableCell>
-                        <Typography variant="body2">
-                          {customer.phone || "-"}
-                        </Typography>
+                        <Box>
+                          <Typography
+                            variant="body2"
+                            fontWeight={700}
+                            sx={{
+                              fontFamily: "monospace",
+                            }}
+                          >
+                            {customer.username || "Chưa có"}
+                          </Typography>
+
+                          <Typography variant="caption" color="text.secondary">
+                            {customer.lastLoginAt
+                              ? `Đăng nhập: ${formatDate(customer.lastLoginAt)}`
+                              : "Chưa đăng nhập"}
+                          </Typography>
+                        </Box>
                       </TableCell>
 
-                      {/* ADDRESS */}
-
                       <TableCell>
-                        <Typography
-                          variant="body2"
-                          color="text.secondary"
-                          sx={{
-                            maxWidth: 220,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {customer.address || "-"}
-                        </Typography>
+                        <Stack spacing={0.3}>
+                          <Stack
+                            direction="row"
+                            spacing={0.5}
+                            alignItems="center"
+                          >
+                            <PhoneIcon
+                              sx={{
+                                fontSize: 15,
+                                color: "text.secondary",
+                              }}
+                            />
+
+                            <Typography variant="body2" fontWeight={600}>
+                              {customer.phone || "-"}
+                            </Typography>
+                          </Stack>
+
+                          {customer.email && (
+                            <Stack
+                              direction="row"
+                              spacing={0.5}
+                              alignItems="center"
+                            >
+                              <EmailIcon
+                                sx={{
+                                  fontSize: 15,
+                                  color: "text.secondary",
+                                }}
+                              />
+
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                {customer.email}
+                              </Typography>
+                            </Stack>
+                          )}
+                        </Stack>
                       </TableCell>
 
-                      {/* ORDERS */}
+                      <TableCell align="center">
+                        <Chip
+                          size="small"
+                          label={getCustomerStatusLabel(customer.status)}
+                          color={getCustomerStatusColor(customer.status)}
+                          variant="outlined"
+                        />
+                      </TableCell>
 
                       <TableCell align="center">
                         <Chip
@@ -1053,15 +1327,15 @@ const Customers = () => {
                         />
                       </TableCell>
 
-                      {/* PURCHASE */}
-
                       <TableCell align="right">
-                        <Typography fontWeight={700} color="success.main">
+                        <Typography
+                          fontWeight={700}
+                          color="success.main"
+                          whiteSpace="nowrap"
+                        >
                           {formatMoney(spent)}
                         </Typography>
                       </TableCell>
-
-                      {/* DEBT */}
 
                       <TableCell align="right">
                         <Typography
@@ -1069,12 +1343,11 @@ const Customers = () => {
                           color={
                             customerDebt > 0 ? "error.main" : "success.main"
                           }
+                          whiteSpace="nowrap"
                         >
                           {formatMoney(customerDebt)}
                         </Typography>
                       </TableCell>
-
-                      {/* ACTION */}
 
                       <TableCell align="center">
                         <Stack
@@ -1082,8 +1355,6 @@ const Customers = () => {
                           spacing={0.3}
                           justifyContent="center"
                         >
-                          {/* XEM ĐƠN */}
-
                           <IconButton
                             color="success"
                             title="Xem đơn đã mua"
@@ -1091,8 +1362,6 @@ const Customers = () => {
                           >
                             <ShoppingCartIcon />
                           </IconButton>
-
-                          {/* CHI TIẾT KHÁCH */}
 
                           <IconButton
                             color="info"
@@ -1104,8 +1373,6 @@ const Customers = () => {
                             <VisibilityIcon />
                           </IconButton>
 
-                          {/* CÔNG NỢ */}
-
                           <IconButton
                             color="warning"
                             title="Cập nhật công nợ"
@@ -1114,8 +1381,6 @@ const Customers = () => {
                             <AccountBalanceWalletIcon />
                           </IconButton>
 
-                          {/* SỬA */}
-
                           <IconButton
                             color="primary"
                             title="Sửa"
@@ -1123,8 +1388,6 @@ const Customers = () => {
                           >
                             <EditIcon />
                           </IconButton>
-
-                          {/* XÓA */}
 
                           <IconButton
                             color="error"
@@ -1142,8 +1405,6 @@ const Customers = () => {
             </TableBody>
           </Table>
         </TableContainer>
-
-        {/* PAGINATION */}
 
         <TablePagination
           component="div"
@@ -1169,7 +1430,13 @@ const Customers = () => {
 
       <Dialog open={openDialog} onClose={handleClose} fullWidth maxWidth="sm">
         <DialogTitle>
-          {editingCustomer ? "Chỉnh sửa khách hàng" : "Thêm khách hàng"}
+          <Stack direction="row" spacing={1} alignItems="center">
+            <PersonIcon color="primary" />
+
+            <Typography variant="h6" fontWeight={800}>
+              {editingCustomer ? "Chỉnh sửa khách hàng" : "Thêm khách hàng"}
+            </Typography>
+          </Stack>
         </DialogTitle>
 
         <DialogContent>
@@ -1181,27 +1448,188 @@ const Customers = () => {
               pt: 1,
             }}
           >
+            {/* NAME */}
+
             <TextField
               label="Tên khách hàng"
               required
               fullWidth
               value={form.name}
               onChange={handleChange("name")}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <PersonIcon fontSize="small" />
+                  </InputAdornment>
+                ),
+              }}
             />
+
+            {/* USERNAME */}
+
+            <TextField
+              label="Username"
+              fullWidth
+              value={form.username}
+              onChange={handleChange("username")}
+              placeholder="Để trống để hệ thống tự tạo"
+              helperText={
+                editingCustomer
+                  ? "Nếu khách chưa có username, backend sẽ tự tạo"
+                  : "Có thể để trống, backend sẽ tự tạo username"
+              }
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <LockIcon fontSize="small" />
+                  </InputAdornment>
+                ),
+              }}
+            />
+
+            {/* PASSWORD */}
+
+            <Divider sx={{ mt: 1 }} />
+
+            <Typography variant="subtitle2" fontWeight={800}>
+              Bảo mật tài khoản
+            </Typography>
+
+            {editingCustomer ? (
+              <Paper
+                variant="outlined"
+                sx={{
+                  p: 2,
+                  borderRadius: 2,
+                }}
+              >
+                <Stack
+                  direction={{
+                    xs: "column",
+                    sm: "row",
+                  }}
+                  justifyContent="space-between"
+                  alignItems={{
+                    xs: "stretch",
+                    sm: "center",
+                  }}
+                  spacing={2}
+                >
+                  <Box>
+                    <Typography fontWeight={700}>Mật khẩu</Typography>
+
+                    <Typography variant="body2" color="text.secondary">
+                      Mật khẩu hiện tại được bảo mật và không hiển thị
+                    </Typography>
+                  </Box>
+
+                  <Button
+                    variant="outlined"
+                    color="warning"
+                    startIcon={<LockIcon />}
+                    onClick={handleOpenPasswordDialog}
+                  >
+                    Đổi mật khẩu
+                  </Button>
+                </Stack>
+              </Paper>
+            ) : (
+              <Paper
+                variant="outlined"
+                sx={{
+                  p: 2,
+                  borderRadius: 2,
+                  backgroundColor: "#fffaf0",
+                  borderColor: "#ffcc80",
+                }}
+              >
+                <Stack direction="row" spacing={1.5} alignItems="center">
+                  <LockIcon color="warning" />
+
+                  <Box>
+                    <Typography fontWeight={700}>Mật khẩu mặc định</Typography>
+
+                    <Typography variant="body2" color="text.secondary">
+                      Tài khoản mới sẽ sử dụng mật khẩu mặc định:
+                    </Typography>
+
+                    <Typography
+                      sx={{
+                        mt: 0.5,
+                        fontFamily: "monospace",
+                        fontWeight: 800,
+                        color: "warning.dark",
+                      }}
+                    >
+                      {DEFAULT_PASSWORD}
+                    </Typography>
+                  </Box>
+                </Stack>
+              </Paper>
+            )}
+
+            {/* STATUS */}
+
+            <TextField
+              select
+              label="Trạng thái tài khoản"
+              fullWidth
+              value={form.status}
+              onChange={handleChange("status")}
+            >
+              <MenuItem value="pending">
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Chip size="small" label="Chờ duyệt" color="warning" />
+                </Stack>
+              </MenuItem>
+
+              <MenuItem value="active">
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Chip size="small" label="Đang hoạt động" color="success" />
+                </Stack>
+              </MenuItem>
+
+              <MenuItem value="blocked">
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Chip size="small" label="Đã khóa" color="error" />
+                </Stack>
+              </MenuItem>
+            </TextField>
+
+            {/* PHONE */}
 
             <TextField
               label="Số điện thoại"
               fullWidth
               value={form.phone}
               onChange={handleChange("phone")}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <PhoneIcon fontSize="small" />
+                  </InputAdornment>
+                ),
+              }}
             />
+
+            {/* EMAIL */}
 
             <TextField
               label="Email"
+              type="email"
               fullWidth
               value={form.email}
               onChange={handleChange("email")}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <EmailIcon fontSize="small" />
+                  </InputAdornment>
+                ),
+              }}
             />
+
+            {/* ADDRESS */}
 
             <TextField
               label="Địa chỉ"
@@ -1209,6 +1637,8 @@ const Customers = () => {
               value={form.address}
               onChange={handleChange("address")}
             />
+
+            {/* NOTE */}
 
             <TextField
               label="Ghi chú"
@@ -1218,6 +1648,125 @@ const Customers = () => {
               value={form.note}
               onChange={handleChange("note")}
             />
+
+            {/* INFORMATION */}
+
+            {editingCustomer && (
+              <>
+                <Divider sx={{ mt: 1 }} />
+
+                <Typography variant="subtitle2" fontWeight={800}>
+                  Thông tin tài khoản
+                </Typography>
+
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: {
+                      xs: "1fr",
+                      sm: "repeat(2, 1fr)",
+                    },
+                    gap: 1.5,
+                  }}
+                >
+                  <Paper
+                    variant="outlined"
+                    sx={{
+                      p: 1.5,
+                      borderRadius: 2,
+                    }}
+                  >
+                    <Typography variant="caption" color="text.secondary">
+                      Tổng đơn hàng
+                    </Typography>
+
+                    <Typography fontWeight={800} fontSize={20}>
+                      {editingCustomer.totalOrders || 0}
+                    </Typography>
+                  </Paper>
+
+                  <Paper
+                    variant="outlined"
+                    sx={{
+                      p: 1.5,
+                      borderRadius: 2,
+                    }}
+                  >
+                    <Typography variant="caption" color="text.secondary">
+                      Tổng đã mua
+                    </Typography>
+
+                    <Typography
+                      fontWeight={800}
+                      color="success.main"
+                      fontSize={20}
+                    >
+                      {formatMoney(editingCustomer.totalSpent || 0)}
+                    </Typography>
+                  </Paper>
+
+                  <Paper
+                    variant="outlined"
+                    sx={{
+                      p: 1.5,
+                      borderRadius: 2,
+                    }}
+                  >
+                    <Typography variant="caption" color="text.secondary">
+                      Công nợ
+                    </Typography>
+
+                    <Typography
+                      fontWeight={800}
+                      color={
+                        Number(editingCustomer.debt || 0) > 0
+                          ? "error.main"
+                          : "success.main"
+                      }
+                      fontSize={20}
+                    >
+                      {formatMoney(editingCustomer.debt || 0)}
+                    </Typography>
+                  </Paper>
+
+                  <Paper
+                    variant="outlined"
+                    sx={{
+                      p: 1.5,
+                      borderRadius: 2,
+                    }}
+                  >
+                    <Typography variant="caption" color="text.secondary">
+                      Đăng nhập gần nhất
+                    </Typography>
+
+                    <Typography fontWeight={700} fontSize={14}>
+                      {formatDateTime(editingCustomer.lastLoginAt)}
+                    </Typography>
+                  </Paper>
+                </Box>
+
+                <Box>
+                  <Typography variant="caption" color="text.secondary">
+                    Ngày tạo tài khoản
+                  </Typography>
+
+                  <Typography variant="body2" fontWeight={600}>
+                    {formatDateTime(editingCustomer.created_at)}
+                  </Typography>
+                </Box>
+
+                <Box>
+                  <Typography variant="caption" color="text.secondary">
+                    Cập nhật lần cuối
+                  </Typography>
+
+                  <Typography variant="body2" fontWeight={600}>
+                    {formatDateTime(editingCustomer.updated_at)}
+                  </Typography>
+                </Box>
+              </>
+            )}
           </Box>
         </DialogContent>
 
@@ -1233,7 +1782,9 @@ const Customers = () => {
             startIcon={
               savingCustomer ? (
                 <CircularProgress size={18} color="inherit" />
-              ) : null
+              ) : (
+                <SaveIcon />
+              )
             }
           >
             {savingCustomer
@@ -1241,6 +1792,156 @@ const Customers = () => {
               : editingCustomer
                 ? "Cập nhật"
                 : "Thêm khách hàng"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* =================================================
+          CHANGE PASSWORD DIALOG
+      ================================================= */}
+
+      <Dialog
+        open={openPasswordDialog}
+        onClose={handleClosePasswordDialog}
+        fullWidth
+        maxWidth="xs"
+      >
+        <DialogTitle>
+          <Stack direction="row" spacing={1} alignItems="center">
+            <LockIcon color="warning" />
+
+            <Typography variant="h6" fontWeight={800}>
+              Đổi mật khẩu
+            </Typography>
+          </Stack>
+        </DialogTitle>
+
+        <DialogContent>
+          <Stack spacing={2} sx={{ pt: 1 }}>
+            <Paper
+              variant="outlined"
+              sx={{
+                p: 2,
+                borderRadius: 2,
+                backgroundColor: "#fafafa",
+              }}
+            >
+              <Typography variant="body2" color="text.secondary">
+                Khách hàng
+              </Typography>
+
+              <Typography fontWeight={800}>
+                {editingCustomer?.name || "Không xác định"}
+              </Typography>
+
+              {editingCustomer?.username && (
+                <Typography
+                  variant="body2"
+                  color="primary.main"
+                  sx={{
+                    fontFamily: "monospace",
+                    mt: 0.3,
+                  }}
+                >
+                  @{editingCustomer.username}
+                </Typography>
+              )}
+            </Paper>
+
+            <TextField
+              fullWidth
+              autoFocus
+              label="Mật khẩu mới"
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              error={password.length > 0 && password.length < 6}
+              helperText={
+                password.length > 0 && password.length < 6
+                  ? "Mật khẩu phải có ít nhất 6 ký tự"
+                  : "Mật khẩu hiện tại không được hiển thị"
+              }
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      edge="end"
+                    >
+                      {showPassword ? (
+                        <VisibilityOffIcon />
+                      ) : (
+                        <VisibilityIcon />
+                      )}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+
+            <TextField
+              fullWidth
+              label="Xác nhận mật khẩu"
+              type={showConfirmPassword ? "text" : "password"}
+              value={confirmPassword}
+              onChange={(event) => setConfirmPassword(event.target.value)}
+              error={confirmPassword.length > 0 && password !== confirmPassword}
+              helperText={
+                confirmPassword.length > 0 && password !== confirmPassword
+                  ? "Mật khẩu xác nhận không khớp"
+                  : ""
+              }
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => setShowConfirmPassword((prev) => !prev)}
+                      edge="end"
+                    >
+                      {showConfirmPassword ? (
+                        <VisibilityOffIcon />
+                      ) : (
+                        <VisibilityIcon />
+                      )}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+
+            <Alert
+              severity="info"
+              sx={{
+                borderRadius: 2,
+              }}
+            >
+              Mật khẩu sẽ được mã hóa trước khi lưu vào hệ thống.
+            </Alert>
+          </Stack>
+        </DialogContent>
+
+        <DialogActions>
+          <Button
+            onClick={handleClosePasswordDialog}
+            disabled={changingPassword}
+          >
+            Hủy
+          </Button>
+
+          <Button
+            variant="contained"
+            color="warning"
+            onClick={handleChangePassword}
+            disabled={changingPassword || !password || !confirmPassword}
+            startIcon={
+              changingPassword ? (
+                <CircularProgress size={18} color="inherit" />
+              ) : (
+                <LockIcon />
+              )
+            }
+          >
+            {changingPassword ? "Đang cập nhật..." : "Đổi mật khẩu"}
           </Button>
         </DialogActions>
       </Dialog>
@@ -1275,6 +1976,18 @@ const Customers = () => {
                 <Typography fontWeight={800} fontSize={17}>
                   {selectedDebtCustomer.name}
                 </Typography>
+
+                {selectedDebtCustomer.username && (
+                  <Typography
+                    variant="body2"
+                    color="primary.main"
+                    sx={{
+                      fontFamily: "monospace",
+                    }}
+                  >
+                    @{selectedDebtCustomer.username}
+                  </Typography>
+                )}
 
                 {selectedDebtCustomer.phone && (
                   <Typography variant="body2" color="text.secondary">
@@ -1393,16 +2106,27 @@ const Customers = () => {
             </Stack>
 
             {selectedOrderCustomer && (
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ mt: 0.5 }}
-              >
-                {selectedOrderCustomer.name}
-                {selectedOrderCustomer.phone
-                  ? ` • ${selectedOrderCustomer.phone}`
-                  : ""}
-              </Typography>
+              <Box sx={{ mt: 0.5 }}>
+                <Typography variant="body2" color="text.secondary">
+                  {selectedOrderCustomer.name}
+
+                  {selectedOrderCustomer.phone
+                    ? ` • ${selectedOrderCustomer.phone}`
+                    : ""}
+                </Typography>
+
+                {selectedOrderCustomer.username && (
+                  <Typography
+                    variant="caption"
+                    color="primary.main"
+                    sx={{
+                      fontFamily: "monospace",
+                    }}
+                  >
+                    @{selectedOrderCustomer.username}
+                  </Typography>
+                )}
+              </Box>
             )}
           </Box>
 

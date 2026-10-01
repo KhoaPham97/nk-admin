@@ -1,11 +1,55 @@
 import { FC, FormEvent, useState } from "react";
+import axios from "axios";
 import {
   AiOutlineArrowLeft,
   AiOutlineLock,
-  AiOutlineMail,
+  AiOutlineEye,
+  AiOutlineEyeInvisible,
 } from "react-icons/ai";
 import { FaUser } from "react-icons/fa";
 import { useLocation, useNavigate } from "react-router-dom";
+import { API_ENDPOINTS } from "../api";
+
+// =====================================================
+// API
+// =====================================================
+
+const API_URL = API_ENDPOINTS.LOGIN || "";
+
+// =====================================================
+// TYPES
+// =====================================================
+
+interface LoginResponse {
+  success: boolean;
+  message: string;
+  token?: string;
+  accessToken?: string;
+  customer?: {
+    _id: string;
+    name: string;
+    phone?: string;
+    address?: string;
+    email?: string;
+    username: string;
+    status?: string;
+
+    totalOrders?: number;
+    totalSpent?: number;
+    totalPurchased?: number;
+    totalPaid?: number;
+    debt?: number;
+
+    note?: string;
+    lastLoginAt?: string;
+    created_at?: string;
+    updated_at?: string;
+  };
+}
+
+// =====================================================
+// COMPONENT
+// =====================================================
 
 const LoginForm: FC = () => {
   const navigate = useNavigate();
@@ -13,29 +57,43 @@ const LoginForm: FC = () => {
 
   const [account, setAccount] = useState("");
   const [password, setPassword] = useState("");
+
+  const [showPassword, setShowPassword] = useState(false);
+
   const [loading, setLoading] = useState(false);
 
-  /* =====================================================
-     QUAY LẠI TRANG TRƯỚC
-  ===================================================== */
+  const [errorMessage, setErrorMessage] = useState("");
+
+  // =====================================================
+  // QUAY LẠI TRANG TRƯỚC
+  // =====================================================
 
   const handleClose = () => {
-    const state = location.state as { from?: string } | null;
+    const state = location.state as {
+      from?: string;
+    } | null;
 
     if (state?.from) {
-      navigate(state.from, { replace: true });
+      navigate(state.from, {
+        replace: true,
+      });
+
       return;
     }
 
-    navigate("/", { replace: true });
+    navigate("/", {
+      replace: true,
+    });
   };
 
-  /* =====================================================
-     QUA TRANG ĐĂNG KÝ
-  ===================================================== */
+  // =====================================================
+  // QUA TRANG ĐĂNG KÝ
+  // =====================================================
 
   const goToRegister = () => {
-    const state = location.state as { from?: string } | null;
+    const state = location.state as {
+      from?: string;
+    } | null;
 
     navigate("/register", {
       state: {
@@ -44,51 +102,169 @@ const LoginForm: FC = () => {
     });
   };
 
-  /* =====================================================
-     LOGIN
-  ===================================================== */
+  // =====================================================
+  // LOGIN
+  // =====================================================
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    if (!account.trim()) {
+    setErrorMessage("");
+
+    const username = account.trim().toLowerCase();
+    const loginPassword = password;
+
+    // =====================================================
+    // VALIDATE
+    // =====================================================
+
+    if (!username) {
+      setErrorMessage("Vui lòng nhập username");
+
       return;
     }
 
-    if (!password.trim()) {
+    if (!loginPassword) {
+      setErrorMessage("Vui lòng nhập mật khẩu");
+
       return;
     }
 
     try {
       setLoading(true);
 
-      /*
-       * TODO:
-       * Gắn API login hiện tại của bạn vào đây.
-       *
-       * Ví dụ:
-       *
-       * const response = await axios.post(...)
-       *
-       * Sau khi login thành công:
-       *
-       * const state = location.state as { from?: string } | null;
-       *
-       * navigate(state?.from || "/", {
-       *   replace: true,
-       * });
-       */
+      // =====================================================
+      // CALL API
+      // =====================================================
 
-      console.log({
-        account,
-        password,
-      });
-    } catch (error) {
-      console.error(error);
+      const response = await axios.post<LoginResponse>(
+        `${API_URL}`,
+        {
+          username,
+          password: loginPassword,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      const data = response.data;
+
+      // =====================================================
+      // CHECK RESPONSE
+      // =====================================================
+
+      if (!data.success || !data.customer) {
+        setErrorMessage(data.message || "Đăng nhập không thành công");
+
+        return;
+      }
+
+      // =====================================================
+      // TOKEN
+      // =====================================================
+
+      const token = data.accessToken || data.token;
+
+      if (!token) {
+        setErrorMessage("Đăng nhập thành công nhưng không nhận được token");
+
+        return;
+      }
+
+      // =====================================================
+      // LƯU LOGIN
+      // =====================================================
+
+      localStorage.setItem("customerToken", token);
+
+      localStorage.setItem("customerAccessToken", token);
+
+      // =====================================================
+      // LƯU CUSTOMER
+      // =====================================================
+
+      localStorage.setItem("customer", JSON.stringify(data.customer));
+
+      // =====================================================
+      // GIỮ LẠI USERNAME
+      // =====================================================
+
+      localStorage.setItem("customerUsername", data.customer.username);
+
+      // =====================================================
+      // LOGIN THÀNH CÔNG
+      // =====================================================
+      const state = location.state as {
+        from?: string;
+      } | null;
+
+      const redirectPath = state?.from || "/";
+      window.location.href = redirectPath;
+    } catch (error: any) {
+      console.error("Customer login error:", error);
+
+      // =====================================================
+      // API RESPONSE ERROR
+      // =====================================================
+
+      if (error?.response) {
+        const status = error.response.status;
+
+        const message = error.response.data?.message;
+
+        if (status === 401) {
+          setErrorMessage(message || "Username hoặc mật khẩu không đúng");
+
+          return;
+        }
+
+        if (status === 403) {
+          setErrorMessage(message || "Tài khoản đã bị khóa");
+
+          return;
+        }
+
+        if (status === 400) {
+          setErrorMessage(message || "Thông tin đăng nhập không hợp lệ");
+
+          return;
+        }
+
+        if (status >= 500) {
+          setErrorMessage(
+            message || "Máy chủ đang gặp lỗi. Vui lòng thử lại sau.",
+          );
+
+          return;
+        }
+
+        setErrorMessage(message || "Đăng nhập không thành công");
+
+        return;
+      }
+
+      // =====================================================
+      // NETWORK ERROR
+      // =====================================================
+
+      if (error?.code === "ERR_NETWORK") {
+        setErrorMessage("Không thể kết nối đến máy chủ");
+
+        return;
+      }
+
+      setErrorMessage("Đã xảy ra lỗi khi đăng nhập");
     } finally {
       setLoading(false);
     }
   };
+
+  // =====================================================
+  // RENDER
+  // =====================================================
 
   return (
     <div
@@ -192,7 +368,34 @@ const LoginForm: FC = () => {
           ================================================= */}
 
           <form onSubmit={handleSubmit} className="space-y-5 p-6">
-            {/* ACCOUNT */}
+            {/* =================================================
+                ERROR
+            ================================================= */}
+
+            {errorMessage && (
+              <div
+                className="
+                  rounded-xl
+                  border
+                  border-red-200
+                  bg-red-50
+                  px-4
+                  py-3
+                  text-sm
+                  font-medium
+                  text-red-600
+                  dark:border-red-900/50
+                  dark:bg-red-950/30
+                  dark:text-red-400
+                "
+              >
+                {errorMessage}
+              </div>
+            )}
+
+            {/* =================================================
+                ACCOUNT
+            ================================================= */}
 
             <div>
               <label
@@ -205,11 +408,11 @@ const LoginForm: FC = () => {
                   dark:text-gray-200
                 "
               >
-                Email hoặc số điện thoại
+                Tên tài khoản
               </label>
 
               <div className="relative">
-                <AiOutlineMail
+                <FaUser
                   className="
                     absolute
                     left-3
@@ -217,15 +420,22 @@ const LoginForm: FC = () => {
                     -translate-y-1/2
                     text-gray-400
                   "
-                  size={20}
+                  size={17}
                 />
 
                 <input
                   type="text"
                   value={account}
-                  onChange={(e) => setAccount(e.target.value)}
-                  placeholder="Nhập email hoặc số điện thoại"
+                  onChange={(e) => {
+                    setAccount(e.target.value);
+
+                    if (errorMessage) {
+                      setErrorMessage("");
+                    }
+                  }}
+                  placeholder="Nhập username"
                   autoComplete="username"
+                  disabled={loading}
                   className="
                     w-full
                     rounded-xl
@@ -239,6 +449,8 @@ const LoginForm: FC = () => {
                     transition
                     focus:border-blue-500
                     focus:bg-white
+                    disabled:cursor-not-allowed
+                    disabled:opacity-60
                     dark:border-gray-700
                     dark:bg-gray-800
                     dark:text-white
@@ -246,9 +458,21 @@ const LoginForm: FC = () => {
                   "
                 />
               </div>
+
+              <p
+                className="
+                  mt-1.5
+                  text-xs
+                  text-gray-400
+                "
+              >
+                Sử dụng username được cấp khi đăng ký tài khoản.
+              </p>
             </div>
 
-            {/* PASSWORD */}
+            {/* =================================================
+                PASSWORD
+            ================================================= */}
 
             <div>
               <label
@@ -277,11 +501,18 @@ const LoginForm: FC = () => {
                 />
 
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+
+                    if (errorMessage) {
+                      setErrorMessage("");
+                    }
+                  }}
                   placeholder="Nhập mật khẩu"
                   autoComplete="current-password"
+                  disabled={loading}
                   className="
                     w-full
                     rounded-xl
@@ -290,26 +521,58 @@ const LoginForm: FC = () => {
                     bg-gray-50
                     py-3
                     pl-11
-                    pr-4
+                    pr-12
                     outline-none
                     transition
                     focus:border-blue-500
                     focus:bg-white
+                    disabled:cursor-not-allowed
+                    disabled:opacity-60
                     dark:border-gray-700
                     dark:bg-gray-800
                     dark:text-white
+                    dark:focus:bg-gray-800
                   "
                 />
+
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  disabled={loading}
+                  className="
+                    absolute
+                    right-3
+                    top-1/2
+                    -translate-y-1/2
+                    text-gray-400
+                    transition
+                    hover:text-blue-600
+                    disabled:cursor-not-allowed
+                    dark:hover:text-blue-400
+                  "
+                  aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                >
+                  {showPassword ? (
+                    <AiOutlineEyeInvisible size={21} />
+                  ) : (
+                    <AiOutlineEye size={21} />
+                  )}
+                </button>
               </div>
             </div>
 
-            {/* LOGIN */}
+            {/* =================================================
+                LOGIN
+            ================================================= */}
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !account.trim() || !password}
               className="
+                flex
                 w-full
+                items-center
+                justify-center
                 rounded-xl
                 bg-blue-600
                 py-3
@@ -321,10 +584,29 @@ const LoginForm: FC = () => {
                 disabled:opacity-60
               "
             >
-              {loading ? "Đang đăng nhập..." : "Đăng nhập"}
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <span
+                    className="
+                      h-5
+                      w-5
+                      animate-spin
+                      rounded-full
+                      border-2
+                      border-white/30
+                      border-t-white
+                    "
+                  />
+                  Đang đăng nhập...
+                </span>
+              ) : (
+                "Đăng nhập"
+              )}
             </button>
 
-            {/* REGISTER */}
+            {/* =================================================
+                REGISTER
+            ================================================= */}
 
             <div
               className="
@@ -338,11 +620,13 @@ const LoginForm: FC = () => {
               <button
                 type="button"
                 onClick={goToRegister}
+                disabled={loading}
                 className="
                   ml-1
                   font-semibold
                   text-blue-600
                   hover:underline
+                  disabled:cursor-not-allowed
                   dark:text-blue-400
                 "
               >

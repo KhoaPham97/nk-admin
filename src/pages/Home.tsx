@@ -8,17 +8,31 @@ import { API_ENDPOINTS } from "../api";
 interface Product {
   _id: string;
   id?: string;
+
   title: string;
+  name?: string;
+
   price?: number | string;
   qty?: number | string;
+
   thumbnail?: string;
   images?: string[];
+
   rating?: number;
   discountPercentage?: number;
+
   category?: string;
   categoryId?: string;
   type?: string;
+
+  code?: string;
+  productCode?: string;
+  brand?: string;
+
   variants?: any[];
+
+  // Số lượng đã bán
+  soldCount?: number;
 }
 
 interface Category {
@@ -35,6 +49,81 @@ interface CategoryGroup {
   title: string;
   description: string;
   fallbackImage: string;
+}
+
+interface OrderItem {
+  _id?: string;
+
+  productId?:
+    | string
+    | {
+        _id?: string;
+        id?: string;
+      };
+
+  product?:
+    | string
+    | {
+        _id?: string;
+        id?: string;
+      };
+
+  product_id?:
+    | string
+    | {
+        _id?: string;
+        id?: string;
+      };
+
+  productTitle?: string;
+  productName?: string;
+  name?: string;
+  title?: string;
+
+  productCode?: string;
+  code?: string;
+
+  thumbnail?: string;
+
+  price?: number | string;
+  defaultPrice?: number | string;
+
+  qty?: number | string;
+  quantity?: number | string;
+
+  total?: number | string;
+
+  variantId?:
+    | string
+    | {
+        _id?: string;
+        id?: string;
+      };
+
+  variant?: any;
+
+  [key: string]: any;
+}
+
+interface Order {
+  _id: string;
+  code?: string;
+
+  status?: string;
+
+  items?: OrderItem[];
+  products?: OrderItem[];
+  orderItems?: OrderItem[];
+
+  [key: string]: any;
+}
+
+interface SoldProduct {
+  productId: string;
+  productCode?: string;
+  productTitle?: string;
+  thumbnail?: string;
+  soldCount: number;
 }
 
 const CATEGORY_GROUPS: CategoryGroup[] = [
@@ -83,27 +172,147 @@ const getImageUrl = (
   return `/images/${value}`;
 };
 
-const getCategoryName = (name: string, type: string) => {
-  const prefixes: Record<string, string> = {
-    "1": "Phụ tùng xe đạp - ",
-    "2": "Phụ tùng xe điện - ",
-    "3": "Phụ tùng xe ba gác - ",
-  };
-
-  const prefix = prefixes[type];
-
-  if (prefix && name.startsWith(prefix)) {
-    return name.substring(prefix.length);
+const getCategoryImage = (
+  category: Category,
+  group: CategoryGroup,
+  products: Product[],
+) => {
+  if (category.thumbnail) {
+    return getImageUrl(category.thumbnail, group.fallbackImage);
   }
 
-  return name;
+  if (category.image) {
+    return getImageUrl(category.image, group.fallbackImage);
+  }
+
+  const categoryProducts = products.filter((product) => {
+    return (
+      String(product.categoryId) === String(category._id) ||
+      String(product.category) === String(category._id)
+    );
+  });
+
+  const firstProduct = categoryProducts.find((product) => product.thumbnail);
+
+  if (firstProduct?.thumbnail) {
+    return getImageUrl(firstProduct.thumbnail, group.fallbackImage);
+  }
+
+  return group.fallbackImage;
+};
+
+/**
+ * =========================================================
+ * LẤY PRODUCT ID TỪ ORDER ITEM
+ * =========================================================
+ */
+const getOrderProductId = (item: OrderItem): string | null => {
+  const candidates = [item.productId, item.product, item.product_id];
+
+  for (const value of candidates) {
+    if (!value) continue;
+
+    if (typeof value === "string") {
+      const id = value.trim();
+
+      if (id) {
+        return id;
+      }
+    }
+
+    if (typeof value === "object") {
+      const id = value._id || value.id;
+
+      if (id) {
+        return String(id);
+      }
+    }
+  }
+
+  return null;
+};
+
+/**
+ * =========================================================
+ * LẤY QTY ORDER ITEM
+ * =========================================================
+ */
+const getOrderItemQty = (item: OrderItem): number => {
+  const qty = Number(item.qty ?? item.quantity ?? 0);
+
+  if (!Number.isFinite(qty) || qty <= 0) {
+    return 0;
+  }
+
+  return qty;
+};
+
+/**
+ * =========================================================
+ * LẤY ITEMS CỦA ORDER
+ * =========================================================
+ */
+const getOrderItems = (order: Order): OrderItem[] => {
+  if (Array.isArray(order.items)) {
+    return order.items;
+  }
+
+  if (Array.isArray(order.products)) {
+    return order.products;
+  }
+
+  if (Array.isArray(order.orderItems)) {
+    return order.orderItems;
+  }
+
+  return [];
+};
+
+/**
+ * =========================================================
+ * CHECK ORDER COMPLETED
+ * =========================================================
+ */
+const isCompletedOrder = (order: Order) => {
+  return (
+    String(order.status || "")
+      .trim()
+      .toLowerCase() === "completed"
+  );
+};
+
+/**
+ * =========================================================
+ * LẤY PRODUCT ID
+ * =========================================================
+ */
+const getProductId = (product: Product) => {
+  return String(product._id || product.id || "");
+};
+
+/**
+ * =========================================================
+ * LẤY PRODUCT CODE
+ * =========================================================
+ */
+const getProductCode = (product: Product) => {
+  return String(product.code || product.productCode || "")
+    .trim()
+    .toLowerCase();
 };
 
 const Home: FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
+
   const [categories, setCategories] = useState<Category[]>([]);
+
+  const [orders, setOrders] = useState<Order[]>([]);
+
   const [loadingProducts, setLoadingProducts] = useState(true);
+
   const [loadingCategories, setLoadingCategories] = useState(true);
+
+  const [loadingOrders, setLoadingOrders] = useState(true);
 
   // =========================================================
   // LOAD PRODUCTS
@@ -126,11 +335,14 @@ const Home: FC = () => {
           ? data.products
           : Array.isArray(data?.data)
             ? data.data
-            : [];
+            : Array.isArray(data)
+              ? data
+              : [];
 
         setProducts(productList);
       } catch (error) {
         console.error("❌ Lỗi tải sản phẩm:", error);
+
         setProducts([]);
       } finally {
         setLoadingProducts(false);
@@ -157,11 +369,16 @@ const Home: FC = () => {
           ? data.categorys
           : Array.isArray(data?.categories)
             ? data.categories
-            : [];
+            : Array.isArray(data?.data)
+              ? data.data
+              : Array.isArray(data)
+                ? data
+                : [];
 
         setCategories(categoryList);
       } catch (error) {
         console.error("❌ Lỗi tải danh mục:", error);
+
         setCategories([]);
       } finally {
         setLoadingCategories(false);
@@ -172,6 +389,153 @@ const Home: FC = () => {
   }, []);
 
   // =========================================================
+  // LOAD ORDERS
+  // =========================================================
+  //
+  // Lấy toàn bộ orders để tổng hợp sản phẩm bán chạy.
+  //
+  // Chỉ những order completed mới được tính.
+  //
+  // =========================================================
+
+  useEffect(() => {
+    const loadOrders = async () => {
+      try {
+        setLoadingOrders(true);
+
+        const response = await axios.get(API_ENDPOINTS.ORDER, {
+          params: {
+            page: 1,
+            limit: 100,
+          },
+        });
+
+        const data = response.data;
+
+        const orderList = Array.isArray(data?.orders)
+          ? data.orders
+          : Array.isArray(data?.data)
+            ? data.data
+            : Array.isArray(data?.results)
+              ? data.results
+              : Array.isArray(data)
+                ? data
+                : [];
+
+        console.log("📦 Orders:", orderList);
+
+        setOrders(orderList);
+      } catch (error) {
+        console.error("❌ Lỗi tải orders:", error);
+
+        setOrders([]);
+      } finally {
+        setLoadingOrders(false);
+      }
+    };
+
+    loadOrders();
+  }, []);
+
+  // =========================================================
+  // TỔNG HỢP SẢN PHẨM ĐÃ BÁN
+  // =========================================================
+  //
+  // Ví dụ:
+  //
+  // Ruột 14x250
+  //
+  // Order 1 = 200
+  // Order 2 = 100
+  // Order 3 = 550
+  // Order 4 = 200
+  // Order 5 = 200
+  // Order 6 = 50
+  // Order 7 = 100
+  // Order 8 = 100
+  //
+  // => Tổng = 1500+
+  //
+  // cancelled KHÔNG tính.
+  //
+  // =========================================================
+
+  const soldProductMap = useMemo<Record<string, SoldProduct>>(() => {
+    const soldMap: Record<string, SoldProduct> = {};
+
+    if (!orders.length) {
+      return soldMap;
+    }
+
+    orders.forEach((order) => {
+      // Chỉ tính đơn completed
+      if (!isCompletedOrder(order)) {
+        return;
+      }
+
+      const items = getOrderItems(order);
+
+      items.forEach((item) => {
+        const productId = getOrderProductId(item);
+
+        if (!productId) {
+          return;
+        }
+
+        const qty = getOrderItemQty(item);
+
+        if (qty <= 0) {
+          return;
+        }
+
+        const key = String(productId);
+
+        if (!soldMap[key]) {
+          soldMap[key] = {
+            productId: key,
+            productCode: item.productCode || item.code || "",
+            productTitle:
+              item.productTitle ||
+              item.productName ||
+              item.title ||
+              item.name ||
+              "",
+            thumbnail: item.thumbnail || "",
+            soldCount: 0,
+          };
+        }
+
+        soldMap[key].soldCount += qty;
+
+        // Nếu order sau có thông tin đầy đủ hơn
+        if (!soldMap[key].productCode && (item.productCode || item.code)) {
+          soldMap[key].productCode = item.productCode || item.code || "";
+        }
+
+        if (
+          !soldMap[key].productTitle &&
+          (item.productTitle || item.productName || item.title || item.name)
+        ) {
+          soldMap[key].productTitle =
+            item.productTitle ||
+            item.productName ||
+            item.title ||
+            item.name ||
+            "";
+        }
+
+        if (!soldMap[key].thumbnail && item.thumbnail) {
+          soldMap[key].thumbnail = item.thumbnail;
+        }
+      });
+    });
+
+    console.log("🔥 Tổng hợp sản phẩm bán chạy:", soldMap);
+
+    return soldMap;
+  }, [orders]);
+
+  // =========================================================
   // PRODUCT MỚI
   // =========================================================
 
@@ -180,19 +544,67 @@ const Home: FC = () => {
   }, [products]);
 
   // =========================================================
-  // PRODUCT NỔI BẬT
+  // PRODUCT BÁN CHẠY
+  // =========================================================
+  //
+  // Lấy dữ liệu từ soldProductMap
+  // rồi match ngược với products.
+  //
+  // Ưu tiên:
+  // 1. productId
+  // 2. productCode
+  //
+  // Sau đó sort theo soldCount.
+  //
   // =========================================================
 
   const featuredProducts = useMemo(() => {
-    return [...products]
-      .sort((a, b) => {
-        const ratingA = Number(a.rating) || 0;
-        const ratingB = Number(b.rating) || 0;
+    if (!products.length) {
+      return [];
+    }
 
-        return ratingB - ratingA;
+    const soldList = Object.values(soldProductMap);
+
+    if (!soldList.length) {
+      return [];
+    }
+
+    const result = products
+      .map((product) => {
+        const productId = getProductId(product);
+
+        const productCode = getProductCode(product);
+
+        // Match theo ID trước
+        let sold = soldList.find(
+          (item) => String(item.productId) === productId,
+        );
+
+        // Nếu không match ID
+        // thì thử match code
+        if (!sold && productCode) {
+          sold = soldList.find(
+            (item) =>
+              String(item.productCode || "")
+                .trim()
+                .toLowerCase() === productCode,
+          );
+        }
+
+        return {
+          ...product,
+
+          soldCount: sold?.soldCount || 0,
+        };
       })
+      .filter((product) => Number(product.soldCount || 0) > 0)
+      .sort((a, b) => Number(b.soldCount || 0) - Number(a.soldCount || 0))
       .slice(0, 10);
-  }, [products]);
+
+    console.log("🔥 TOP SẢN PHẨM BÁN CHẠY:", result);
+
+    return result;
+  }, [products, soldProductMap]);
 
   // =========================================================
   // PRODUCT THEO TYPE
@@ -212,41 +624,6 @@ const Home: FC = () => {
     return categories.filter(
       (category) => String(category.type) === String(type),
     );
-  };
-
-  // =========================================================
-  // TÌM ẢNH ĐẠI DIỆN CATEGORY
-  //
-  // Ưu tiên:
-  // 1. category.thumbnail
-  // 2. category.image
-  // 3. thumbnail của sản phẩm thuộc category
-  // 4. ảnh mặc định theo type
-  // =========================================================
-
-  const getCategoryImage = (category: Category, group: CategoryGroup) => {
-    if (category.thumbnail) {
-      return getImageUrl(category.thumbnail, group.fallbackImage);
-    }
-
-    if (category.image) {
-      return getImageUrl(category.image, group.fallbackImage);
-    }
-
-    const categoryProducts = products.filter((product) => {
-      return (
-        String(product.categoryId) === String(category._id) ||
-        String(product.category) === String(category._id)
-      );
-    });
-
-    const firstProduct = categoryProducts.find((product) => product.thumbnail);
-
-    if (firstProduct?.thumbnail) {
-      return getImageUrl(firstProduct.thumbnail, group.fallbackImage);
-    }
-
-    return group.fallbackImage;
   };
 
   // =========================================================
@@ -404,7 +781,7 @@ const Home: FC = () => {
                   <img
                     src={
                       groupCategories.length > 0
-                        ? getCategoryImage(groupCategories[0], group)
+                        ? getCategoryImage(groupCategories[0], group, products)
                         : group.fallbackImage
                     }
                     alt={group.title}
@@ -479,14 +856,41 @@ const Home: FC = () => {
       )}
 
       {/* =====================================================
-          SẢN PHẨM NỔI BẬT
+          SẢN PHẨM BÁN CHẠY NHẤT
       ===================================================== */}
 
-      {!loadingProducts && featuredProducts.length > 0 && (
+      {!loadingProducts && !loadingOrders && featuredProducts.length > 0 && (
+        <section className="container mx-auto px-4 py-14 md:py-20">
+          <div className="mb-3 flex items-center justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-widest text-blue-600">
+                Dựa trên đơn hàng đã hoàn thành
+              </p>
+            </div>
+
+            <span className="text-xs text-gray-400">
+              Top {featuredProducts.length}
+            </span>
+          </div>
+
+          <ProductList
+            title="Sản phẩm bán chạy nhất"
+            products={featuredProducts}
+            isSlide
+            type="all"
+          />
+        </section>
+      )}
+
+      {/* =====================================================
+          CHƯA CÓ ORDER COMPLETED
+      ===================================================== */}
+
+      {!loadingProducts && !loadingOrders && featuredProducts.length === 0 && (
         <section className="container mx-auto px-4 py-14 md:py-20">
           <ProductList
-            title="Sản phẩm nổi bật"
-            products={featuredProducts}
+            title="Sản phẩm bán chạy nhất"
+            products={products.slice(0, 10)}
             isSlide
             type="all"
           />

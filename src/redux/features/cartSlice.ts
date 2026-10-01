@@ -1,72 +1,170 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { CartItem } from "../../models/CartItem";
-import { CartSlice } from "../../models/CartSlice";
+import { CartItem } from "../../interfaces/CartItem";
+import { CartSlice } from "../../interfaces/CartSlice";
 
 const initialState: CartSlice = {
   cartOpen: false,
   cartItems: [],
 };
 
-export const cartSlice = createSlice({
-  name: "cartSlice",
+const cartSlice = createSlice({
+  name: "cart",
   initialState,
+
   reducers: {
-    addToCart: (state, action: PayloadAction<CartItem>) => {
-      const { cartItems } = state;
-      if (cartItems.findIndex((pro) => pro.id === action.payload.id) === -1) {
-        const item = { ...action.payload, quantity: 1 };
-        return { ...state, cartItems: [...cartItems, item] };
-      } else {
-        const updatedItems = cartItems.map((item) =>
-          item.id === action.payload.id
-            ? { ...item, quantity: item.quantity && item.quantity + 1 }
-            : item
-        );
-        return { ...state, cartItems: updatedItems };
-      }
-    },
-    removeFromCart: (state, action: PayloadAction<number>) => {
-      const { cartItems } = state;
-      const updatedItems = cartItems.filter(
-        (item) => item.id !== action.payload
-      );
-      return { ...state, cartItems: updatedItems };
-    },
-    reduceFromCart: (state, action: PayloadAction<number>) => {
-      const { cartItems } = state;
-      const _item = cartItems.find((item) => item.id === action.payload);
-      if (_item?.quantity && _item?.quantity > 1) {
-        const updatedList = cartItems.map((item) =>
-          item.id === action.payload
-            ? { ...item, quantity: item.quantity && item.quantity - 1 }
-            : item
-        );
-        return { ...state, cartItems: updatedList };
-      } else {
-        const updatedItems = cartItems.filter(
-          (item) => item.id !== action.payload
-        );
-        return { ...state, cartItems: updatedItems };
-      }
-    },
+    /**
+     * Mở / đóng cart
+     */
     setCartState: (state, action: PayloadAction<boolean>) => {
-      return { ...state, cartOpen: action.payload };
+      state.cartOpen = action.payload;
     },
-    emptyCart: (state) => {
-      return { ...state, cartItems: [] };
+
+    /**
+     * Thêm sản phẩm vào giỏ
+     *
+     * Nếu sản phẩm đã tồn tại:
+     * -> tăng quantity
+     *
+     * Nếu chưa tồn tại:
+     * -> thêm mới quantity = 1
+     */
+    addToCart: (state, action: PayloadAction<CartItem>) => {
+      const product = action.payload;
+
+      const productId = String(product._id || product.id || "");
+
+      const existingItem = state.cartItems.find(
+        (item) => String(item._id || item.id || "") === productId,
+      );
+
+      if (existingItem) {
+        existingItem.quantity =
+          Number(existingItem.quantity || 1) + Number(product.quantity || 1);
+      } else {
+        state.cartItems.push({
+          ...product,
+          quantity: Number(product.quantity || 1),
+        });
+      }
     },
-    addListCart: (state, action) => {
-      return { ...state, cartItems: action.payload };
+
+    /**
+     * Xóa sản phẩm
+     */
+    removeFromCart: (state, action: PayloadAction<string>) => {
+      const productId = String(action.payload);
+
+      state.cartItems = state.cartItems.filter(
+        (item) => String(item._id || item.id || "") !== productId,
+      );
+    },
+
+    /**
+     * Tăng số lượng
+     */
+    increaseQuantity: (state, action: PayloadAction<string>) => {
+      const productId = String(action.payload);
+
+      const item = state.cartItems.find(
+        (item) => String(item._id || item.id || "") === productId,
+      );
+
+      if (!item) return;
+
+      item.quantity = Number(item.quantity || 1) + 1;
+    },
+
+    /**
+     * Giảm số lượng
+     */
+    decreaseQuantity: (state, action: PayloadAction<string>) => {
+      const productId = String(action.payload);
+
+      const item = state.cartItems.find(
+        (item) => String(item._id || item.id || "") === productId,
+      );
+
+      if (!item) return;
+
+      const currentQuantity = Number(item.quantity || 1);
+
+      if (currentQuantity <= 1) {
+        state.cartItems = state.cartItems.filter(
+          (item) => String(item._id || item.id || "") !== productId,
+        );
+        return;
+      }
+
+      item.quantity = currentQuantity - 1;
+    },
+
+    /**
+     * Nhập trực tiếp số lượng
+     */
+    updateQuantity: (
+      state,
+      action: PayloadAction<{
+        id: string;
+        quantity: number;
+      }>,
+    ) => {
+      const productId = String(action.payload.id);
+
+      const item = state.cartItems.find(
+        (item) => String(item._id || item.id || "") === productId,
+      );
+
+      if (!item) return;
+
+      const quantity = Math.max(1, Number(action.payload.quantity || 1));
+
+      item.quantity = quantity;
+    },
+
+    /**
+     * Xóa toàn bộ giỏ hàng
+     */
+    clearCart: (state) => {
+      state.cartItems = [];
+    },
+    addListCart: (state, action: PayloadAction<CartItem[]>) => {
+      action.payload.forEach((product) => {
+        const productId = getProductId(product);
+
+        if (!productId) {
+          return;
+        }
+
+        const cartItemKey = getCartItemKey(product);
+
+        const existingItem = state.cartItems.find(
+          (item) => getCartItemKey(item) === cartItemKey,
+        );
+
+        const quantity = Math.max(1, Number(product.quantity || 1));
+
+        if (existingItem) {
+          existingItem.quantity = Number(existingItem.quantity || 1) + quantity;
+        } else {
+          state.cartItems.push({
+            ...product,
+            quantity,
+          });
+        }
+      });
     },
   },
 });
 
 export const {
+  setCartState,
   addToCart,
   removeFromCart,
-  setCartState,
-  reduceFromCart,
-  emptyCart,
+  increaseQuantity,
+  decreaseQuantity,
+  updateQuantity,
+  clearCart,
   addListCart,
 } = cartSlice.actions;
+
 export default cartSlice.reducer;

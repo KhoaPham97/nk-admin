@@ -237,7 +237,9 @@ function LazyloadProducts() {
               ? "Phụ tùng xe đạp"
               : type === "2"
                 ? "Phụ tùng xe điện"
-                : "Phụ tùng xe ba gác"}
+                : type === "3"
+                  ? "Phụ tùng xe ba gác"
+                  : ""}
           </h2>
         </div>
 
