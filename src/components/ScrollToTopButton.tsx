@@ -25,7 +25,7 @@ const ScrollToTopButton: React.FC = () => {
   }, []);
 
   return (
-    <div className="fixed bottom-10 right-8 z-50">
+    <div className="fixed bottom-20 right-8 z-50">
       {isVisible && (
         <button
           onClick={scrollToTop}

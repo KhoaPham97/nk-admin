@@ -34,6 +34,8 @@ import LoginForm from "./components/LoginForm";
 import RegisterForm from "./components/RegisterForm";
 import Account from "./pages/Account";
 import OrderSuccess from "./pages/OrderSuccess";
+import ChatWidget from "./components/ChatWidget";
+
 import "react-toastify/dist/ReactToastify.css";
 // ================================
 // ADMIN
@@ -133,6 +135,7 @@ const CheckAccount = () => {
       />
       <AnalyticsTracker />
       <AuthModal />
+      <ChatWidget />
     </>
   );
 };

@@ -22,7 +22,7 @@ import InventoryImport from "./pages/InventoryImport";
 import AdminSettings from "./pages/AdminSettings";
 import InventoryHistory from "./pages/InventoryHistory";
 import InventoryReceipts from "./pages/InventoryReceipts";
-
+import AdminChat from "./pages/AdminChat";
 export default function BasicExample() {
   return (
     <Routes>
@@ -64,6 +64,7 @@ export default function BasicExample() {
           <Route path="settings" element={<AdminSettings />} />
           <Route path="inventory-history" element={<InventoryHistory />} />
           <Route path="inventory-receipts" element={<InventoryReceipts />} />
+          <Route path="chat" element={<AdminChat />} />
         </Route>
       </Route>
     </Routes>

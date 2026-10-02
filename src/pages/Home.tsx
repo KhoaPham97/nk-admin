@@ -60,19 +60,19 @@ const CATEGORY_GROUPS: CategoryGroup[] = [
     type: "1",
     title: "Phụ tùng xe đạp",
     description: "Các loại phụ tùng, linh kiện và phụ kiện dành cho xe đạp.",
-    fallbackImage: "/images/categories/bicycle.jpg",
+    fallbackImage: "/images/categories/phu-tung-xe-dap.png",
   },
   {
     type: "2",
     title: "Phụ tùng xe điện",
     description: "Motor, controller, tay ga, bánh xe và linh kiện điện xe.",
-    fallbackImage: "/images/categories/electric.jpg",
+    fallbackImage: "/images/categories/phu-tung-xe-dien.png",
   },
   {
     type: "3",
     title: "Phụ tùng xe ba gác",
     description: "Bạc đạn, chữ thập, cầu, phanh và phụ tùng xe ba gác.",
-    fallbackImage: "/images/categories/tricycle.jpg",
+    fallbackImage: "/images/categories/phu-tung-xe-ba-gac.png",
   },
 ];
 
@@ -458,11 +458,7 @@ const Home: FC = () => {
                   className="group relative overflow-hidden rounded-2xl bg-black"
                 >
                   <img
-                    src={
-                      groupCategories.length > 0
-                        ? getCategoryImage(groupCategories[0], group, products)
-                        : group.fallbackImage
-                    }
+                    src={group.fallbackImage}
                     alt={group.title}
                     className="h-[300px] w-full object-cover opacity-70 transition duration-700 group-hover:scale-110 group-hover:opacity-80"
                     onError={(event) => {

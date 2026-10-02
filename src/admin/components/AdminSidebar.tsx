@@ -21,6 +21,7 @@ import StorefrontIcon from "@mui/icons-material/Storefront";
 import AddBoxIcon from "@mui/icons-material/AddBox";
 import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
 import PostAddIcon from "@mui/icons-material/PostAdd";
+import ChatIcon from "@mui/icons-material/Chat";
 import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -48,6 +49,16 @@ const AdminSidebar = ({
           label: "Dashboard",
           icon: <DashboardIcon />,
           path: "/admin",
+        },
+      ],
+    },
+    {
+      title: "CHAT",
+      items: [
+        {
+          label: "Chat",
+          path: "/admin/chat",
+          icon: <ChatIcon />,
         },
       ],
     },

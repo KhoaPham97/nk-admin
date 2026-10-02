@@ -1,6 +1,9 @@
-const BASE_URL = window.location.href.includes("localhost")
+export const BASE_URL = window.location.href.includes("localhost")
   ? "http://localhost:3001/api"
   : "https://nkbike.onrender.com/api";
+export const DEFAUL_URL = window.location.href.includes("localhost")
+  ? "http://localhost:3001"
+  : "https://nkbike.onrender.com";
 
 export const API_ENDPOINTS = {
   SIGNIN: `${BASE_URL}/signin`,
