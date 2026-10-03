@@ -32,7 +32,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import SyncIcon from "@mui/icons-material/Sync";
+
 import {
   AccountBalanceWallet,
   Add,
@@ -76,6 +76,8 @@ const Orders = () => {
 
   const [updatingStatusId, setUpdatingStatusId] = useState(null);
 
+  const [syncingVariantsId, setSyncingVariantsId] = useState(null);
+
   // =====================================================
   // EXCHANGE RATE
   // CNY -> VND
@@ -118,6 +120,12 @@ const Orders = () => {
   const [search, setSearch] = useState("");
 
   const [status, setStatus] = useState("all");
+
+  // =====================================================
+  // DATE FILTER - FE ONLY
+  // =====================================================
+
+  const [dateRange, setDateRange] = useState("all");
 
   const [page, setPage] = useState(1);
 
@@ -218,6 +226,12 @@ const Orders = () => {
         return;
       }
 
+      // =================================================
+      // QUAN TRỌNG:
+      // KHÔNG gửi dateRange lên BE
+      // Filter thời gian chỉ xử lý ở FE
+      // =================================================
+
       const params = {
         page,
         limit,
@@ -277,12 +291,6 @@ const Orders = () => {
     try {
       setExchangeRateLoading(true);
       setExchangeRateError("");
-
-      /*
-       * API tỷ giá trực tiếp từ CNY
-       *
-       * 1 CNY = bao nhiêu VND
-       */
 
       const response = await axios.get(
         "https://api.exchangerate-api.com/v4/latest/CNY",
@@ -365,6 +373,65 @@ const Orders = () => {
     setStatus(event.target.value);
     setPage(1);
   };
+
+  // =====================================================
+  // DATE FILTER - FE ONLY
+  // =====================================================
+
+  const handleDateRangeChange = (event) => {
+    setDateRange(event.target.value);
+  };
+
+  // =====================================================
+  // CHECK DATE RANGE
+  // =====================================================
+
+  const isOrderInDateRange = (order) => {
+    if (dateRange === "all") {
+      return true;
+    }
+
+    const rawDate = order?.created_at || order?.createdAt;
+
+    if (!rawDate) {
+      return false;
+    }
+
+    const orderDate = new Date(rawDate);
+
+    if (Number.isNaN(orderDate.getTime())) {
+      return false;
+    }
+
+    const now = new Date();
+
+    const fromDate = new Date(now);
+
+    // 7 ngày gần nhất
+    if (dateRange === "week") {
+      fromDate.setDate(fromDate.getDate() - 7);
+    }
+
+    // 1 tháng gần nhất
+    if (dateRange === "month") {
+      fromDate.setMonth(fromDate.getMonth() - 1);
+    }
+
+    // 1 năm gần nhất
+    if (dateRange === "year") {
+      fromDate.setFullYear(fromDate.getFullYear() - 1);
+    }
+
+    return orderDate >= fromDate && orderDate <= now;
+  };
+
+  // =====================================================
+  // FILTER ORDERS - FE ONLY
+  // =====================================================
+
+  const filteredOrders = useMemo(() => {
+    return orders.filter((order) => isOrderInDateRange(order));
+  }, [orders, dateRange]);
 
   // =====================================================
   // MONEY
@@ -576,7 +643,10 @@ const Orders = () => {
         0,
     );
   };
-  const [syncingVariantsId, setSyncingVariantsId] = useState(null);
+
+  // =====================================================
+  // SYNC ORDER VARIANTS
+  // =====================================================
 
   const handleSyncOrderVariants = async (orderId) => {
     if (!orderId) return;
@@ -594,7 +664,6 @@ const Orders = () => {
             `Đã cập nhật: ${res.data.data?.updatedItems || 0} sản phẩm`,
         );
 
-        // Load lại danh sách order
         await loadOrders();
       } else {
         alert(res.data?.message || "Đồng bộ variants thất bại");
@@ -607,29 +676,15 @@ const Orders = () => {
       setSyncingVariantsId(null);
     }
   };
+
   // =====================================================
   // DEFAULT PRICE - GIÁ GỐC VARIANT
-  //
-  // QUAN TRỌNG:
-  // defaultPrice là giá gốc CNY của variant.
   // =====================================================
 
   const getVariantDefaultPrice = (item) => {
-    /*
-     * Trường hợp backend đã lưu defaultPrice trực tiếp trong order item.
-     */
-
     if (item?.defaultPrice !== undefined && item?.defaultPrice !== null) {
       return Number(item.defaultPrice) || 0;
     }
-
-    /*
-     * Trường hợp order item có:
-     *
-     * variant: {
-     *   defaultPrice: ...
-     * }
-     */
 
     if (
       item?.variant?.defaultPrice !== undefined &&
@@ -637,10 +692,6 @@ const Orders = () => {
     ) {
       return Number(item.variant.defaultPrice) || 0;
     }
-
-    /*
-     * Trường hợp product được populate và có variants.
-     */
 
     const variants = item?.product?.variants;
 
@@ -1417,40 +1468,6 @@ const Orders = () => {
                 Giá vốn & lợi nhuận
               </Button>
             </Tooltip>
-
-            {/* <Tooltip title="Đồng bộ giá sản phẩm">
-              <span>
-                <Button
-                  size="small"
-                  variant={hasPriceDifference ? "contained" : "outlined"}
-                  color={hasPriceDifference ? "warning" : "primary"}
-                  disabled={
-                    Boolean(syncingPriceItem) ||
-                    syncingStock ||
-                    Boolean(syncingOrderId) ||
-                    Boolean(rollingBackOrderId) ||
-                    Boolean(updatingStatusId) ||
-                    payingDebt
-                  }
-                  onClick={() => handleSyncItemPrice(order, item, index)}
-                  startIcon={
-                    isSyncing ? (
-                      <CircularProgress size={14} color="inherit" />
-                    ) : (
-                      <Sync fontSize="small" />
-                    )
-                  }
-                  sx={{
-                    minWidth: 110,
-                    fontSize: 11,
-                    fontWeight: 600,
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {isSyncing ? "Đang đồng bộ" : "Đồng bộ giá"}
-                </Button>
-              </span>
-            </Tooltip> */}
           </Stack>
         </Stack>
 
@@ -1764,37 +1781,57 @@ const Orders = () => {
   };
 
   // =====================================================
-  // TOTAL PROFIT CURRENT PAGE
+  // TOTAL PROFIT CURRENT FILTER
   // =====================================================
 
   const currentPageProfit = useMemo(() => {
-    return orders.reduce(
+    return filteredOrders.reduce(
       (totalProfit, order) => totalProfit + getOrderProfit(order),
       0,
     );
-  }, [orders, exchangeRate]);
+  }, [filteredOrders, exchangeRate]);
 
   // =====================================================
-  // TOTAL COST CURRENT PAGE
+  // TOTAL COST CURRENT FILTER
   // =====================================================
 
   const currentPageCost = useMemo(() => {
-    return orders.reduce(
+    return filteredOrders.reduce(
       (totalCost, order) => totalCost + getOrderCost(order),
       0,
     );
-  }, [orders, exchangeRate]);
+  }, [filteredOrders, exchangeRate]);
 
   // =====================================================
-  // TOTAL REVENUE CURRENT PAGE
+  // TOTAL REVENUE CURRENT FILTER
   // =====================================================
 
   const currentPageRevenue = useMemo(() => {
-    return orders.reduce(
+    return filteredOrders.reduce(
       (totalRevenue, order) => totalRevenue + getOrderRevenue(order),
       0,
     );
-  }, [orders]);
+  }, [filteredOrders]);
+
+  // =====================================================
+  // DATE FILTER LABEL
+  // =====================================================
+
+  const getDateRangeLabel = () => {
+    switch (dateRange) {
+      case "week":
+        return "7 ngày gần nhất";
+
+      case "month":
+        return "1 tháng gần nhất";
+
+      case "year":
+        return "1 năm gần nhất";
+
+      default:
+        return "Tất cả thời gian";
+    }
+  };
 
   // =====================================================
   // RENDER
@@ -1845,29 +1882,6 @@ const Orders = () => {
           }}
           spacing={1}
         >
-          {/* <Button
-            variant="contained"
-            color="warning"
-            startIcon={
-              syncingStock ? (
-                <CircularProgress size={18} color="inherit" />
-              ) : (
-                <Sync />
-              )
-            }
-            disabled={
-              syncingStock ||
-              Boolean(syncingOrderId) ||
-              Boolean(rollingBackOrderId) ||
-              Boolean(updatingStatusId) ||
-              Boolean(syncingPriceItem) ||
-              payingDebt
-            }
-            onClick={handleSyncStock}
-          >
-            {syncingStock ? "Đang đồng bộ kho..." : "Đồng bộ tồn kho"}
-          </Button> */}
-
           <Button
             variant="contained"
             startIcon={<Add />}
@@ -1966,6 +1980,8 @@ const Orders = () => {
       <Card sx={{ mb: 2 }}>
         <CardContent>
           <Grid container spacing={2}>
+            {/* SEARCH */}
+
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
@@ -1992,7 +2008,9 @@ const Orders = () => {
               />
             </Grid>
 
-            <Grid item xs={12} sm={6} md={3}>
+            {/* STATUS */}
+
+            <Grid item xs={12} sm={6} md={2}>
               <FormControl fullWidth size="small">
                 <Select value={status} onChange={handleStatusChange}>
                   <MenuItem value="all">Tất cả trạng thái</MenuItem>
@@ -2006,7 +2024,34 @@ const Orders = () => {
               </FormControl>
             </Grid>
 
-            <Grid item xs={12} sm={6} md={3}>
+            {/* DATE RANGE - FE ONLY */}
+
+            <Grid item xs={12} sm={6} md={2}>
+              <FormControl fullWidth size="small">
+                <Select
+                  value={dateRange}
+                  onChange={handleDateRangeChange}
+                  displayEmpty
+                  startAdornment={
+                    <InputAdornment position="start">
+                      <CalendarToday fontSize="small" />
+                    </InputAdornment>
+                  }
+                >
+                  <MenuItem value="all">Tất cả thời gian</MenuItem>
+
+                  <MenuItem value="week">1 tuần</MenuItem>
+
+                  <MenuItem value="month">1 tháng</MenuItem>
+
+                  <MenuItem value="year">1 năm</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+
+            {/* LIMIT */}
+
+            <Grid item xs={12} sm={6} md={2}>
               <FormControl fullWidth size="small">
                 <Select
                   value={limit}
@@ -2027,6 +2072,8 @@ const Orders = () => {
               </FormControl>
             </Grid>
 
+            {/* BUTTON */}
+
             <Grid item xs={12}>
               <Stack direction="row" spacing={1}>
                 <Button
@@ -2045,6 +2092,34 @@ const Orders = () => {
           </Grid>
         </CardContent>
       </Card>
+
+      {/* =================================================
+          ACTIVE DATE FILTER
+      ================================================= */}
+
+      {dateRange !== "all" && (
+        <Alert
+          severity="info"
+          icon={<CalendarToday fontSize="small" />}
+          sx={{
+            mb: 2,
+          }}
+          action={
+            <Button
+              color="inherit"
+              size="small"
+              onClick={() => setDateRange("all")}
+            >
+              Xóa
+            </Button>
+          }
+        >
+          Đang lọc đơn hàng: <strong>{getDateRangeLabel()}</strong>
+          {" — "}
+          {filteredOrders.length.toLocaleString("vi-VN")} đơn trong danh sách
+          hiện tại.
+        </Alert>
+      )}
 
       {/* =================================================
           SUMMARY
@@ -2089,7 +2164,7 @@ const Orders = () => {
                   </Typography>
 
                   <Typography variant="h6" fontWeight={700}>
-                    {orders.length.toLocaleString("vi-VN")}
+                    {filteredOrders.length.toLocaleString("vi-VN")}
                   </Typography>
                 </Box>
               </Stack>
@@ -2109,7 +2184,7 @@ const Orders = () => {
 
                 <Box>
                   <Typography variant="body2" color="text.secondary">
-                    Lãi/lỗ trang này
+                    Lãi/lỗ đang lọc
                   </Typography>
 
                   <Typography
@@ -2164,7 +2239,7 @@ const Orders = () => {
           <Grid container spacing={2}>
             <Grid item xs={12} md={4}>
               <Typography variant="caption" color="text.secondary">
-                Doanh thu trang hiện tại
+                Doanh thu đang lọc
               </Typography>
 
               <Typography variant="h6" fontWeight={700}>
@@ -2174,7 +2249,7 @@ const Orders = () => {
 
             <Grid item xs={12} md={4}>
               <Typography variant="caption" color="text.secondary">
-                Giá vốn trang hiện tại
+                Giá vốn đang lọc
               </Typography>
 
               <Typography variant="h6" fontWeight={700}>
@@ -2291,7 +2366,7 @@ const Orders = () => {
                     </Typography>
                   </TableCell>
                 </TableRow>
-              ) : orders.length === 0 ? (
+              ) : filteredOrders.length === 0 ? (
                 <TableRow>
                   <TableCell
                     colSpan={12}
@@ -2301,12 +2376,14 @@ const Orders = () => {
                     }}
                   >
                     <Typography color="text.secondary">
-                      Không có đơn hàng
+                      {dateRange !== "all"
+                        ? `Không có đơn hàng trong ${getDateRangeLabel()}`
+                        : "Không có đơn hàng"}
                     </Typography>
                   </TableCell>
                 </TableRow>
               ) : (
-                orders.map((order) => {
+                filteredOrders.map((order) => {
                   const isSyncingThisOrder = syncingOrderId === order._id;
 
                   const isRollingBackThisOrder =
@@ -2582,7 +2659,9 @@ const Orders = () => {
                               </span>
                             </Tooltip>
                           )}
-                          {/* NÚT MỚI: ĐỒNG BỘ VARIANT */}
+
+                          {/* ĐỒNG BỘ VARIANT */}
+
                           <Tooltip title="Đồng bộ variant">
                             <span>
                               <Button
@@ -2608,6 +2687,7 @@ const Orders = () => {
                               </Button>
                             </span>
                           </Tooltip>
+
                           <Tooltip title="Xem đơn hàng">
                             <IconButton
                               size="small"
@@ -2851,8 +2931,7 @@ const Orders = () => {
                           sx={{
                             p: 1.5,
                             borderRadius: 2,
-                            backgroundColor:
-                              totalProfit >= 0 ? "success.50" : "error.50",
+                            backgroundColor: "grey.50",
                           }}
                         >
                           <Typography variant="caption" color="text.secondary">
@@ -2963,8 +3042,6 @@ const Orders = () => {
                 pt: 1,
               }}
             >
-              {/* CUSTOMER */}
-
               <Box
                 sx={{
                   p: 2,
@@ -2982,8 +3059,6 @@ const Orders = () => {
                   {getCustomerName(selectedDebtOrder)}
                 </Typography>
               </Box>
-
-              {/* SUMMARY */}
 
               <Grid container spacing={1.5}>
                 <Grid item xs={4}>
@@ -3041,8 +3116,6 @@ const Orders = () => {
                 </Grid>
               </Grid>
 
-              {/* AMOUNT */}
-
               <TextField
                 fullWidth
                 label="Số tiền khách thanh toán"
@@ -3072,8 +3145,6 @@ const Orders = () => {
               >
                 Thu đủ công nợ
               </Button>
-
-              {/* PREVIEW */}
 
               <Box
                 sx={{

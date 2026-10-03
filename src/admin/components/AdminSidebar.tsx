@@ -23,6 +23,8 @@ import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
 import PostAddIcon from "@mui/icons-material/PostAdd";
 import ChatIcon from "@mui/icons-material/Chat";
 import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
+import ImageIcon from "@mui/icons-material/Image";
+
 import { useLocation, useNavigate } from "react-router-dom";
 
 interface Props {
@@ -59,6 +61,16 @@ const AdminSidebar = ({
           label: "Chat",
           path: "/admin/chat",
           icon: <ChatIcon />,
+        },
+      ],
+    },
+    {
+      title: "Hình Ảnh",
+      items: [
+        {
+          label: "Hình ảnh",
+          icon: <ImageIcon />,
+          path: "/admin/images",
         },
       ],
     },
