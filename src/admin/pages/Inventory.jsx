@@ -70,6 +70,7 @@ const Inventory = () => {
       const response = await axios.get(API_ENDPOINTS.PRODUCTS, {
         params: {
           type: "all",
+          limit: 999,
         },
       });
 

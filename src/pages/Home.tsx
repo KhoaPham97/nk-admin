@@ -407,8 +407,8 @@ const Home: FC = () => {
       {/* =====================================================
           CATEGORY
       ===================================================== */}
-
       <section className="container mx-auto px-4 py-14 md:py-20">
+        {/* Header */}
         <div className="mb-8 flex items-end justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-widest text-blue-600">
@@ -438,72 +438,146 @@ const Home: FC = () => {
           </Link>
         </div>
 
+        {/* Category */}
         {loadingCategories ? (
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6">
             {[1, 2, 3].map((item) => (
               <div
                 key={item}
-                className="h-[300px] animate-pulse rounded-2xl bg-gray-200 dark:bg-slate-800"
+                className="
+            h-[220px]
+            animate-pulse
+            rounded-3xl
+            bg-gray-100
+            dark:bg-slate-800
+            md:h-[300px]
+          "
               />
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6">
             {CATEGORY_GROUPS.map((group) => {
               const groupCategories = getCategoriesByType(group.type);
 
               return (
-                <div
+                <Link
                   key={group.type}
-                  className="group relative overflow-hidden rounded-2xl bg-black"
+                  to={`/categories?type=${group.type}`}
+                  className="
+              group
+              relative
+              block
+              overflow-hidden
+              rounded-3xl
+              bg-white
+              shadow-sm
+              ring-1
+              ring-gray-100
+              transition-all
+              duration-500
+              hover:-translate-y-1
+              hover:shadow-xl
+              dark:bg-slate-900
+              dark:ring-slate-800
+            "
+                  onClick={() => {
+                    window.scrollTo({
+                      top: 0,
+                      behavior: "instant",
+                    });
+                  }}
                 >
-                  <img
-                    src={group.fallbackImage}
-                    alt={group.title}
-                    className="h-[300px] w-full object-cover opacity-70 transition duration-700 group-hover:scale-110 group-hover:opacity-80"
-                    onError={(event) => {
-                      event.currentTarget.src = group.fallbackImage;
-                    }}
-                  />
-
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-
-                  <div className="absolute bottom-0 left-0 right-0 p-6">
-                    <p className="text-xs font-semibold uppercase tracking-widest text-blue-400">
-                      {groupCategories.length} danh mục
-                    </p>
-
-                    <h3 className="mt-2 text-2xl font-bold text-white">
-                      {group.title}
-                    </h3>
-
-                    <p className="mt-2 text-sm leading-5 text-gray-300">
-                      {group.description}
-                    </p>
-
-                    <Link
-                      to={`/categories?type=${group.type}`}
-                      className="mt-5 inline-flex items-center text-sm font-semibold text-white"
-                      onClick={() => {
-                        window.scrollTo({
-                          top: 0,
-                          behavior: "instant",
-                        });
+                  {/* Ảnh category ngang */}
+                  <div className="relative aspect-[16/6] w-full overflow-hidden">
+                    <img
+                      src={group.fallbackImage}
+                      alt={group.title}
+                      className="
+                  h-full
+                  w-full
+                  object-cover
+                  transition-transform
+                  duration-700
+                  group-hover:scale-[1.03]
+                "
+                      onError={(event) => {
+                        event.currentTarget.src = group.fallbackImage;
                       }}
-                    >
-                      Xem phụ tùng
-                      <span className="ml-2 transition-transform group-hover:translate-x-1">
-                        →
-                      </span>
-                    </Link>
+                    />
+
+                    {/* Overlay rất nhẹ để ảnh vẫn sáng */}
+                    <div
+                      className="
+                  pointer-events-none
+                  absolute
+                  inset-0
+                  bg-gradient-to-r
+                  from-black/5
+                  via-transparent
+                  to-black/5
+                "
+                    />
                   </div>
-                </div>
+
+                  {/* Thông tin bên dưới ảnh */}
+                  <div className="flex items-center justify-between px-5 py-4 md:px-7 md:py-5">
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900 md:text-xl dark:text-white">
+                        {group.title}
+                      </h3>
+
+                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        {groupCategories.length} danh mục phụ tùng
+                      </p>
+                    </div>
+
+                    <div
+                      className="
+                  flex
+                  h-10
+                  w-10
+                  shrink-0
+                  items-center
+                  justify-center
+                  rounded-full
+                  bg-gray-100
+                  text-lg
+                  text-gray-700
+                  transition-all
+                  duration-300
+                  group-hover:bg-blue-600
+                  group-hover:text-white
+                  dark:bg-slate-800
+                "
+                    >
+                      →
+                    </div>
+                  </div>
+                </Link>
               );
             })}
           </div>
         )}
-      </section>
 
+        {/* Mobile */}
+        {!loadingCategories && (
+          <div className="mt-6 text-center sm:hidden">
+            <Link
+              to="/categories"
+              className="text-sm font-semibold text-blue-600 hover:text-blue-700"
+              onClick={() => {
+                window.scrollTo({
+                  top: 0,
+                  behavior: "instant",
+                });
+              }}
+            >
+              Xem tất cả danh mục →
+            </Link>
+          </div>
+        )}
+      </section>
       {/* =====================================================
           SẢN PHẨM MỚI
       ===================================================== */}
