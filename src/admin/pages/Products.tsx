@@ -19,8 +19,10 @@ import {
   Autocomplete,
   Alert,
   MenuItem,
+  FormControlLabel,
+  Switch,
 } from "@mui/material";
-
+import { getProductPriceRange } from "../common/CommonFunc";
 import SearchIcon from "@mui/icons-material/Search";
 import Inventory2Icon from "@mui/icons-material/Inventory2";
 import SaveIcon from "@mui/icons-material/Save";
@@ -87,7 +89,7 @@ interface Product {
   imageUrl?: string;
 
   variants?: Variant[];
-
+  isVisible?: boolean;
   [key: string]: any;
 }
 
@@ -785,6 +787,12 @@ const Products = () => {
 
     return Number(numericValue).toLocaleString("vi-VN");
   };
+  const getProductPrice = (product: any) => {
+    const { min, max } = getProductPriceRange(product);
+    return min === max
+      ? `${min.toLocaleString("vi-VN")}đ`
+      : `${min.toLocaleString("vi-VN")}đ - ${max.toLocaleString("vi-VN")}đ`;
+  };
 
   // =====================================================
   // IMAGE PATH
@@ -1081,8 +1089,21 @@ const Products = () => {
                           />
 
                           <Typography variant="caption" fontWeight={600}>
-                            {formatVND(product.price)} ₫
+                            {getProductPrice(product)}
                           </Typography>
+                          <Chip
+                            size="small"
+                            label={product.isVisible === false ? "Ẩn" : "Hiện"}
+                            color={
+                              product.isVisible === false
+                                ? "default"
+                                : "success"
+                            }
+                            variant="outlined"
+                            sx={{
+                              height: 23,
+                            }}
+                          />
                         </Stack>
                       </Box>
                     </ListItemButton>
@@ -1388,6 +1409,22 @@ const Products = () => {
                         }}
                       />
                     </Grid>
+
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={selectedProduct?.isVisible !== false}
+                          onChange={(e) => {
+                            updateProductField("isVisible", e.target.checked);
+                          }}
+                        />
+                      }
+                      label={
+                        selectedProduct?.isVisible !== false
+                          ? "Đang hiển thị"
+                          : "Đang ẩn"
+                      }
+                    />
                   </Grid>
                 </Box>
 

@@ -405,8 +405,9 @@ const Home: FC = () => {
       </section>
 
       {/* =====================================================
-          CATEGORY
-      ===================================================== */}
+    CATEGORY BANNER
+===================================================== */}
+
       <section className="container mx-auto px-4 py-14 md:py-20">
         {/* Header */}
         <div className="mb-8 flex items-end justify-between">
@@ -438,19 +439,19 @@ const Home: FC = () => {
           </Link>
         </div>
 
-        {/* Category */}
+        {/* Category banners */}
         {loadingCategories ? (
           <div className="grid grid-cols-1 gap-6">
             {[1, 2, 3].map((item) => (
               <div
                 key={item}
                 className="
-            h-[220px]
+            aspect-[16/6]
+            w-full
             animate-pulse
             rounded-3xl
             bg-gray-100
             dark:bg-slate-800
-            md:h-[300px]
           "
               />
             ))}
@@ -488,49 +489,92 @@ const Home: FC = () => {
                     });
                   }}
                 >
-                  {/* Ảnh category ngang */}
-                  <div className="relative aspect-[16/6] w-full overflow-hidden">
+                  {/* ===============================
+                BANNER IMAGE
+            =============================== */}
+
+                  <div className="relative w-full overflow-hidden">
                     <img
                       src={group.fallbackImage}
                       alt={group.title}
                       className="
-                  h-full
+                  block
+                  h-auto
                   w-full
-                  object-cover
+                  object-contain
                   transition-transform
                   duration-700
-                  group-hover:scale-[1.03]
+                  group-hover:scale-[1.02]
                 "
                       onError={(event) => {
-                        event.currentTarget.src = group.fallbackImage;
+                        event.currentTarget.src =
+                          "/images/categories/default.jpg";
                       }}
                     />
 
-                    {/* Overlay rất nhẹ để ảnh vẫn sáng */}
+                    {/* Overlay rất nhẹ */}
                     <div
                       className="
                   pointer-events-none
                   absolute
                   inset-0
                   bg-gradient-to-r
-                  from-black/5
+                  from-black/10
                   via-transparent
-                  to-black/5
+                  to-black/10
+                  opacity-60
                 "
                     />
-                  </div>
 
-                  {/* Thông tin bên dưới ảnh */}
-                  <div className="flex items-center justify-between px-5 py-4 md:px-7 md:py-5">
-                    <div>
-                      <h3 className="text-lg font-bold text-gray-900 md:text-xl dark:text-white">
+                    {/* Tên nhóm trên ảnh */}
+                    <div
+                      className="
+                  absolute
+                  bottom-0
+                  left-0
+                  right-0
+                  bg-gradient-to-t
+                  from-black/70
+                  via-black/20
+                  to-transparent
+                  px-5
+                  pb-5
+                  pt-14
+                  md:px-7
+                  md:pb-7
+                "
+                    >
+                      <h3 className="text-xl font-bold text-white drop-shadow md:text-2xl">
                         {group.title}
                       </h3>
 
-                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                      <p className="mt-1 text-sm text-white/80">
                         {groupCategories.length} danh mục phụ tùng
                       </p>
                     </div>
+                  </div>
+
+                  {/* ===============================
+                BOTTOM ACTION
+            =============================== */}
+
+                  <div
+                    className="
+                flex
+                items-center
+                justify-between
+                border-t
+                border-gray-100
+                px-5
+                py-4
+                dark:border-slate-800
+                md:px-7
+                md:py-5
+              "
+                  >
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                      Xem phụ tùng
+                    </span>
 
                     <div
                       className="
@@ -549,6 +593,7 @@ const Home: FC = () => {
                   group-hover:bg-blue-600
                   group-hover:text-white
                   dark:bg-slate-800
+                  dark:text-gray-200
                 "
                     >
                       →

@@ -11,6 +11,8 @@ import {
   MenuItem,
   TextField,
   Typography,
+  FormControlLabel,
+  Switch,
 } from "@mui/material";
 
 import { Add, Delete, Save } from "@mui/icons-material";
@@ -97,6 +99,7 @@ const initialForm = {
   categoryId: "",
 
   category: "",
+  isVisible: true,
 
   variants: [],
 };
@@ -823,6 +826,15 @@ export default function CreateProduct() {
                 Mỗi hình ảnh nhập một dòng
               </Typography>
             </Grid>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={form?.isVisible}
+                  onChange={(e) => handleChange("isVisible")}
+                />
+              }
+              label={form?.isVisible !== false ? "Đang hiển thị" : "Đang ẩn"}
+            />
           </Grid>
         </CardContent>
       </Card>

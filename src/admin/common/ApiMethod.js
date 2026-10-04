@@ -35,6 +35,7 @@ export const postFormDataRequest = async ({ url, data = {}, params = {} }) => {
         "Content-Type": "multipart/form-data",
       },
     });
+
     toast.success(res.statusText);
     return res.data;
   } catch (err) {
@@ -47,7 +48,10 @@ export const patchRequest = async ({ url, data = {}, params = {} }) => {
   try {
     toast.loading("Loading...");
 
-    const res = await axios.patch(url, data, { params });
+    const res = await axios.patch(url, data, {
+      params,
+    });
+
     toast.success(res.statusText);
     return res.data;
   } catch (err) {
@@ -66,6 +70,7 @@ export const patchFormDataRequest = async ({ url, data = {}, params = {} }) => {
         "Content-Type": "multipart/form-data",
       },
     });
+
     toast.success(res.statusText);
     return res.data;
   } catch (err) {
@@ -78,7 +83,10 @@ export const putRequest = async ({ url, data = {}, params = {} }) => {
   try {
     toast.loading("Loading...");
 
-    const res = await axios.put(url, data, { params });
+    const res = await axios.put(url, data, {
+      params,
+    });
+
     toast.success(res.statusText);
     return res.data;
   } catch (err) {
@@ -91,7 +99,10 @@ export const deleteRequest = async ({ url, params = {} }) => {
   try {
     toast.loading("Loading...");
 
-    const res = await axios.delete(url, { params });
+    const res = await axios.delete(url, {
+      params,
+    });
+
     toast.success(res.statusText);
     return res.data;
   } catch (err) {

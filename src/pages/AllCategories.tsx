@@ -301,89 +301,239 @@ const AllCategories: FC = () => {
               return (
                 <section key={group.type}>
                   {/* =================================================
-                      BIG BANNER
-                  ================================================= */}
+    BIG BANNER
+================================================= */}
 
-                  <div className="group relative overflow-hidden rounded-[28px] bg-black shadow-xl">
-                    <img
-                      src={group.image}
-                      alt={group.title}
-                      className="
-                        h-[280px]
-                        w-full
-                        object-cover
-                        transition-transform
-                        duration-700
-                        ease-out
-                        group-hover:scale-[1.03]
-                        md:h-[380px]
-                        lg:h-[430px]
-                      "
-                      onError={(event) => handleImageError(event, group.type)}
-                    />
+                  <Link
+                    to={`/categories?type=${group.type}`}
+                    className="
+    group
+    relative
+    block
+    overflow-hidden
+    rounded-2xl
+    bg-white
+    shadow-md
+    ring-1
+    ring-gray-100
+    dark:bg-slate-900
+    dark:ring-slate-800
+    md:rounded-[28px]
+    md:shadow-xl
+  "
+                    onClick={() => {
+                      window.scrollTo({
+                        top: 0,
+                        behavior: "instant",
+                      });
+                    }}
+                  >
+                    <div className="relative w-full overflow-hidden">
+                      <img
+                        src={group.image}
+                        alt={group.title}
+                        className="
+        block
+        h-auto
+        w-full
+        object-contain
+        transition-transform
+        duration-700
+        group-hover:scale-[1.02]
+      "
+                        onError={(event) => handleImageError(event, group.type)}
+                      />
 
-                    {/* DARK GRADIENT */}
+                      {/* Overlay */}
+                      <div
+                        className="
+        pointer-events-none
+        absolute
+        inset-0
+        bg-gradient-to-t
+        from-black/70
+        via-black/15
+        to-transparent
+        sm:bg-gradient-to-r
+        sm:from-black/70
+        sm:via-black/25
+        sm:to-transparent
+      "
+                      />
 
-                    <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/45 to-black/5" />
+                      {/* Nội dung */}
+                      <div
+                        className="
+        absolute
+        inset-x-0
+        bottom-0
+        p-4
+        sm:inset-y-0
+        sm:flex
+        sm:items-center
+        sm:p-6
+        md:p-10
+        lg:p-14
+      "
+                      >
+                        <div className="max-w-xl">
+                          <div
+                            className="
+            mb-2
+            inline-flex
+            items-center
+            gap-1.5
+            rounded-full
+            border
+            border-white/20
+            bg-black/25
+            px-2.5
+            py-1
+            backdrop-blur-md
+            sm:mb-3
+            sm:px-3
+            sm:py-1.5
+            md:mb-4
+            md:px-4
+            md:py-2
+          "
+                          >
+                            <span className="h-1.5 w-1.5 rounded-full bg-blue-400 sm:h-2 sm:w-2" />
 
-                    {/* BOTTOM GRADIENT */}
-
-                    <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/50 to-transparent" />
-
-                    {/* CONTENT */}
-
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="max-w-2xl px-6 md:px-10 lg:px-14">
-                        {/* LABEL */}
-
-                        <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 backdrop-blur-md">
-                          <span className="h-2 w-2 rounded-full bg-white" />
-
-                          <span className="text-xs font-bold uppercase tracking-[0.16em] text-white">
-                            Nhật Khang Bike
-                          </span>
-                        </div>
-
-                        {/* TITLE */}
-
-                        <h2 className="max-w-xl text-3xl font-black leading-tight tracking-tight text-white md:text-5xl lg:text-6xl">
-                          {group.title}
-                        </h2>
-
-                        {/* DESCRIPTION */}
-
-                        <p className="mt-4 max-w-xl text-sm leading-6 text-white/85 md:text-base md:leading-7">
-                          {group.description}
-                        </p>
-
-                        {/* BUTTON */}
-
-                        <div className="mt-6 flex flex-wrap items-center gap-3">
-                          <span className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-bold text-gray-900 shadow-lg transition-all duration-300 group-hover:bg-blue-600 group-hover:text-white">
-                            Xem danh mục
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              strokeWidth={2}
-                              stroke="currentColor"
-                              className="h-4 w-4 transition-transform group-hover:translate-x-1"
+                            <span
+                              className="
+              text-[8px]
+              font-bold
+              uppercase
+              tracking-wider
+              text-white
+              sm:text-[10px]
+              md:text-xs
+            "
                             >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"
-                              />
-                            </svg>
-                          </span>
+                              NHẬT KHANG BIKE
+                            </span>
+                          </div>
 
-                          <span className="rounded-full border border-white/25 bg-black/20 px-4 py-3 text-sm font-medium text-white backdrop-blur-md">
-                            {categories.length} danh mục
-                          </span>
+                          <h2
+                            className="
+            text-xl
+            font-black
+            leading-tight
+            tracking-tight
+            text-white
+            drop-shadow-xl
+            sm:text-3xl
+            md:text-5xl
+            lg:text-6xl
+          "
+                          >
+                            {group.title}
+                          </h2>
+
+                          <p
+                            className="
+            mt-1
+            max-w-md
+            text-[9px]
+            leading-4
+            text-white/90
+            sm:mt-2
+            sm:text-xs
+            sm:leading-5
+            md:mt-4
+            md:text-base
+            md:leading-7
+          "
+                          >
+                            {group.description}
+                          </p>
+
+                          <div
+                            className="
+            mt-2.5
+            flex
+            items-center
+            gap-2
+            sm:mt-4
+            md:mt-6
+          "
+                          >
+                            <span
+                              className="
+              inline-flex
+              items-center
+              gap-1.5
+              rounded-full
+              bg-white
+              px-3
+              py-1.5
+              text-[9px]
+              font-bold
+              text-gray-900
+              shadow-lg
+              transition
+              group-hover:bg-blue-600
+              group-hover:text-white
+              sm:px-4
+              sm:py-2
+              sm:text-xs
+              md:px-5
+              md:py-3
+              md:text-sm
+            "
+                            >
+                              Xem danh mục
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                className="h-3 w-3 sm:h-4 sm:w-4"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M13.5 4.5 21 12l-7.5 7.5M3 12h18"
+                                />
+                              </svg>
+                            </span>
+
+                            <span
+                              className="
+              rounded-full
+              border
+              border-white/25
+              bg-black/25
+              px-2.5
+              py-1.5
+              text-[9px]
+              font-medium
+              text-white
+              backdrop-blur-md
+              sm:px-3
+              sm:py-2
+              sm:text-xs
+              md:px-4
+              md:py-3
+              md:text-sm
+            "
+                            >
+                              {
+                                categories.filter(
+                                  (category) =>
+                                    String(category.type) ===
+                                    String(group.type),
+                                ).length
+                              }{" "}
+                              danh mục
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </Link>
 
                   {/* =================================================
                       CATEGORY SECTION HEADER
