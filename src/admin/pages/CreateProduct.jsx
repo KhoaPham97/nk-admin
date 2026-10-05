@@ -826,11 +826,18 @@ export default function CreateProduct() {
                 Mỗi hình ảnh nhập một dòng
               </Typography>
             </Grid>
+
             <FormControlLabel
               control={
                 <Switch
-                  checked={form?.isVisible}
-                  onChange={(e) => handleChange("isVisible")}
+                  checked={form?.isVisible !== false}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+
+                      isVisible: e.target.checked,
+                    }))
+                  }
                 />
               }
               label={form?.isVisible !== false ? "Đang hiển thị" : "Đang ẩn"}

@@ -33,7 +33,6 @@ import ImageIcon from "@mui/icons-material/Image";
 import { useLocation } from "react-router-dom";
 
 import { getRequest, patchRequest } from "../common/ApiMethod";
-
 // =====================================================
 // TYPES
 // =====================================================
