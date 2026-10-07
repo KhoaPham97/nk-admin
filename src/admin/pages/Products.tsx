@@ -856,7 +856,7 @@ const Products = () => {
           variant.defaultPrice === null ||
           variant.defaultPrice === undefined
             ? "0"
-            : parsePrice(variant.defaultPrice),
+            : variant.defaultPrice,
 
         // =================================================
         // QTY
@@ -1612,7 +1612,9 @@ const Products = () => {
                       }}
                     >
                       <Autocomplete
-                        options={categories}
+                        options={categories.filter(
+                          (i) => i.type === selectedProduct.type,
+                        )}
                         value={currentCategory}
                         getOptionLabel={(option) => option.name || ""}
                         isOptionEqualToValue={(option, value) =>
@@ -1869,24 +1871,14 @@ const Products = () => {
                                 fullWidth
                                 size="small"
                                 label="Giá gốc"
-                                value={formatVND(variant.defaultPrice)}
+                                value={variant.defaultPrice}
                                 onChange={(e) =>
                                   updateVariant(
                                     index,
                                     "defaultPrice",
-                                    parsePrice(e.target.value),
+                                    e.target.value,
                                   )
                                 }
-                                InputProps={{
-                                  endAdornment: (
-                                    <InputAdornment position="end">
-                                      ₫
-                                    </InputAdornment>
-                                  ),
-                                }}
-                                inputProps={{
-                                  inputMode: "numeric",
-                                }}
                               />
                             </Grid>
 

@@ -158,13 +158,12 @@ const InventoryReceipts = () => {
     const number = Number(value);
 
     if (!Number.isFinite(number)) {
-      return "0 ₫";
+      return "0";
     }
 
-    return number.toLocaleString("vi-VN", {
+    return number.toLocaleString("zh-CN", {
       style: "currency",
-      currency: "VND",
-      maximumFractionDigits: 0,
+      currency: "CNY",
     });
   };
 

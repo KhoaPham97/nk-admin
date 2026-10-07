@@ -50,7 +50,7 @@ const formatMoney = (value) => {
     return "0";
   }
 
-  return number.toLocaleString("vi-VN");
+  return number.toLocaleString("zh-CN");
 };
 
 const parseMoney = (value) => {
@@ -527,7 +527,7 @@ const InventoryImport = () => {
   // ==========================================================
 
   const handleChangeUnitCost = (index, value) => {
-    const price = Math.max(Number(parseMoney(value)) || 0, 0);
+    const price = value ?? 0;
 
     setItems((prev) =>
       prev.map((item, i) => {
@@ -1105,15 +1105,15 @@ const InventoryImport = () => {
               <TextField
                 fullWidth
                 label="Giá nhập"
-                value={unitCost ? formatMoney(unitCost) : ""}
+                value={unitCost ? unitCost : ""}
                 onChange={(e) => {
-                  const value = parseMoney(e.target.value);
+                  const value = e.target.value;
 
                   setUnitCost(value);
                 }}
                 placeholder="VD: 25.000"
                 InputProps={{
-                  endAdornment: "₫",
+                  endAdornment: "¥",
                 }}
               />
             </Grid>
@@ -1206,7 +1206,7 @@ const InventoryImport = () => {
             </Box>
 
             <Chip
-              label={`Tổng: ${formatMoney(totalAmount)} ₫`}
+              label={`Tổng: ${formatMoney(totalAmount)} ¥`}
               color="primary"
             />
           </Stack>
@@ -1318,7 +1318,7 @@ const InventoryImport = () => {
                         </TableCell>
 
                         <TableCell align="right">
-                          {Number(item.currentQty || 0).toLocaleString("vi-VN")}
+                          {Number(item.currentQty || 0).toLocaleString("zh-CN")}
                         </TableCell>
 
                         <TableCell align="right">
@@ -1345,14 +1345,12 @@ const InventoryImport = () => {
                         <TableCell align="right">
                           <TextField
                             size="small"
-                            value={
-                              item.unitCost ? formatMoney(item.unitCost) : ""
-                            }
+                            value={item.unitCost ? item.unitCost : ""}
                             onChange={(e) =>
                               handleChangeUnitCost(index, e.target.value)
                             }
                             InputProps={{
-                              endAdornment: "₫",
+                              endAdornment: "¥",
                             }}
                             inputProps={{
                               style: {
@@ -1367,7 +1365,7 @@ const InventoryImport = () => {
 
                         <TableCell align="right">
                           <Typography fontWeight={600}>
-                            {formatMoney(item.total)} ₫
+                            {formatMoney(item.total)} ¥
                           </Typography>
                         </TableCell>
 
@@ -1424,7 +1422,7 @@ const InventoryImport = () => {
                   </Typography>
 
                   <Typography variant="h5" fontWeight={700} color="primary">
-                    {formatMoney(totalAmount)} ₫
+                    {formatMoney(totalAmount)} ¥
                   </Typography>
                 </Box>
 

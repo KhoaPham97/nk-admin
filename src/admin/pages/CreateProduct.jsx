@@ -675,11 +675,13 @@ export default function CreateProduct() {
               >
                 <MenuItem value="">Chọn danh mục</MenuItem>
 
-                {categories.map((category) => (
-                  <MenuItem key={category._id} value={category._id}>
-                    {category.name || category.title}
-                  </MenuItem>
-                ))}
+                {categories
+                  .filter((i) => i.type === form.type)
+                  .map((category) => (
+                    <MenuItem key={category._id} value={category._id}>
+                      {category.name || category.title}
+                    </MenuItem>
+                  ))}
               </TextField>
             </Grid>
 
