@@ -57,6 +57,7 @@ const emptyVariant = () => ({
   defaultPrice: "",
   price: "",
   qty: 0,
+  weight: "",
 });
 
 // =========================================================
@@ -455,6 +456,13 @@ export default function CreateProduct() {
           price: String(variant.price || "0"),
           defaultPrice: String(variant.defaultPrice || "0"),
           qty: Number(variant.qty || 0),
+          // Cân nặng KG
+          weight:
+            variant.weight === "" ||
+            variant.weight === null ||
+            variant.weight === undefined
+              ? 0
+              : Number(variant.weight) || 0,
         })),
       };
 
@@ -917,7 +925,7 @@ export default function CreateProduct() {
                 >
                   {/* TÊN */}
 
-                  <Grid item xs={12} md={5}>
+                  <Grid item xs={12} md={4}>
                     <TextField
                       fullWidth
                       size="small"
@@ -930,13 +938,13 @@ export default function CreateProduct() {
                     />
                   </Grid>
 
-                  {/* GIÁ */}
+                  {/* GIÁ BÁN */}
 
-                  <Grid item xs={12} md={3}>
+                  <Grid item xs={12} md={2}>
                     <TextField
                       fullWidth
                       size="small"
-                      label="Giá (VND)"
+                      label="Giá bán (VND)"
                       value={formatVND(variant.price)}
                       onChange={(e) =>
                         updateVariant(index, "price", parseVND(e.target.value))
@@ -948,9 +956,9 @@ export default function CreateProduct() {
                     />
                   </Grid>
 
-                  {/* GIÁ */}
+                  {/* GIÁ GỐC */}
 
-                  <Grid item xs={12} md={3}>
+                  <Grid item xs={12} md={2}>
                     <TextField
                       fullWidth
                       size="small"
@@ -959,16 +967,40 @@ export default function CreateProduct() {
                       onChange={(e) =>
                         updateVariant(index, "defaultPrice", e.target.value)
                       }
-                      placeholder="VD: 150.000"
+                      placeholder="VD: 10"
                       InputProps={{
-                        endAdornment: "₫",
+                        endAdornment: "¥",
+                      }}
+                    />
+                  </Grid>
+
+                  {/* CÂN NẶNG */}
+
+                  <Grid item xs={12} sm={6} md={1.5}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="Cân nặng"
+                      value={variant.weight ?? ""}
+                      onChange={(e) =>
+                        updateVariant(index, "weight", e.target.value)
+                      }
+                      type="number"
+                      placeholder="0.125"
+                      inputProps={{
+                        min: 0,
+                        step: 0.001,
+                        inputMode: "decimal",
+                      }}
+                      InputProps={{
+                        endAdornment: "kg",
                       }}
                     />
                   </Grid>
 
                   {/* SỐ LƯỢNG */}
 
-                  <Grid item xs={10} md={3}>
+                  <Grid item xs={10} sm={5} md={1.5}>
                     <TextField
                       fullWidth
                       size="small"
@@ -989,12 +1021,11 @@ export default function CreateProduct() {
                   <Grid
                     item
                     xs={2}
+                    sm={1}
                     md={1}
                     sx={{
                       display: "flex",
-
                       alignItems: "center",
-
                       justifyContent: "center",
                     }}
                   >

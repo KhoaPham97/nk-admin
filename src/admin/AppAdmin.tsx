@@ -23,6 +23,8 @@ import AdminSettings from "./pages/AdminSettings";
 import InventoryHistory from "./pages/InventoryHistory";
 import InventoryReceipts from "./pages/InventoryReceipts";
 import AdminChat from "./pages/AdminChat";
+import ProductPricing from "./pages/ProductPricing";
+
 import Images from "./pages/Images";
 
 export default function BasicExample() {
@@ -45,11 +47,13 @@ export default function BasicExample() {
           {/* /admin */}
           <Route index element={<Dashboard />} />
           {/* PRODUCTS */}
+
           <Route path="products" element={<Products />} />
           <Route path="products/bicycle" element={<Products />} />
           <Route path="products/electric" element={<Products />} />
           <Route path="products/tricycle" element={<Products />} />
           <Route path="products/create" element={<CreateProduct />} />
+          <Route path="products-pricing" element={<ProductPricing />} />
           {/* CATEGORY */}
           <Route path="categories" element={<Categories />} />
           {/* CUSTOMERS */}
@@ -58,7 +62,6 @@ export default function BasicExample() {
           {/* ORDERS */}
           <Route path="orders" element={<Orders />} />
           <Route path="orders/create" element={<CreateOrder />} />
-
           {/* INVOICE */}
           <Route path="invoices/:id" element={<InvoiceDetail />} />
           <Route path="inventory" element={<Inventory />} />

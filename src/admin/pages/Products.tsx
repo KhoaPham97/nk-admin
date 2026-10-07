@@ -42,6 +42,7 @@ interface Variant {
   price: number | string;
   defaultPrice: number | string;
   qty: number | string;
+  weight: number | string;
   [key: string]: any;
 }
 
@@ -416,7 +417,7 @@ const Products = () => {
 
   const updateVariant = (
     index: number,
-    field: "name" | "price" | "defaultPrice" | "qty",
+    field: "name" | "price" | "defaultPrice" | "qty" | "weight",
     value: string,
   ) => {
     if (!selectedProduct) {
@@ -643,6 +644,13 @@ const Products = () => {
           variant.qty === undefined
             ? 0
             : Number(variant.qty) || 0,
+        // QUAN TRỌNG
+        weight:
+          variant.weight === "" ||
+          variant.weight === null ||
+          variant.weight === undefined
+            ? 0
+            : Number(variant.weight) || 0,
       }));
 
       const finalQty = calculateTotalQty(variants);
@@ -1428,8 +1436,8 @@ const Products = () => {
                 </Box>
 
                 {/* =================================================
-                    VARIANTS
-                ================================================= */}
+    VARIANTS
+================================================= */}
 
                 <Box mt={4}>
                   <Stack
@@ -1517,7 +1525,10 @@ const Products = () => {
                           }}
                         >
                           <Grid container spacing={1.5} alignItems="center">
-                            {/* ==================== PHÂN LOẠI ==================== */}
+                            {/* ====================
+                  PHÂN LOẠI
+              ==================== */}
+
                             <Grid
                               size={{
                                 xs: 12,
@@ -1537,12 +1548,15 @@ const Products = () => {
                               />
                             </Grid>
 
-                            {/* ==================== GIÁ BÁN ==================== */}
+                            {/* ====================
+                  GIÁ BÁN
+              ==================== */}
+
                             <Grid
                               size={{
                                 xs: 12,
                                 sm: 6,
-                                md: 3,
+                                md: 2.5,
                               }}
                             >
                               <TextField
@@ -1570,19 +1584,22 @@ const Products = () => {
                               />
                             </Grid>
 
-                            {/* ==================== GIÁ GỐC ==================== */}
+                            {/* ====================
+                  GIÁ GỐC
+              ==================== */}
+
                             <Grid
                               size={{
                                 xs: 12,
                                 sm: 6,
-                                md: 3,
+                                md: 2.5,
                               }}
                             >
                               <TextField
                                 fullWidth
                                 size="small"
                                 label="Giá gốc"
-                                value={variant.defaultPrice}
+                                value={variant.defaultPrice ?? ""}
                                 onChange={(e) =>
                                   updateVariant(
                                     index,
@@ -1603,12 +1620,51 @@ const Products = () => {
                               />
                             </Grid>
 
-                            {/* ==================== SỐ LƯỢNG ==================== */}
+                            {/* ====================
+                  CÂN NẶNG
+              ==================== */}
+
                             <Grid
                               size={{
-                                xs: 10,
-                                sm: 5,
-                                md: 2,
+                                xs: 6,
+                                sm: 3,
+                                md: 1.5,
+                              }}
+                            >
+                              <TextField
+                                fullWidth
+                                size="small"
+                                type="number"
+                                label="Cân nặng"
+                                placeholder="0.12"
+                                value={variant.weight ?? ""}
+                                onChange={(e) =>
+                                  updateVariant(index, "weight", e.target.value)
+                                }
+                                inputProps={{
+                                  min: 0,
+                                  step: 0.001,
+                                  inputMode: "decimal",
+                                }}
+                                InputProps={{
+                                  endAdornment: (
+                                    <InputAdornment position="end">
+                                      kg
+                                    </InputAdornment>
+                                  ),
+                                }}
+                              />
+                            </Grid>
+
+                            {/* ====================
+                  SỐ LƯỢNG
+              ==================== */}
+
+                            <Grid
+                              size={{
+                                xs: 6,
+                                sm: 3,
+                                md: 1.5,
                               }}
                             >
                               <TextField
@@ -1626,10 +1682,13 @@ const Products = () => {
                               />
                             </Grid>
 
-                            {/* ==================== XÓA ==================== */}
+                            {/* ====================
+                  XÓA
+              ==================== */}
+
                             <Grid
                               size={{
-                                xs: 2,
+                                xs: 12,
                                 sm: 1,
                                 md: 1,
                               }}
@@ -1658,7 +1717,6 @@ const Products = () => {
                     ))}
                   </Stack>
                 </Box>
-
                 {/* =================================================
                     DESCRIPTION
                 ================================================= */}

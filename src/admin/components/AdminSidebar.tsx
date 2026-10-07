@@ -114,6 +114,11 @@ const AdminSidebar = ({
           icon: <CategoryIcon />,
           path: "/admin/categories",
         },
+        {
+          label: "Tính giá sản phẩm",
+          icon: <Inventory2Icon />,
+          path: "/admin/products-pricing",
+        },
       ],
     },
 
