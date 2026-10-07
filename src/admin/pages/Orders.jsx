@@ -122,7 +122,7 @@ const Orders = () => {
   const [status, setStatus] = useState("all");
 
   // =====================================================
-  // DATE FILTER - FE ONLY
+  // DATE FILTER - API
   // =====================================================
 
   const [dateRange, setDateRange] = useState("all");
@@ -215,57 +215,77 @@ const Orders = () => {
   // LOAD ORDERS
   // =====================================================
 
+  const formatDateParam = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+  const getDateParams = (range) => {
+    if (range === "all") {
+      return {};
+    }
+    const today = new Date();
+    const fromDate = new Date(today);
+    const toDate = new Date(today);
+    switch (range) {
+      case "today":
+        // Hôm nay
+        break;
+      case "week":
+        // 7 ngày gần nhất, tính cả hôm nay
+        fromDate.setDate(fromDate.getDate() - 6);
+        break;
+      case "month":
+        // 30 ngày gần nhất
+        fromDate.setDate(fromDate.getDate() - 29);
+        break;
+      case "3months":
+        //3 tháng gần nhất
+        fromDate.setMonth(fromDate.getMonth() - 3);
+        break;
+      case "year":
+        // 1 năm gần nhất
+        fromDate.setFullYear(fromDate.getFullYear() - 1);
+        break;
+      default:
+        return {};
+    }
+    return {
+      fromDate: formatDateParam(fromDate),
+      toDate: formatDateParam(toDate),
+    };
+  };
   const loadOrders = async () => {
     try {
       setLoading(true);
-
       const token = getToken();
-
       if (!token) {
         navigate("/admin/login");
         return;
       }
-
-      // =================================================
-      // QUAN TRỌNG:
-      // KHÔNG gửi dateRange lên BE
-      // Filter thời gian chỉ xử lý ở FE
-      // =================================================
-
-      const params = {
-        page,
-        limit,
-      };
-
+      const params = { page, limit }; // ================================================= // SEARCH // =================================================
       if (search.trim()) {
         params.search = search.trim();
       }
-
-      if (status !== "all") {
-        params.status = status;
-      }
-
+      // ================================================= // STATUS // ================================================= if (status !== "all") { params.status = status; } // ================================================= // DATE FILTER // BE nhận: // fromDate=YYYY-MM-DD // toDate=YYYY-MM-DD // =================================================
+      const dateParams = getDateParams(dateRange);
+      Object.assign(params, dateParams);
+      console.log("LOAD ORDERS PARAMS:", params); // ================================================= // CALL API // =================================================
       const response = await axios.get(API_ENDPOINTS.ORDER, {
         ...getAuthConfig(),
         params,
       });
-
       const data = response?.data || {};
-
       const orderList = data.orders || data.data || [];
-
       setOrders(Array.isArray(orderList) ? orderList : []);
-
       setTotal(Number(data.total) || 0);
-
       setTotalPages(Number(data.totalPages) || 1);
     } catch (error) {
       console.error("LOAD ORDERS ERROR:", error);
-
       if (handleAuthError(error)) {
         return;
       }
-
       showSnackbar(
         error?.response?.data?.message || "Không thể tải danh sách đơn hàng",
         "error",
@@ -274,14 +294,13 @@ const Orders = () => {
       setLoading(false);
     }
   };
-
   // =====================================================
   // EFFECT
   // =====================================================
 
   useEffect(() => {
     loadOrders();
-  }, [page, limit, status]);
+  }, [page, limit, status, dateRange]);
 
   // =====================================================
   // EXCHANGE RATE
@@ -346,7 +365,10 @@ const Orders = () => {
   // =====================================================
 
   const handleSearch = () => {
-    setPage(1);
+    if (page !== 1) {
+      setPage(1);
+      return;
+    }
     loadOrders();
   };
 
@@ -375,63 +397,21 @@ const Orders = () => {
   };
 
   // =====================================================
-  // DATE FILTER - FE ONLY
+  // DATE FILTER - API
   // =====================================================
 
   const handleDateRangeChange = (event) => {
     setDateRange(event.target.value);
+    setPage(1);
   };
 
   // =====================================================
-  // CHECK DATE RANGE
+  // FILTER ORDERS
   // =====================================================
+  // Date/search/status đã được BE xử lý trước khi trả dữ liệu.
+  // Không lọc date lần nữa ở FE để tránh sai pagination/total.
 
-  const isOrderInDateRange = (order) => {
-    if (dateRange === "all") {
-      return true;
-    }
-
-    const rawDate = order?.created_at || order?.createdAt;
-
-    if (!rawDate) {
-      return false;
-    }
-
-    const orderDate = new Date(rawDate);
-
-    if (Number.isNaN(orderDate.getTime())) {
-      return false;
-    }
-
-    const now = new Date();
-
-    const fromDate = new Date(now);
-
-    // 7 ngày gần nhất
-    if (dateRange === "week") {
-      fromDate.setDate(fromDate.getDate() - 7);
-    }
-
-    // 1 tháng gần nhất
-    if (dateRange === "month") {
-      fromDate.setMonth(fromDate.getMonth() - 1);
-    }
-
-    // 1 năm gần nhất
-    if (dateRange === "year") {
-      fromDate.setFullYear(fromDate.getFullYear() - 1);
-    }
-
-    return orderDate >= fromDate && orderDate <= now;
-  };
-
-  // =====================================================
-  // FILTER ORDERS - FE ONLY
-  // =====================================================
-
-  const filteredOrders = useMemo(() => {
-    return orders.filter((order) => isOrderInDateRange(order));
-  }, [orders, dateRange]);
+  const filteredOrders = orders;
 
   // =====================================================
   // MONEY
@@ -1819,11 +1799,17 @@ const Orders = () => {
 
   const getDateRangeLabel = () => {
     switch (dateRange) {
+      case "today":
+        return "Hôm nay";
+
       case "week":
         return "7 ngày gần nhất";
 
       case "month":
-        return "1 tháng gần nhất";
+        return "30 ngày gần nhất";
+
+      case "3months":
+        return "3 tháng gần nhất";
 
       case "year":
         return "1 năm gần nhất";
@@ -1832,7 +1818,6 @@ const Orders = () => {
         return "Tất cả thời gian";
     }
   };
-
   // =====================================================
   // RENDER
   // =====================================================
@@ -2024,29 +2009,25 @@ const Orders = () => {
               </FormControl>
             </Grid>
 
-            {/* DATE RANGE - FE ONLY */}
+            {/* DATE RANGE - API */}
 
             <Grid item xs={12} sm={6} md={2}>
-              <FormControl fullWidth size="small">
-                <Select
-                  value={dateRange}
-                  onChange={handleDateRangeChange}
-                  displayEmpty
-                  startAdornment={
-                    <InputAdornment position="start">
-                      <CalendarToday fontSize="small" />
-                    </InputAdornment>
-                  }
-                >
-                  <MenuItem value="all">Tất cả thời gian</MenuItem>
-
-                  <MenuItem value="week">1 tuần</MenuItem>
-
-                  <MenuItem value="month">1 tháng</MenuItem>
-
-                  <MenuItem value="year">1 năm</MenuItem>
-                </Select>
-              </FormControl>
+              <TextField
+                select
+                size="small"
+                label="Thời gian"
+                value={dateRange}
+                onChange={handleDateRangeChange}
+                sx={{ minWidth: 190 }}
+              >
+                {" "}
+                <MenuItem value="all"> Tất cả thời gian </MenuItem>{" "}
+                <MenuItem value="today"> Hôm nay </MenuItem>{" "}
+                <MenuItem value="week"> 7 ngày gần nhất </MenuItem>{" "}
+                <MenuItem value="month"> 30 ngày gần nhất </MenuItem>{" "}
+                <MenuItem value="3months"> 3 tháng gần nhất </MenuItem>{" "}
+                <MenuItem value="year"> 1 năm gần nhất </MenuItem>{" "}
+              </TextField>
             </Grid>
 
             {/* LIMIT */}
@@ -2116,8 +2097,7 @@ const Orders = () => {
         >
           Đang lọc đơn hàng: <strong>{getDateRangeLabel()}</strong>
           {" — "}
-          {filteredOrders.length.toLocaleString("vi-VN")} đơn trong danh sách
-          hiện tại.
+          {total.toLocaleString("vi-VN")} đơn trong khoảng thời gian đang lọc.
         </Alert>
       )}
 
