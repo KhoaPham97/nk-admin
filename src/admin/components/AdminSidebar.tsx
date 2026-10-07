@@ -24,6 +24,7 @@ import PostAddIcon from "@mui/icons-material/PostAdd";
 import ChatIcon from "@mui/icons-material/Chat";
 import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
 import ImageIcon from "@mui/icons-material/Image";
+import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -54,6 +55,7 @@ const AdminSidebar = ({
         },
       ],
     },
+
     {
       title: "CHAT",
       items: [
@@ -64,6 +66,7 @@ const AdminSidebar = ({
         },
       ],
     },
+
     {
       title: "Hình Ảnh",
       items: [
@@ -84,7 +87,6 @@ const AdminSidebar = ({
           path: "/admin/products",
         },
 
-        // ⭐ THÊM SẢN PHẨM
         {
           label: "Nhập sản phẩm",
           icon: <PostAddIcon />,
@@ -114,10 +116,20 @@ const AdminSidebar = ({
           icon: <CategoryIcon />,
           path: "/admin/categories",
         },
+
         {
           label: "Tính giá sản phẩm",
           icon: <Inventory2Icon />,
           path: "/admin/products-pricing",
+        },
+
+        // ========================================
+        // VEHICLES
+        // ========================================
+        {
+          label: "Xe / Vehicles",
+          icon: <DirectionsCarIcon />,
+          path: "/admin/vehicles",
         },
       ],
     },
@@ -136,11 +148,13 @@ const AdminSidebar = ({
           icon: <AddBoxIcon />,
           path: "/admin/inventory/import",
         },
+
         {
           label: "Lịch sử nhập kho",
           path: "/admin/inventory-receipts",
           icon: <Inventory2Icon />,
         },
+
         {
           label: "Lịch sử xuất kho",
           icon: <RemoveCircleOutlineIcon />,
@@ -157,11 +171,13 @@ const AdminSidebar = ({
           icon: <ShoppingCartIcon />,
           path: "/admin/orders",
         },
+
         {
           label: "Tạo đơn hàng",
           path: "/admin/orders/create",
           icon: <AddShoppingCartIcon />,
         },
+
         {
           label: "Khách hàng",
           icon: <PeopleIcon />,

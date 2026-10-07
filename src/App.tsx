@@ -35,7 +35,7 @@ import RegisterForm from "./components/RegisterForm";
 import Account from "./pages/Account";
 import OrderSuccess from "./pages/OrderSuccess";
 import ChatWidget from "./components/ChatWidget";
-
+import VehicleProductSearch from "./pages/VehicleProductSearch";
 import "react-toastify/dist/ReactToastify.css";
 // ================================
 // ADMIN
@@ -116,6 +116,10 @@ const CheckAccount = () => {
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/order-success" element={<OrderSuccess />} />
         <Route path="/order-success/:id" element={<OrderSuccess />} />
+        <Route
+          path="/tim-phu-tung-theo-xe"
+          element={<VehicleProductSearch />}
+        />
       </Routes>
       <Toaster position="bottom-center" reverseOrder={false} />
       {/* ================================

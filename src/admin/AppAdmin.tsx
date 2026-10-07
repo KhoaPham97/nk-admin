@@ -26,6 +26,7 @@ import AdminChat from "./pages/AdminChat";
 import ProductPricing from "./pages/ProductPricing";
 
 import Images from "./pages/Images";
+import Vehicles from "./pages/Vehicles";
 
 export default function BasicExample() {
   return (
@@ -44,32 +45,80 @@ export default function BasicExample() {
 
       <Route element={<AdminProtectedRoute />}>
         <Route path="/admin" element={<AdminLayout />}>
-          {/* /admin */}
+          {/* DASHBOARD */}
           <Route index element={<Dashboard />} />
-          {/* PRODUCTS */}
+
+          {/* ========================================
+              PRODUCTS
+          ======================================== */}
 
           <Route path="products" element={<Products />} />
           <Route path="products/bicycle" element={<Products />} />
           <Route path="products/electric" element={<Products />} />
           <Route path="products/tricycle" element={<Products />} />
           <Route path="products/create" element={<CreateProduct />} />
+
           <Route path="products-pricing" element={<ProductPricing />} />
-          {/* CATEGORY */}
+
+          {/* ========================================
+              VEHICLES
+          ======================================== */}
+
+          <Route path="vehicles" element={<Vehicles />} />
+
+          {/* ========================================
+              CATEGORY
+          ======================================== */}
+
           <Route path="categories" element={<Categories />} />
-          {/* CUSTOMERS */}
+
+          {/* ========================================
+              CUSTOMERS
+          ======================================== */}
+
           <Route path="customers" element={<Customers />} />
           <Route path="customers/:id" element={<CustomerDetail />} />
-          {/* ORDERS */}
+
+          {/* ========================================
+              ORDERS
+          ======================================== */}
+
           <Route path="orders" element={<Orders />} />
           <Route path="orders/create" element={<CreateOrder />} />
-          {/* INVOICE */}
+
+          {/* ========================================
+              INVOICE
+          ======================================== */}
+
           <Route path="invoices/:id" element={<InvoiceDetail />} />
+
+          {/* ========================================
+              INVENTORY
+          ======================================== */}
+
           <Route path="inventory" element={<Inventory />} />
           <Route path="inventory/import" element={<InventoryImport />} />
-          <Route path="settings" element={<AdminSettings />} />
+
           <Route path="inventory-history" element={<InventoryHistory />} />
+
           <Route path="inventory-receipts" element={<InventoryReceipts />} />
+
+          {/* ========================================
+              SETTINGS
+          ======================================== */}
+
+          <Route path="settings" element={<AdminSettings />} />
+
+          {/* ========================================
+              CHAT
+          ======================================== */}
+
           <Route path="chat" element={<AdminChat />} />
+
+          {/* ========================================
+              IMAGES
+          ======================================== */}
+
           <Route path="images" element={<Images />} />
         </Route>
       </Route>

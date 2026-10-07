@@ -13,7 +13,11 @@ import {
 
 import { FaUser } from "react-icons/fa";
 
-import { MdOutlineDarkMode, MdOutlineLightMode } from "react-icons/md";
+import {
+  MdOutlineDarkMode,
+  MdOutlineLightMode,
+  MdDirectionsBike,
+} from "react-icons/md";
 
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 
@@ -460,7 +464,28 @@ const Navbar: FC = () => {
               >
                 Danh mục
               </Link>
-
+              <Link
+                to="/tim-phu-tung-theo-xe"
+                className="
+    flex
+    items-center
+    gap-1.5
+    rounded-lg
+    px-3
+    py-2
+    text-sm
+    font-semibold
+    text-gray-700
+    transition
+    hover:bg-gray-100
+    hover:text-blue-600
+    dark:text-gray-200
+    dark:hover:bg-slate-800
+  "
+              >
+                <MdDirectionsBike size={18} />
+                Tìm phụ tùng theo xe
+              </Link>
               {/* ACCOUNT */}
 
               {isLoggedIn ? (
@@ -774,6 +799,28 @@ const Navbar: FC = () => {
                   "
                 >
                   Danh mục
+                </Link>
+                <Link
+                  to="/tim-phu-tung-theo-xe"
+                  onClick={closeMenu}
+                  className="
+    flex
+    items-center
+    gap-3
+    rounded-xl
+    px-4
+    py-3
+    font-semibold
+    text-gray-800
+    hover:bg-blue-50
+    hover:text-blue-600
+    dark:text-white
+    dark:hover:bg-slate-800
+  "
+                >
+                  <MdDirectionsBike size={22} className="text-blue-600" />
+
+                  <span>Tìm phụ tùng theo xe</span>
                 </Link>
               </div>
 

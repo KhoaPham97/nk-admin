@@ -1,7 +1,6 @@
 import { FC, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
-
 import ProductList from "../components/ProductList";
 import { API_ENDPOINTS } from "../api";
 
@@ -623,6 +622,7 @@ const Home: FC = () => {
           </div>
         )}
       </section>
+
       {/* =====================================================
           SẢN PHẨM MỚI
       ===================================================== */}

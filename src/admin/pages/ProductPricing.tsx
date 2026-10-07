@@ -84,7 +84,7 @@ const ProductPricing: React.FC = () => {
       setLoading(true);
       setError("");
 
-      const url = `${API_ENDPOINTS.PRODUCTS}?type=all`;
+      const url = `${API_ENDPOINTS.PRODUCTS}?type=all&limit=999`;
 
       const response = await fetch(url);
 

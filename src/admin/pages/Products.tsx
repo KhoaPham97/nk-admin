@@ -22,7 +22,9 @@ import {
   FormControlLabel,
   Switch,
 } from "@mui/material";
+
 import { getProductPriceRange } from "../common/CommonFunc";
+
 import SearchIcon from "@mui/icons-material/Search";
 import Inventory2Icon from "@mui/icons-material/Inventory2";
 import SaveIcon from "@mui/icons-material/Save";
@@ -33,23 +35,35 @@ import ImageIcon from "@mui/icons-material/Image";
 import { useLocation } from "react-router-dom";
 
 import { getRequest, patchRequest } from "../common/ApiMethod";
+
 // =====================================================
 // TYPES
 // =====================================================
 
 interface Variant {
+  _id?: string;
+  id?: string;
+
   name: string;
+
   price: number | string;
+
   defaultPrice: number | string;
+
   qty: number | string;
+
   weight: number | string;
+
   [key: string]: any;
 }
 
 interface Category {
   _id: string;
+
   name: string;
+
   type?: string;
+
   [key: string]: any;
 }
 
@@ -88,11 +102,23 @@ interface Product {
 
   imageUrl?: string;
 
+  // ===================================================
+  // XE TƯƠNG THÍCH
+  // ===================================================
+  compatibleVehicles?: string[];
+
   variants?: Variant[];
+
   isVisible?: boolean;
+
   [key: string]: any;
 }
-
+interface Vehicle {
+  _id: string;
+  name: string;
+  type?: string;
+  [key: string]: any;
+}
 // =====================================================
 // TYPE NAME
 // =====================================================
@@ -143,7 +169,7 @@ const Products = () => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const [categories, setCategories] = useState<Category[]>([]);
-
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [search, setSearch] = useState("");
 
   const [page, setPage] = useState(1);
@@ -167,18 +193,6 @@ const Products = () => {
   const [errorMessage, setErrorMessage] = useState("");
 
   // =====================================================
-  // CALCULATE TOTAL QTY
-  // =====================================================
-
-  const calculateTotalQty = (variants: Variant[]) => {
-    return variants.reduce((total, variant) => {
-      const qty = Number(variant.qty);
-
-      return total + (Number.isFinite(qty) ? qty : 0);
-    }, 0);
-  };
-
-  // =====================================================
   // NORMALIZE NUMBER
   // Cho phép "" trong lúc edit
   // =====================================================
@@ -200,6 +214,53 @@ const Products = () => {
   };
 
   // =====================================================
+  // NORMALIZE COMPATIBLE VEHICLES
+  //
+  // Hỗ trợ cả dữ liệu cũ:
+  //
+  // "VC 2021, Liwei I5, Liwei A5"
+  //
+  // và dữ liệu mới:
+  //
+  // ["VC 2021", "Liwei I5", "Liwei A5"]
+  // =====================================================
+
+  const normalizeCompatibleVehicles = (
+    value: string[] | string | null | undefined,
+  ): string[] => {
+    if (Array.isArray(value)) {
+      return Array.from(
+        new Set(value.map((item) => String(item).trim()).filter(Boolean)),
+      );
+    }
+
+    if (typeof value === "string") {
+      return Array.from(
+        new Set(
+          value
+            .split(",")
+            .map((item) => item.trim())
+            .filter(Boolean),
+        ),
+      );
+    }
+
+    return [];
+  };
+
+  // =====================================================
+  // CALCULATE TOTAL QTY
+  // =====================================================
+
+  const calculateTotalQty = (variants: Variant[]) => {
+    return variants.reduce((total, variant) => {
+      const qty = Number(variant.qty);
+
+      return total + (Number.isFinite(qty) ? qty : 0);
+    }, 0);
+  };
+
+  // =====================================================
   // NORMALIZE PRODUCT
   // =====================================================
 
@@ -210,33 +271,103 @@ const Products = () => {
 
           name: variant.name || "",
 
-          // Không ép "" thành 0
           price: normalizeNumber(variant.price),
+
           defaultPrice: normalizeNumber(variant.defaultPrice),
-          // Không ép "" thành 0
+
           qty: normalizeNumber(variant.qty),
+
+          weight: normalizeNumber(variant.weight),
         }))
       : [];
 
     return {
       ...product,
 
-      // Luôn đưa type về string
+      // =================================================
+      // BASIC
+      // =================================================
+
+      title: product.title || "",
+
+      brand: product.brand || "",
+
+      code: product.code || "",
+
       type: product.type ? String(product.type) : "",
 
-      // Không ép "" thành 0
+      categoryId: product.categoryId || "",
+
+      category: product.category || "",
+
+      // =================================================
+      // XE TƯƠNG THÍCH
+      // =================================================
+
+      compatibleVehicles: normalizeCompatibleVehicles(
+        product.compatibleVehicles,
+      ),
+
+      // =================================================
+      // PRICE
+      // =================================================
+
       price: normalizeNumber(product.price),
 
       originalPrice: normalizeNumber(product.originalPrice),
 
+      // =================================================
+      // VARIANTS
+      // =================================================
+
       variants,
 
+      // =================================================
+      // QTY
+      // =================================================
+
       qty: calculateTotalQty(variants),
+
+      // =================================================
+      // IMAGES
+      // =================================================
 
       images: Array.isArray(product.images) ? product.images : [],
     };
   };
 
+  // =====================================================
+  // VEHICLE OPTIONS
+  //
+  // Lấy tất cả xe đã có trong các sản phẩm đang load.
+  //
+  // Vì Autocomplete có freeSolo nên vẫn có thể nhập
+  // xe mới dù chưa nằm trong danh sách.
+  // =====================================================
+  useEffect(() => {
+    loadVehicles();
+  }, []);
+
+  const loadVehicles = async () => {
+    try {
+      const res = await getRequest({
+        url: "/vehicles",
+      });
+
+      const list = Array.isArray(res?.vehicles) ? res.vehicles : [];
+
+      setVehicles(list);
+    } catch (error) {
+      console.error("Load vehicles error:", error);
+      setVehicles([]);
+    }
+  };
+  const vehicleOptions = useMemo(() => {
+    return vehicles
+      .map((vehicle) => vehicle.name)
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b, "vi"));
+  }, [vehicles]);
   // =====================================================
   // LOAD CATEGORY
   // =====================================================
@@ -297,11 +428,13 @@ const Products = () => {
 
       const params: Record<string, any> = {
         page,
+
         limit,
       };
 
-      // Type chỉ dùng để FILTER danh sách
+      // Type chỉ dùng để FILTER
       // Không dùng type URL để ghi đè khi save
+
       if (type) {
         params.type = type;
       }
@@ -314,6 +447,7 @@ const Products = () => {
 
       const res = await getRequest({
         url: "/products",
+
         params,
       });
 
@@ -412,6 +546,32 @@ const Products = () => {
   };
 
   // =====================================================
+  // CHANGE COMPATIBLE VEHICLES
+  // =====================================================
+
+  const changeCompatibleVehicles = (values: string[]) => {
+    if (!selectedProduct) {
+      return;
+    }
+
+    const normalized = Array.from(
+      new Set(values.map((item) => String(item).trim()).filter(Boolean)),
+    );
+
+    setSelectedProduct({
+      ...selectedProduct,
+
+      compatibleVehicles: normalized,
+    });
+
+    setDirty(true);
+
+    setSaveMessage("");
+
+    setErrorMessage("");
+  };
+
+  // =====================================================
   // UPDATE VARIANT
   // =====================================================
 
@@ -429,9 +589,6 @@ const Products = () => {
     variants[index] = {
       ...variants[index],
 
-      // QUAN TRỌNG:
-      // Không Number(value) ở đây.
-      // Cho phép value = "" khi user xóa.
       [field]: value,
     };
 
@@ -468,9 +625,12 @@ const Products = () => {
         name: "",
 
         price: "",
+
         defaultPrice: "",
 
         qty: "",
+
+        weight: "",
       },
     ];
 
@@ -546,8 +706,7 @@ const Products = () => {
       return;
     }
 
-    // IMPORTANT:
-    // Category KHÔNG được tự động thay đổi type
+    // Category KHÔNG tự động thay đổi type
 
     setSelectedProduct({
       ...selectedProduct,
@@ -585,6 +744,60 @@ const Products = () => {
   };
 
   // =====================================================
+  // PARSE PRICE
+  // =====================================================
+
+  const parsePrice = (value: string | number | null | undefined) => {
+    if (value === "" || value === null || value === undefined) {
+      return "";
+    }
+
+    return String(value).replace(/\D/g, "");
+  };
+
+  // =====================================================
+  // FORMAT VND
+  // =====================================================
+
+  const formatVND = (value: string | number | null | undefined) => {
+    const numericValue = parsePrice(value);
+
+    if (numericValue === "") {
+      return "";
+    }
+
+    return Number(numericValue).toLocaleString("vi-VN");
+  };
+
+  // =====================================================
+  // PRODUCT PRICE
+  // =====================================================
+
+  const getProductPrice = (product: any) => {
+    const { min, max } = getProductPriceRange(product);
+
+    return min === max
+      ? `${min.toLocaleString("vi-VN")}đ`
+      : `${min.toLocaleString("vi-VN")}đ - ${max.toLocaleString("vi-VN")}đ`;
+  };
+
+  // =====================================================
+  // IMAGE PATH
+  // =====================================================
+
+  const getImageUrl = (filename?: string) => {
+    if (!filename) {
+      return "";
+    }
+
+    if (filename.startsWith("http://") || filename.startsWith("https://")) {
+      return filename;
+    }
+
+    return `/images/${filename}`;
+  };
+
+  // =====================================================
   // SAVE PRODUCT
   // =====================================================
 
@@ -613,38 +826,53 @@ const Products = () => {
       setErrorMessage("");
 
       // =================================================
-      // NORMALIZE VARIANTS KHI SAVE
+      // NORMALIZE VARIANTS
       // =================================================
 
       const variants = (selectedProduct.variants || []).map((variant) => ({
+        // =================================================
+        // NAME
+        // =================================================
+
         name: variant.name || "",
 
-        // Khi lưu:
-        // "" -> "0"
-        // "10000" -> "10000"
+        // =================================================
+        // PRICE
+        // =================================================
+
         price:
           variant.price === "" ||
           variant.price === null ||
           variant.price === undefined
             ? "0"
             : parsePrice(variant.price),
+
+        // =================================================
+        // DEFAULT PRICE
+        // =================================================
+
         defaultPrice:
           variant.defaultPrice === "" ||
           variant.defaultPrice === null ||
           variant.defaultPrice === undefined
             ? "0"
-            : variant.defaultPrice,
+            : parsePrice(variant.defaultPrice),
 
-        // Khi lưu:
-        // "" -> 0
-        // "10" -> 10
+        // =================================================
+        // QTY
+        // =================================================
+
         qty:
           variant.qty === "" ||
           variant.qty === null ||
           variant.qty === undefined
             ? 0
             : Number(variant.qty) || 0,
-        // QUAN TRỌNG
+
+        // =================================================
+        // WEIGHT
+        // =================================================
+
         weight:
           variant.weight === "" ||
           variant.weight === null ||
@@ -653,10 +881,14 @@ const Products = () => {
             : Number(variant.weight) || 0,
       }));
 
+      // =================================================
+      // FINAL QTY
+      // =================================================
+
       const finalQty = calculateTotalQty(variants);
 
       // =================================================
-      // NORMALIZE PRICE
+      // PRODUCT PRICE
       // =================================================
 
       const finalPrice =
@@ -674,25 +906,50 @@ const Products = () => {
           : parsePrice(selectedProduct.originalPrice);
 
       // =================================================
+      // XE TƯƠNG THÍCH
+      // =================================================
+
+      const compatibleVehicles = normalizeCompatibleVehicles(
+        selectedProduct.compatibleVehicles,
+      );
+
+      // =================================================
       // PRODUCT TO SAVE
       // =================================================
 
       const productToSave: Product = {
         ...selectedProduct,
 
-        // Type lấy từ Select
+        // =================================================
+        // TYPE
+        // =================================================
+
         type: productType,
 
-        // Giá đã chuẩn hóa, lưu dạng số thuần không có dấu chấm/₫
+        // =================================================
+        // PRICE
+        // =================================================
+
         price: finalPrice,
 
-        // Giá cũ lưu dạng số thuần không có dấu chấm/₫
         originalPrice: finalOriginalPrice,
 
-        // Variants đã chuẩn hóa
+        // =================================================
+        // XE TƯƠNG THÍCH
+        // =================================================
+
+        compatibleVehicles,
+
+        // =================================================
+        // VARIANTS
+        // =================================================
+
         variants,
 
-        // Qty tổng
+        // =================================================
+        // TOTAL QTY
+        // =================================================
+
         qty: finalQty,
       };
 
@@ -705,6 +962,11 @@ const Products = () => {
       console.log("SAVE PRICE:", productToSave.price);
 
       console.log("SAVE ORIGINAL PRICE:", productToSave.originalPrice);
+
+      console.log(
+        "SAVE COMPATIBLE VEHICLES:",
+        productToSave.compatibleVehicles,
+      );
 
       console.log("SAVE VARIANTS:", productToSave.variants);
 
@@ -723,7 +985,7 @@ const Products = () => {
       });
 
       // =================================================
-      // UPDATE CURRENT LIST
+      // UPDATE LIST
       // =================================================
 
       setProducts((current) =>
@@ -766,57 +1028,6 @@ const Products = () => {
     categories.find(
       (category) => category._id === selectedProduct?.categoryId,
     ) || null;
-
-  // =====================================================
-  // FORMAT PRICE
-  // =====================================================
-
-  // =====================================================
-  // VND PRICE HELPERS
-  // Hiển thị: 150.000 ₫
-  // Lưu DB:   "150000"
-  // =====================================================
-
-  const parsePrice = (value: string | number | null | undefined) => {
-    if (value === "" || value === null || value === undefined) {
-      return "";
-    }
-
-    return String(value).replace(/\D/g, "");
-  };
-
-  const formatVND = (value: string | number | null | undefined) => {
-    const numericValue = parsePrice(value);
-
-    if (numericValue === "") {
-      return "";
-    }
-
-    return Number(numericValue).toLocaleString("vi-VN");
-  };
-  const getProductPrice = (product: any) => {
-    const { min, max } = getProductPriceRange(product);
-    return min === max
-      ? `${min.toLocaleString("vi-VN")}đ`
-      : `${min.toLocaleString("vi-VN")}đ - ${max.toLocaleString("vi-VN")}đ`;
-  };
-
-  // =====================================================
-  // IMAGE PATH
-  // =====================================================
-
-  const getImageUrl = (filename?: string) => {
-    if (!filename) {
-      return "";
-    }
-
-    // URL đầy đủ
-    if (filename.startsWith("http://") || filename.startsWith("https://")) {
-      return filename;
-    }
-
-    return `/images/${filename}`;
-  };
 
   // =====================================================
   // RENDER
@@ -869,7 +1080,9 @@ const Products = () => {
       {saveMessage && (
         <Alert
           severity="success"
-          sx={{ mb: 2 }}
+          sx={{
+            mb: 2,
+          }}
           onClose={() => setSaveMessage("")}
         >
           {saveMessage}
@@ -879,7 +1092,9 @@ const Products = () => {
       {errorMessage && (
         <Alert
           severity="error"
-          sx={{ mb: 2 }}
+          sx={{
+            mb: 2,
+          }}
           onClose={() => setErrorMessage("")}
         >
           {errorMessage}
@@ -1098,6 +1313,7 @@ const Products = () => {
                           <Typography variant="caption" fontWeight={600}>
                             {getProductPrice(product)}
                           </Typography>
+
                           <Chip
                             size="small"
                             label={product.isVisible === false ? "Ẩn" : "Hiện"}
@@ -1304,6 +1520,56 @@ const Products = () => {
                       />
                     </Grid>
 
+                    {/* =================================================
+                        XE TƯƠNG THÍCH
+                    ================================================= */}
+
+                    <Grid
+                      size={{
+                        xs: 12,
+                      }}
+                    >
+                      <Autocomplete
+                        multiple
+                        freeSolo
+                        options={vehicleOptions}
+                        value={selectedProduct.compatibleVehicles || []}
+                        onChange={(_, newValue) => {
+                          changeCompatibleVehicles(newValue as string[]);
+                        }}
+                        filterSelectedOptions
+                        selectOnFocus
+                        clearOnBlur
+                        handleHomeEndKeys
+                        noOptionsText="Chưa có xe phù hợp"
+                        renderTags={(value, getTagProps) =>
+                          value.map((option, index) => (
+                            <Chip
+                              {...getTagProps({
+                                index,
+                              })}
+                              key={`${option}-${index}`}
+                              label={option}
+                              size="small"
+                            />
+                          ))
+                        }
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            fullWidth
+                            label="Xe tương thích"
+                            placeholder={
+                              selectedProduct.compatibleVehicles?.length
+                                ? "Thêm xe..."
+                                : "Tìm hoặc nhập tên xe..."
+                            }
+                            helperText="Tìm xe trong danh sách hoặc nhập xe mới. Có thể chọn nhiều xe."
+                          />
+                        )}
+                      />
+                    </Grid>
+
                     {/* TYPE */}
 
                     <Grid
@@ -1417,27 +1683,35 @@ const Products = () => {
                       />
                     </Grid>
 
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={selectedProduct?.isVisible !== false}
-                          onChange={(e) => {
-                            updateProductField("isVisible", e.target.checked);
-                          }}
-                        />
-                      }
-                      label={
-                        selectedProduct?.isVisible !== false
-                          ? "Đang hiển thị"
-                          : "Đang ẩn"
-                      }
-                    />
+                    {/* VISIBILITY */}
+
+                    <Grid
+                      size={{
+                        xs: 12,
+                      }}
+                    >
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={selectedProduct.isVisible !== false}
+                            onChange={(e) => {
+                              updateProductField("isVisible", e.target.checked);
+                            }}
+                          />
+                        }
+                        label={
+                          selectedProduct.isVisible !== false
+                            ? "Đang hiển thị"
+                            : "Đang ẩn"
+                        }
+                      />
+                    </Grid>
                   </Grid>
                 </Box>
 
                 {/* =================================================
-    VARIANTS
-================================================= */}
+                    VARIANTS
+                ================================================= */}
 
                 <Box mt={4}>
                   <Stack
@@ -1513,21 +1787,21 @@ const Products = () => {
                         variant="outlined"
                         sx={{
                           borderRadius: 2,
+
                           backgroundColor: "background.paper",
                         }}
                       >
                         <CardContent
                           sx={{
                             p: 1.5,
+
                             "&:last-child": {
                               pb: 1.5,
                             },
                           }}
                         >
                           <Grid container spacing={1.5} alignItems="center">
-                            {/* ====================
-                  PHÂN LOẠI
-              ==================== */}
+                            {/* PHÂN LOẠI */}
 
                             <Grid
                               size={{
@@ -1548,9 +1822,7 @@ const Products = () => {
                               />
                             </Grid>
 
-                            {/* ====================
-                  GIÁ BÁN
-              ==================== */}
+                            {/* GIÁ BÁN */}
 
                             <Grid
                               size={{
@@ -1584,9 +1856,7 @@ const Products = () => {
                               />
                             </Grid>
 
-                            {/* ====================
-                  GIÁ GỐC
-              ==================== */}
+                            {/* GIÁ GỐC */}
 
                             <Grid
                               size={{
@@ -1599,12 +1869,12 @@ const Products = () => {
                                 fullWidth
                                 size="small"
                                 label="Giá gốc"
-                                value={variant.defaultPrice ?? ""}
+                                value={formatVND(variant.defaultPrice)}
                                 onChange={(e) =>
                                   updateVariant(
                                     index,
                                     "defaultPrice",
-                                    e.target.value,
+                                    parsePrice(e.target.value),
                                   )
                                 }
                                 InputProps={{
@@ -1620,9 +1890,7 @@ const Products = () => {
                               />
                             </Grid>
 
-                            {/* ====================
-                  CÂN NẶNG
-              ==================== */}
+                            {/* CÂN NẶNG */}
 
                             <Grid
                               size={{
@@ -1636,14 +1904,16 @@ const Products = () => {
                                 size="small"
                                 type="number"
                                 label="Cân nặng"
-                                placeholder="0.12"
+                                placeholder="0.120"
                                 value={variant.weight ?? ""}
                                 onChange={(e) =>
                                   updateVariant(index, "weight", e.target.value)
                                 }
                                 inputProps={{
                                   min: 0,
+
                                   step: 0.001,
+
                                   inputMode: "decimal",
                                 }}
                                 InputProps={{
@@ -1656,9 +1926,7 @@ const Products = () => {
                               />
                             </Grid>
 
-                            {/* ====================
-                  SỐ LƯỢNG
-              ==================== */}
+                            {/* SỐ LƯỢNG */}
 
                             <Grid
                               size={{
@@ -1682,9 +1950,7 @@ const Products = () => {
                               />
                             </Grid>
 
-                            {/* ====================
-                  XÓA
-              ==================== */}
+                            {/* DELETE */}
 
                             <Grid
                               size={{
@@ -1694,7 +1960,9 @@ const Products = () => {
                               }}
                               sx={{
                                 display: "flex",
+
                                 justifyContent: "center",
+
                                 alignItems: "center",
                               }}
                             >
@@ -1703,8 +1971,11 @@ const Products = () => {
                                 onClick={() => deleteVariant(index)}
                                 sx={{
                                   border: "1px solid",
+
                                   borderColor: "error.light",
+
                                   width: 38,
+
                                   height: 38,
                                 }}
                               >
@@ -1717,6 +1988,7 @@ const Products = () => {
                     ))}
                   </Stack>
                 </Box>
+
                 {/* =================================================
                     DESCRIPTION
                 ================================================= */}
@@ -1785,10 +2057,15 @@ const Products = () => {
                           <Box
                             sx={{
                               width: "100%",
+
                               height: 220,
+
                               border: "1px solid #ddd",
+
                               borderRadius: 2,
+
                               overflow: "hidden",
+
                               backgroundColor: "#f5f5f5",
                             }}
                           >
@@ -1798,7 +2075,9 @@ const Products = () => {
                                 alt={selectedProduct.title}
                                 style={{
                                   width: "100%",
+
                                   height: "100%",
+
                                   objectFit: "contain",
                                 }}
                               />
@@ -1806,8 +2085,11 @@ const Products = () => {
                               <Box
                                 sx={{
                                   height: "100%",
+
                                   display: "flex",
+
                                   alignItems: "center",
+
                                   justifyContent: "center",
                                 }}
                               >
@@ -1848,9 +2130,13 @@ const Products = () => {
                           <Box
                             sx={{
                               mt: 0.5,
+
                               p: 1.5,
+
                               borderRadius: 1,
+
                               backgroundColor: "#f5f5f5",
+
                               wordBreak: "break-all",
                             }}
                           >
@@ -1919,10 +2205,15 @@ const Products = () => {
                                   <Box
                                     sx={{
                                       width: "100%",
+
                                       height: 100,
+
                                       border: "1px solid #ddd",
+
                                       borderRadius: 1,
+
                                       overflow: "hidden",
+
                                       backgroundColor: "#f5f5f5",
                                     }}
                                   >
@@ -1932,7 +2223,9 @@ const Products = () => {
                                         alt={`Ảnh ${index + 1}`}
                                         style={{
                                           width: "100%",
+
                                           height: "100%",
+
                                           objectFit: "contain",
                                         }}
                                       />
@@ -1940,9 +2233,13 @@ const Products = () => {
                                       <Box
                                         sx={{
                                           width: "100%",
+
                                           height: "100%",
+
                                           display: "flex",
+
                                           alignItems: "center",
+
                                           justifyContent: "center",
                                         }}
                                       >
@@ -2012,8 +2309,11 @@ const Products = () => {
                           <Box
                             sx={{
                               py: 4,
+
                               textAlign: "center",
+
                               border: "1px dashed #ccc",
+
                               borderRadius: 2,
                             }}
                           >
