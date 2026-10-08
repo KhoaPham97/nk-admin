@@ -34,7 +34,7 @@ import ImageIcon from "@mui/icons-material/Image";
 
 import { useLocation } from "react-router-dom";
 
-import { getRequest, patchRequest } from "../common/ApiMethod";
+import { getRequest, patchRequest, deleteRequest } from "../common/ApiMethod";
 
 // =====================================================
 // TYPES
@@ -508,7 +508,57 @@ const Products = () => {
       setLoading(false);
     }
   };
+  const deleteProduct = async () => {
+    if (!selectedProduct?._id) {
+      return;
+    }
 
+    const productId = selectedProduct._id;
+    const productTitle = selectedProduct.title || "sản phẩm này";
+
+    const confirmed = window.confirm(
+      `Bạn có chắc chắn muốn xóa "${productTitle}"?\n\nHành động này không thể hoàn tác.`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setSaving(true);
+      setSaveMessage("");
+      setErrorMessage("");
+
+      await deleteRequest({
+        url: `/products/${productId}`,
+      });
+
+      // Xóa khỏi danh sách hiện tại
+      setProducts((current) =>
+        current.filter((product) => product._id !== productId),
+      );
+
+      // Xóa sản phẩm đang chọn
+      setSelectedProduct(null);
+
+      setDirty(false);
+
+      // Cập nhật tổng
+      setTotal((current) => Math.max(current - 1, 0));
+
+      setSaveMessage(`Đã xóa sản phẩm "${productTitle}"`);
+    } catch (error: any) {
+      console.error("Delete product error:", error);
+
+      setErrorMessage(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Không thể xóa sản phẩm",
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
   // =====================================================
   // SELECT PRODUCT
   // =====================================================
@@ -1438,21 +1488,31 @@ const Products = () => {
                       ID: {selectedProduct._id}
                     </Typography>
                   </Box>
-
-                  <Button
-                    variant="contained"
-                    startIcon={
-                      saving ? (
-                        <CircularProgress size={18} color="inherit" />
-                      ) : (
-                        <SaveIcon />
-                      )
-                    }
-                    disabled={saving || !dirty}
-                    onClick={saveProduct}
-                  >
-                    {saving ? "Đang lưu..." : "Lưu thay đổi"}
-                  </Button>
+                  <Stack direction="row" spacing={1}>
+                    <Button
+                      variant="outlined"
+                      color="error"
+                      startIcon={<DeleteOutlineIcon />}
+                      disabled={saving}
+                      onClick={deleteProduct}
+                    >
+                      Xóa sản phẩm
+                    </Button>
+                    <Button
+                      variant="contained"
+                      startIcon={
+                        saving ? (
+                          <CircularProgress size={18} color="inherit" />
+                        ) : (
+                          <SaveIcon />
+                        )
+                      }
+                      disabled={saving || !dirty}
+                      onClick={saveProduct}
+                    >
+                      {saving ? "Đang lưu..." : "Lưu thay đổi"}
+                    </Button>
+                  </Stack>
                 </Stack>
 
                 <Divider />
@@ -2336,7 +2396,15 @@ const Products = () => {
                   alignItems="center"
                 >
                   {dirty && <Chip label="Chưa lưu" color="warning" />}
-
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    startIcon={<DeleteOutlineIcon />}
+                    disabled={saving}
+                    onClick={deleteProduct}
+                  >
+                    Xóa sản phẩm
+                  </Button>
                   <Button
                     variant="contained"
                     size="large"

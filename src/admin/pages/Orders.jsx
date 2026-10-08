@@ -125,7 +125,7 @@ const Orders = () => {
   // DATE FILTER - API
   // =====================================================
 
-  const [dateRange, setDateRange] = useState("all");
+  const [dateRange, setDateRange] = useState("today");
 
   const [page, setPage] = useState(1);
 
