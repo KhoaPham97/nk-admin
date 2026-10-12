@@ -1392,8 +1392,6 @@ const AdminSettings = () => {
                   e.preventDefault();
                   e.stopPropagation();
 
-                  console.log("CLICK ĐỔI MẬT KHẨU");
-
                   handleChangePassword();
                 }}
                 sx={{

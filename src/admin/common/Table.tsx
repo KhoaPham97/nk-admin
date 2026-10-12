@@ -112,7 +112,7 @@ export default function TableComponent(data: any) {
   }
   const handleClick = (event: any, id: never) => {
     const selectedIndex: any = selected.indexOf(id);
-    console.log("selectedIndex", selectedIndex);
+    
     let newSelected: any = [];
 
     if (selectedIndex === -1) {
@@ -224,7 +224,7 @@ export default function TableComponent(data: any) {
         .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
     [order, orderBy, page, rowsPerPage, data.row]
   );
-  console.log("visibleRows", visibleRows);
+  
 
   return (
     <div>
@@ -262,7 +262,7 @@ export default function TableComponent(data: any) {
                 let a: string = col[0]?.props?.value ?? "";
 
                 const isItemSelected: any = selected.includes(a);
-                console.log(
+                
                   "isItemSelected",
                   isItemSelected,
                   col[0]?.props?.value

@@ -272,8 +272,6 @@ const AnalyticsTracker = () => {
       }
 
       const result = await response.json();
-
-      console.log("📊 Analytics:", event, result);
     } catch (error) {
       console.error("Analytics error:", error);
     }

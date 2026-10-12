@@ -226,8 +226,6 @@ const Home: FC = () => {
         );
 
         setFeaturedProducts(normalizedProducts);
-
-        console.log("🔥 TOP SẢN PHẨM BÁN CHẠY:", normalizedProducts);
       } catch (error) {
         console.error("❌ Lỗi tải sản phẩm bán chạy:", error);
 

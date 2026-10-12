@@ -443,7 +443,7 @@ const Products = () => {
         params.search = search.trim();
       }
 
-      console.log("LOAD PRODUCTS:", params);
+      
 
       const res = await getRequest({
         url: "/products",
@@ -451,7 +451,7 @@ const Products = () => {
         params,
       });
 
-      console.log("PRODUCT RESPONSE:", res);
+      
 
       // =================================================
       // PRODUCTS
@@ -1003,26 +1003,26 @@ const Products = () => {
         qty: finalQty,
       };
 
-      console.log("====================================");
+      
 
-      console.log("SAVE PRODUCT:", productToSave);
+      
 
-      console.log("SAVE TYPE:", productToSave.type);
+      
 
-      console.log("SAVE PRICE:", productToSave.price);
+      
 
-      console.log("SAVE ORIGINAL PRICE:", productToSave.originalPrice);
+      
 
-      console.log(
+      
         "SAVE COMPATIBLE VEHICLES:",
         productToSave.compatibleVehicles,
       );
 
-      console.log("SAVE VARIANTS:", productToSave.variants);
+      
 
-      console.log("SAVE QTY:", productToSave.qty);
+      
 
-      console.log("====================================");
+      
 
       // =================================================
       // API

@@ -138,7 +138,7 @@ const InvoiceDetail = () => {
     try {
       setUpdatingStatus(true);
 
-      const response = await axios.patch(
+      const response = await axios.put(
         `${API_ENDPOINTS.ORDER}/${order._id}/status`,
         {
           status: newStatus,

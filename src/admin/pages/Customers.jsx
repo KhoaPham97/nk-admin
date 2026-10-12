@@ -760,8 +760,6 @@ const Customers = () => {
 
       const data = response?.data || {};
 
-      console.log("CUSTOMER ORDERS:", data);
-
       setCustomerOrders(
         Array.isArray(data.orders)
           ? data.orders

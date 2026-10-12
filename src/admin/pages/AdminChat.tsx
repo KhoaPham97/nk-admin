@@ -103,8 +103,6 @@ const AdminChat = () => {
 
       const response = await getAdminConversations(status);
 
-      console.log("ADMIN CONVERSATIONS:", response);
-
       const list = response?.conversations || [];
 
       setConversations(list);
@@ -145,11 +143,7 @@ const AdminChat = () => {
     try {
       setLoadingMessages(true);
 
-      console.log("LOAD CHAT MESSAGES:", conversationId);
-
       const response = await getMessages(conversationId);
-
-      console.log("CHAT MESSAGES RESPONSE:", response);
 
       const list = response?.messages || response?.data?.messages || [];
 
@@ -185,8 +179,6 @@ const AdminChat = () => {
   // =====================================================
 
   useEffect(() => {
-    console.log("ADMIN SOCKET URL:", CHAT_SOCKET_URL);
-
     const socket = io(CHAT_SOCKET_URL, {
       transports: ["websocket", "polling"],
       withCredentials: true,
@@ -202,16 +194,12 @@ const AdminChat = () => {
     // ===================================================
 
     socket.on("connect", () => {
-      console.log("✅ ADMIN SOCKET CONNECTED:", socket.id);
-
       const selected = selectedConversationRef.current;
 
       if (selected) {
         socket.emit("chat:join", {
           conversationId: selected._id,
         });
-
-        console.log("JOIN ROOM:", selected._id);
       }
     });
 
@@ -227,17 +215,13 @@ const AdminChat = () => {
     // DISCONNECT
     // ===================================================
 
-    socket.on("disconnect", (reason) => {
-      console.log("ADMIN SOCKET DISCONNECTED:", reason);
-    });
+    socket.on("disconnect", (reason) => {});
 
     // ===================================================
     // NEW MESSAGE
     // ===================================================
 
     socket.on("chat:new-message", (newMessage: ChatMessage) => {
-      console.log("📩 ADMIN NEW MESSAGE:", newMessage);
-
       const selected = selectedConversationRef.current;
 
       // -------------------------------------------------
@@ -324,8 +308,6 @@ const AdminChat = () => {
     // ===================================================
 
     socket.on("chat:conversation-updated", (data) => {
-      console.log("🔄 CHAT CONVERSATION UPDATED:", data);
-
       // QUAN TRỌNG:
       // Chỉ cập nhật STATE
       // Không gọi markChatRead()
@@ -442,8 +424,6 @@ const AdminChat = () => {
     // ===================================================
 
     socket.on("chat:closed", ({ conversationId }) => {
-      console.log("CHAT CLOSED:", conversationId);
-
       const selected = selectedConversationRef.current;
 
       if (selected?._id === conversationId) {
@@ -474,8 +454,6 @@ const AdminChat = () => {
     // ===================================================
 
     return () => {
-      console.log("DISCONNECT ADMIN SOCKET");
-
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
       }
@@ -492,8 +470,6 @@ const AdminChat = () => {
 
   const openConversation = async (conversation: ChatConversation) => {
     try {
-      console.log("OPEN CONVERSATION:", conversation._id);
-
       // Rời room cũ
       const oldConversation = selectedConversationRef.current;
 
@@ -516,8 +492,6 @@ const AdminChat = () => {
       socketRef.current?.emit("chat:join", {
         conversationId: conversation._id,
       });
-
-      console.log("ADMIN JOIN ROOM:", conversation._id);
 
       // Lấy lịch sử từ API
       const messageList = await loadMessages(conversation._id);
@@ -555,8 +529,6 @@ const AdminChat = () => {
           }
         : null;
 
-      console.log("MESSAGES LOADED:", messageList.length);
-
       scrollBottom();
     } catch (error: any) {
       console.error("OPEN CONVERSATION ERROR:", error?.response?.data || error);
@@ -588,8 +560,6 @@ const AdminChat = () => {
         senderId: adminId,
         message: text,
       });
-
-      console.log("ADMIN SEND RESPONSE:", response);
 
       // API trả về message
       // -> thêm ngay lên UI

@@ -130,15 +130,7 @@ const PaginatedProducts: FC<Props> = ({
   // DEBUG
   // =========================================================
 
-  useEffect(() => {
-    console.log("🟢 PaginatedProducts - products:", products);
-
-    console.log("📦 PaginatedProducts - normalized:", normalizedProducts);
-
-    console.log("👀 PaginatedProducts - visible:", visibleProducts);
-
-    console.log("📊 PaginatedProducts - count:", normalizedProducts.length);
-  }, [products, normalizedProducts, visibleProducts]);
+  useEffect(() => {}, [products, normalizedProducts, visibleProducts]);
 
   // =========================================================
   // LOADING

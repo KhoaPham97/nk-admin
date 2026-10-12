@@ -55,9 +55,9 @@ const ImportCategory = () => {
           setData(res.categorys);
         });
         // const json = await response.json();
-        // console.log(json);
+        // 
       } catch (error) {
-        console.log("error: " + error);
+        
       }
     };
 
@@ -65,7 +65,7 @@ const ImportCategory = () => {
   }, []);
   const renderField = (fldName: any, i: any, o: any, k: any) => {
     let fld: any = "";
-    console.log(o.stt);
+    
     switch (fldName) {
       case "stt":
         fld = o.stt?.length > 0 ? o.stt : i + 1;
@@ -84,7 +84,7 @@ const ImportCategory = () => {
               accept="image/*, .heic"
               onChange={async (e: any) => {
                 let cloneData: any = [...data];
-                console.log(e.target.files[0]);
+                
                 const result = await toBase64(e.target.files[0]);
                 cloneData[i].image = result;
                 setData(cloneData);
@@ -93,7 +93,7 @@ const ImportCategory = () => {
             <InputFileUpload
               onChange={async (e: any) => {
                 let cloneData: any = [...data];
-                console.log(e.target.files[0]);
+                
                 const result = await toBase64(e.target.files[0]);
                 cloneData[i].image = result;
                 setData(cloneData);
@@ -177,7 +177,7 @@ const ImportCategory = () => {
         <button
           style={{ marginLeft: "20px" }}
           className="btn btn-secondary float-end mt-2 mb-2"
-          onClick={() => console.log(data)}
+          onClick={() => 
         >
           Thêm
         </button>
@@ -201,7 +201,7 @@ const ImportCategory = () => {
             }
           });
           patchRequest({ url: "/category", data: clone });
-          console.log(clone, selected);
+          
         }}
         row={renderRows()}
         dataList={data}

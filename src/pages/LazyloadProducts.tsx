@@ -32,22 +32,16 @@ function LazyloadProducts() {
   const loadProducts = async (pageNumber: number) => {
     // Đang gọi API thì không gọi lần nữa
     if (loadingRef.current) {
-      console.log("⛔ Đang loading");
       return;
     }
 
     // Hết sản phẩm
     if (!hasMoreRef.current) {
-      console.log("⛔ Hết sản phẩm");
       return;
     }
 
     loadingRef.current = true;
     setLoading(true);
-
-    console.log("🔥 LOAD API");
-    console.log("Type:", typeRef.current);
-    console.log("Page:", pageNumber);
 
     try {
       const res = await axios.get(API_ENDPOINTS.PRODUCTS, {
@@ -60,10 +54,6 @@ function LazyloadProducts() {
 
       const newProducts = res.data.products || [];
       const pagination = res.data.pagination;
-
-      console.log("📦 Số sản phẩm:", newProducts.length);
-      console.log("📄 Page:", pageNumber);
-      console.log("➡️ HasMore:", pagination?.hasMore);
 
       // Không bị duplicate
       setProducts((prev) => {
@@ -109,14 +99,9 @@ function LazyloadProducts() {
 
     const rect = element.getBoundingClientRect();
 
-    console.log("📏 Sentinel top:", rect.top);
-    console.log("🖥️ Window height:", window.innerHeight);
-
     // Sentinel đang nằm gần viewport
     if (rect.top <= window.innerHeight + 500) {
       const nextPage = pageRef.current + 1;
-
-      console.log("🚀 AUTO LOAD:", nextPage);
 
       loadProducts(nextPage);
     }
@@ -131,13 +116,10 @@ function LazyloadProducts() {
     // StrictMode chạy effect 2 lần
     // Lần thứ 2 sẽ bị chặn ở đây
     if (initializedTypeRef.current === type) {
-      console.log("🛑 Bỏ qua StrictMode:", type);
       return;
     }
 
     initializedTypeRef.current = type;
-
-    console.log("🟢 INIT TYPE:", type);
 
     setProducts([]);
 
@@ -163,21 +145,15 @@ function LazyloadProducts() {
       (entries) => {
         if (!entries[0].isIntersecting) return;
 
-        console.log("👀 Sentinel visible");
-
         if (loadingRef.current) {
-          console.log("⛔ Đang loading");
           return;
         }
 
         if (!hasMoreRef.current) {
-          console.log("⛔ Hết sản phẩm");
           return;
         }
 
         const nextPage = pageRef.current + 1;
-
-        console.log("🚀 INTERSECTION LOAD:", nextPage);
 
         loadProducts(nextPage);
       },

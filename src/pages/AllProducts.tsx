@@ -54,24 +54,16 @@ const AllProducts: FC = () => {
     async (pageNumber: number) => {
       // Đang loading
       if (loadingRef.current) {
-        console.log("⛔ Đang loading");
         return;
       }
 
       // Hết sản phẩm
       if (!hasMoreRef.current && pageNumber !== 1) {
-        console.log("⛔ Hết sản phẩm");
         return;
       }
 
       loadingRef.current = true;
       setLoading(true);
-
-      console.log("=================================");
-      console.log("🔥 LOAD PRODUCTS");
-      console.log("📄 Page:", pageNumber);
-      console.log("🏷️ Type:", productType);
-      console.log("=================================");
 
       try {
         const res = await axios.get(API_ENDPOINTS.PRODUCTS, {
@@ -81,8 +73,6 @@ const AllProducts: FC = () => {
             limit: 15,
           },
         });
-
-        console.log("📥 API RESPONSE:", res.data);
 
         // =====================================================
         // LẤY PRODUCTS
@@ -119,13 +109,6 @@ const AllProducts: FC = () => {
               : typeof res.data?.pagination?.totalPages === "number"
                 ? pageNumber < res.data.pagination.totalPages
                 : newProducts.length >= 15;
-
-        console.log("📦 Products nhận được:", newProducts.length);
-        console.log("📄 Page:", pageNumber);
-        console.log("🏷️ Type:", productType);
-        console.log("➡️ hasMore:", nextHasMore);
-        console.log("📊 Total:", res.data?.pagination?.total);
-        console.log("📊 Total pages:", res.data?.pagination?.totalPages);
 
         // =====================================================
         // MERGE PRODUCT
@@ -213,13 +196,8 @@ const AllProducts: FC = () => {
 
     const rect = element.getBoundingClientRect();
 
-    console.log("📏 Sentinel top:", rect.top);
-    console.log("🖥️ Window height:", window.innerHeight);
-
     if (rect.top <= window.innerHeight + 500) {
       const nextPage = pageRef.current + 1;
-
-      console.log("🚀 AUTO LOAD PAGE:", nextPage);
 
       loadProducts(nextPage);
     }
@@ -231,14 +209,10 @@ const AllProducts: FC = () => {
 
   useEffect(() => {
     if (initializedRef.current) {
-      console.log("🛑 Bỏ qua lần render thứ 2");
       return;
     }
 
     initializedRef.current = true;
-
-    console.log("🟢 INIT PRODUCTS");
-    console.log("🏷️ TYPE:", productType);
 
     // Reset
     setProducts([]);
@@ -279,22 +253,15 @@ const AllProducts: FC = () => {
           return;
         }
 
-        console.log("👀 SENTINEL VISIBLE");
-
         if (loadingRef.current) {
-          console.log("⛔ Đang loading");
           return;
         }
 
         if (!hasMoreRef.current) {
-          console.log("⛔ Hết sản phẩm");
           return;
         }
 
         const nextPage = pageRef.current + 1;
-
-        console.log("🚀 INTERSECTION LOAD:", nextPage);
-        console.log("🏷️ TYPE:", productType);
 
         loadProducts(nextPage);
       },

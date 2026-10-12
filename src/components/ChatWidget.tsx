@@ -190,8 +190,6 @@ const ChatWidget: FC<ChatWidgetProps> = ({ customerId, customer, product }) => {
 
       const response = await getOrCreateConversation(finalCustomerId, product);
 
-      console.log("CHAT CONVERSATION:", response);
-
       const conversation = response?.conversation;
 
       if (!conversation?._id) {
@@ -201,8 +199,6 @@ const ChatWidget: FC<ChatWidgetProps> = ({ customerId, customer, product }) => {
       setConversationId(conversation._id);
 
       const messageResponse = await getMessages(conversation._id);
-
-      console.log("CHAT MESSAGES:", messageResponse);
 
       const list = messageResponse?.messages || [];
 
@@ -240,8 +236,6 @@ const ChatWidget: FC<ChatWidgetProps> = ({ customerId, customer, product }) => {
   // ======================================================
 
   useEffect(() => {
-    console.log("CUSTOMER SOCKET URL:", CHAT_SOCKET_URL);
-
     const socket = io(CHAT_SOCKET_URL, {
       transports: ["websocket", "polling"],
       withCredentials: true,
@@ -255,8 +249,6 @@ const ChatWidget: FC<ChatWidgetProps> = ({ customerId, customer, product }) => {
     // ----------------------------------------------------
 
     socket.on("connect", () => {
-      console.log("✅ CUSTOMER SOCKET CONNECTED:", socket.id);
-
       if (conversationId) {
         socket.emit("chat:join", {
           conversationId,
@@ -277,8 +269,6 @@ const ChatWidget: FC<ChatWidgetProps> = ({ customerId, customer, product }) => {
     // ----------------------------------------------------
 
     socket.on("chat:new-message", (newMessage: ChatMessage) => {
-      console.log("📩 CUSTOMER NEW MESSAGE:", newMessage);
-
       if (newMessage.conversationId !== conversationId) {
         return;
       }
@@ -366,8 +356,6 @@ const ChatWidget: FC<ChatWidgetProps> = ({ customerId, customer, product }) => {
       socketRef.current.emit("chat:join", {
         conversationId,
       });
-
-      console.log("CUSTOMER JOIN ROOM:", conversationId);
     }
   }, [conversationId]);
 
@@ -401,8 +389,6 @@ const ChatWidget: FC<ChatWidgetProps> = ({ customerId, customer, product }) => {
 
         product: product || {},
       });
-
-      console.log("CUSTOMER SEND RESPONSE:", response);
 
       // API thành công ->
       // hiện ngay trên màn hình

@@ -90,8 +90,6 @@ export default function Categories() {
         url: "/categorys",
       });
 
-      console.log("CATEGORY RESPONSE:", res);
-
       // API:
       // {
       //   categorys: [...]

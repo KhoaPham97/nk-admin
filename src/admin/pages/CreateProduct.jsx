@@ -466,15 +466,11 @@ export default function CreateProduct() {
         })),
       };
 
-      console.log("CREATE PRODUCT PAYLOAD:", payload);
-
       // ===================================================
       // API CREATE
       // ===================================================
 
       const response = await axios.post(API_URL.PRODUCTS, payload);
-
-      console.log("Create product:", response.data);
 
       alert("Thêm sản phẩm thành công!");
 

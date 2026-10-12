@@ -271,7 +271,7 @@ const Orders = () => {
       // ================================================= // STATUS // ================================================= if (status !== "all") { params.status = status; } // ================================================= // DATE FILTER // BE nhận: // fromDate=YYYY-MM-DD // toDate=YYYY-MM-DD // =================================================
       const dateParams = getDateParams(dateRange);
       Object.assign(params, dateParams);
-      console.log("LOAD ORDERS PARAMS:", params); // ================================================= // CALL API // =================================================
+
       const response = await axios.get(API_ENDPOINTS.ORDER, {
         ...getAuthConfig(),
         params,

@@ -429,8 +429,6 @@ const VehicleProductSearch: React.FC = () => {
   // ======================================================
 
   const handleProductClick = (product: Product) => {
-    console.log("Product:", product);
-
     /*
      * Nếu có route chi tiết:
      *

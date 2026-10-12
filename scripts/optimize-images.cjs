@@ -48,7 +48,7 @@ async function optimizeImage(filePath) {
     // 1. ẢNH ĐÃ NHỎ → BỎ QUA NGAY
     // ==========================================
     if (before <= MAX_FILE_SIZE) {
-      console.log(
+      
         `○ ${path.basename(filePath)} | ` +
           `${(before / 1024).toFixed(1)} KB | bỏ qua`,
       );
@@ -82,7 +82,7 @@ async function optimizeImage(filePath) {
 
       await fs.promises.rename(tempPath, filePath);
 
-      console.log(
+      
         `✓ ${path.basename(filePath)} | ` +
           `${(before / 1024).toFixed(1)} KB → ` +
           `${(after / 1024).toFixed(1)} KB`,
@@ -91,7 +91,7 @@ async function optimizeImage(filePath) {
       // File optimize không nhỏ hơn → giữ nguyên
       await fs.promises.rm(tempPath);
 
-      console.log(
+      
         `- ${path.basename(filePath)} | ` +
           `${(before / 1024).toFixed(1)} KB → ` +
           `${(after / 1024).toFixed(1)} KB | giữ nguyên`,
@@ -108,18 +108,18 @@ async function optimizeImage(filePath) {
 }
 
 async function main() {
-  console.log("");
-  console.log("======================================");
-  console.log("   NHAT KHANG BIKE IMAGE OPTIMIZER");
-  console.log("======================================");
-  console.log("");
+  
+  
+  
+  
+  
 
-  console.log(`Thư mục: ${IMAGE_DIR}`);
-  console.log(`Bỏ qua ảnh ≤ ${(MAX_FILE_SIZE / 1024).toFixed(0)} KB`);
-  console.log(`Max size: ${MAX_WIDTH}x${MAX_HEIGHT}`);
-  console.log(`JPEG quality: ${QUALITY}`);
+  
+  
+  
+  
 
-  console.log("");
+  
 
   if (!fs.existsSync(IMAGE_DIR)) {
     console.error("❌ Không tìm thấy thư mục:");
@@ -135,18 +135,18 @@ async function main() {
     return ext === ".jpg" || ext === ".jpeg";
   });
 
-  console.log(`Tìm thấy ${images.length} ảnh JPG/JPEG`);
-  console.log("");
+  
+  
 
   for (const image of images) {
     await optimizeImage(image);
   }
 
-  console.log("");
-  console.log("======================================");
-  console.log("              HOÀN THÀNH");
-  console.log("======================================");
-  console.log("");
+  
+  
+  
+  
+  
 }
 
 main();

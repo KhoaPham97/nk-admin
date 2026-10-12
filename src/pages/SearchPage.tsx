@@ -155,8 +155,6 @@ const SearchPage: FC = () => {
       setNotFound(false);
 
       try {
-        console.log("🔎 Searching:", query);
-
         // =====================================================
         // SEARCH PRODUCTS
         // =====================================================
@@ -171,8 +169,6 @@ const SearchPage: FC = () => {
 
         const productsDataResponse = await productsResponse.json();
 
-        console.log("📦 Product search response:", productsDataResponse);
-
         const allProducts = getProductsFromResponse(productsDataResponse);
 
         const normalizedQuery = query.toLowerCase();
@@ -182,8 +178,6 @@ const SearchPage: FC = () => {
 
           return searchText.includes(normalizedQuery);
         });
-
-        console.log("📦 Products found:", matchedProducts.length);
 
         if (cancelled) return;
 
@@ -218,8 +212,6 @@ const SearchPage: FC = () => {
 
         const categoriesDataResponse = await categoriesResponse.json();
 
-        console.log("📂 Category response:", categoriesDataResponse);
-
         const allCategories = getCategoriesFromResponse(categoriesDataResponse);
 
         const matchedCategories = allCategories.filter((category: Category) => {
@@ -235,8 +227,6 @@ const SearchPage: FC = () => {
 
           return categoryText.includes(normalizedQuery);
         });
-
-        console.log("📂 Categories found:", matchedCategories.length);
 
         if (cancelled) return;
 

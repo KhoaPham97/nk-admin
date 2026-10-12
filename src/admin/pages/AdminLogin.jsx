@@ -102,8 +102,6 @@ const AdminLogin = () => {
 
       const data = response?.data;
 
-      console.log("LOGIN RESPONSE:", data);
-
       // =================================================
       // CHECK RESPONSE
       // =================================================

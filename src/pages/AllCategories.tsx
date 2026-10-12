@@ -121,8 +121,6 @@ const AllCategories: FC = () => {
 
         const data = await response.json();
 
-        console.log("📦 Categories:", data);
-
         dispatch(addCategories(data.categorys || []));
       } catch (error) {
         console.error("❌ Lỗi lấy danh mục:", error);

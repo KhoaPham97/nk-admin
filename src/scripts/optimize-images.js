@@ -65,7 +65,7 @@ async function optimizeImage(filePath) {
 
       await fs.promises.rename(tempPath, filePath);
 
-      console.log(
+      
         `✓ ${path.basename(filePath)} | ` +
           `${(before / 1024).toFixed(1)} KB → ` +
           `${(after / 1024).toFixed(1)} KB`,
@@ -73,7 +73,7 @@ async function optimizeImage(filePath) {
     } else {
       await fs.promises.rm(tempPath);
 
-      console.log(`- ${path.basename(filePath)} | giữ nguyên`);
+      
     }
   } catch (error) {
     console.error(`✗ ${filePath}`);
@@ -86,14 +86,14 @@ async function optimizeImage(filePath) {
 }
 
 async function main() {
-  console.log("");
-  console.log("======================================");
-  console.log("     NHAT KHANG BIKE IMAGE OPTIMIZER");
-  console.log("======================================");
-  console.log("");
+  
+  
+  
+  
+  
 
-  console.log(`Thư mục: ${IMAGE_DIR}`);
-  console.log("");
+  
+  
 
   try {
     await fs.promises.access(IMAGE_DIR);
@@ -111,18 +111,18 @@ async function main() {
     return ext === ".jpg" || ext === ".jpeg";
   });
 
-  console.log(`Tìm thấy ${images.length} ảnh JPG/JPEG`);
-  console.log("");
+  
+  
 
   for (const image of images) {
     await optimizeImage(image);
   }
 
-  console.log("");
-  console.log("======================================");
-  console.log("              HOÀN THÀNH");
-  console.log("======================================");
-  console.log("");
+  
+  
+  
+  
+  
 }
 
 main();

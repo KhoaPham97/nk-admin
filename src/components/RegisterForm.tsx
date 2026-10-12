@@ -98,7 +98,7 @@ const RegisterForm: FC = () => {
        * setSuccess(true);
        */
 
-      console.log({
+      
         fullName,
         phone,
         email,
