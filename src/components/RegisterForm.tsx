@@ -98,13 +98,6 @@ const RegisterForm: FC = () => {
        * setSuccess(true);
        */
 
-      
-        fullName,
-        phone,
-        email,
-        password,
-      });
-
       setSuccess(true);
     } catch (error: any) {
       console.error(error);

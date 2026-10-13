@@ -27,6 +27,7 @@ import ProductPricing from "./pages/ProductPricing";
 
 import Images from "./pages/Images";
 import Vehicles from "./pages/Vehicles";
+import CustomerPurchaseStats from "./pages/CustomerPurchaseStats";
 
 export default function BasicExample() {
   return (
@@ -120,6 +121,10 @@ export default function BasicExample() {
           ======================================== */}
 
           <Route path="images" element={<Images />} />
+          <Route
+            path="customer-purchase-stats"
+            element={<CustomerPurchaseStats />}
+          />
         </Route>
       </Route>
     </Routes>

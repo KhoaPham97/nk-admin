@@ -25,6 +25,7 @@ import ChatIcon from "@mui/icons-material/Chat";
 import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
 import ImageIcon from "@mui/icons-material/Image";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
+import PeopleAltOutlined from "@mui/icons-material/PeopleAltOutlined";
 
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -177,7 +178,11 @@ const AdminSidebar = ({
           path: "/admin/orders/create",
           icon: <AddShoppingCartIcon />,
         },
-
+        {
+          label: "Thống kê khách hàng",
+          path: "/admin/customer-purchase-stats",
+          icon: <PeopleAltOutlined />,
+        },
         {
           label: "Khách hàng",
           icon: <PeopleIcon />,

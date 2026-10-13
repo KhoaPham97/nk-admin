@@ -443,15 +443,11 @@ const Products = () => {
         params.search = search.trim();
       }
 
-      
-
       const res = await getRequest({
         url: "/products",
 
         params,
       });
-
-      
 
       // =================================================
       // PRODUCTS
@@ -1002,27 +998,6 @@ const Products = () => {
 
         qty: finalQty,
       };
-
-      
-
-      
-
-      
-
-      
-
-      
-
-      
-        "SAVE COMPATIBLE VEHICLES:",
-        productToSave.compatibleVehicles,
-      );
-
-      
-
-      
-
-      
 
       // =================================================
       // API
