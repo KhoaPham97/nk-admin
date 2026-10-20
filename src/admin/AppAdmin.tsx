@@ -28,6 +28,7 @@ import ProductPricing from "./pages/ProductPricing";
 import Images from "./pages/Images";
 import Vehicles from "./pages/Vehicles";
 import CustomerPurchaseStats from "./pages/CustomerPurchaseStats";
+import ProductQuotePage from "../quotes/QuoteImage";
 
 export default function BasicExample() {
   return (
@@ -48,83 +49,62 @@ export default function BasicExample() {
         <Route path="/admin" element={<AdminLayout />}>
           {/* DASHBOARD */}
           <Route index element={<Dashboard />} />
-
           {/* ========================================
               PRODUCTS
           ======================================== */}
-
           <Route path="products" element={<Products />} />
           <Route path="products/bicycle" element={<Products />} />
           <Route path="products/electric" element={<Products />} />
           <Route path="products/tricycle" element={<Products />} />
           <Route path="products/create" element={<CreateProduct />} />
-
           <Route path="products-pricing" element={<ProductPricing />} />
-
           {/* ========================================
               VEHICLES
           ======================================== */}
-
           <Route path="vehicles" element={<Vehicles />} />
-
           {/* ========================================
               CATEGORY
           ======================================== */}
-
           <Route path="categories" element={<Categories />} />
-
           {/* ========================================
               CUSTOMERS
           ======================================== */}
-
           <Route path="customers" element={<Customers />} />
           <Route path="customers/:id" element={<CustomerDetail />} />
-
           {/* ========================================
               ORDERS
           ======================================== */}
-
           <Route path="orders" element={<Orders />} />
           <Route path="orders/create" element={<CreateOrder />} />
-
           {/* ========================================
               INVOICE
           ======================================== */}
-
           <Route path="invoices/:id" element={<InvoiceDetail />} />
-
           {/* ========================================
               INVENTORY
           ======================================== */}
-
           <Route path="inventory" element={<Inventory />} />
           <Route path="inventory/import" element={<InventoryImport />} />
-
           <Route path="inventory-history" element={<InventoryHistory />} />
-
           <Route path="inventory-receipts" element={<InventoryReceipts />} />
-
           {/* ========================================
               SETTINGS
           ======================================== */}
-
           <Route path="settings" element={<AdminSettings />} />
-
           {/* ========================================
               CHAT
           ======================================== */}
-
           <Route path="chat" element={<AdminChat />} />
-
           {/* ========================================
               IMAGES
           ======================================== */}
-
           <Route path="images" element={<Images />} />
           <Route
             path="customer-purchase-stats"
             element={<CustomerPurchaseStats />}
           />
+          // Bên trong Routes
+          <Route path="/admin/product-quote" element={<ProductQuotePage />} />
         </Route>
       </Route>
     </Routes>

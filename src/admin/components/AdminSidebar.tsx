@@ -188,6 +188,11 @@ const AdminSidebar = ({
           icon: <PeopleIcon />,
           path: "/admin/customers",
         },
+        {
+          label: "Báo giá",
+          icon: <PeopleIcon />,
+          path: "/admin/product-quote",
+        },
       ],
     },
 
