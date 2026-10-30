@@ -58,6 +58,7 @@ const emptyVariant = () => ({
   price: "",
   qty: 0,
   weight: "",
+  packageQuantity: 1,
 });
 
 // =========================================================
@@ -327,6 +328,14 @@ export default function CreateProduct() {
           return false;
         }
 
+        if (
+          !Number.isInteger(Number(variant.packageQuantity)) ||
+          Number(variant.packageQuantity) < 1
+        ) {
+          alert(`Số lượng/kiện dòng ${i + 1} phải là số nguyên lớn hơn 0`);
+          return false;
+        }
+
         if (Number(variant.price || 0) < 0) {
           alert(`Giá phân loại dòng ${i + 1} không hợp lệ`);
 
@@ -456,6 +465,7 @@ export default function CreateProduct() {
           price: String(variant.price || "0"),
           defaultPrice: String(variant.defaultPrice || "0"),
           qty: Number(variant.qty || 0),
+          packageQuantity: Number(variant.packageQuantity),
           // Cân nặng KG
           weight:
             variant.weight === "" ||
@@ -998,7 +1008,7 @@ export default function CreateProduct() {
 
                   {/* SỐ LƯỢNG */}
 
-                  <Grid item xs={10} sm={5} md={1.5}>
+                  <Grid item xs={12} sm={6} md={1.5}>
                     <TextField
                       fullWidth
                       size="small"
@@ -1011,6 +1021,32 @@ export default function CreateProduct() {
                       inputProps={{
                         min: 0,
                       }}
+                    />
+                  </Grid>
+
+                  {/* SỐ LƯỢNG SẢN PHẨM TRÊN MỖI KIỆN */}
+                  <Grid item xs={12} sm={6} md={2}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      type="number"
+                      label="SL/kiện"
+                      value={variant.packageQuantity ?? 1}
+                      onChange={(e) =>
+                        updateVariant(index, "packageQuantity", e.target.value)
+                      }
+                      inputProps={{ min: 1, step: 1 }}
+                      error={
+                        !Number.isInteger(Number(variant.packageQuantity)) ||
+                        Number(variant.packageQuantity) < 1
+                      }
+                      helperText={(() => {
+                        const perPackage = Number(variant.packageQuantity);
+                        const qty = Number(variant.qty) || 0;
+                        if (!Number.isInteger(perPackage) || perPackage < 1)
+                          return "Nhập số nguyên ≥ 1";
+                        return `${Math.floor(qty / perPackage)} kiện + ${qty % perPackage} cái lẻ`;
+                      })()}
                     />
                   </Grid>
 

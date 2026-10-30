@@ -54,6 +54,8 @@ interface Variant {
 
   weight: number | string;
 
+  packageQuantity?: number | string;
+
   [key: string]: any;
 }
 
@@ -278,6 +280,11 @@ const Products = () => {
           qty: normalizeNumber(variant.qty),
 
           weight: normalizeNumber(variant.weight),
+
+          packageQuantity:
+            variant.packageQuantity == null
+              ? 1
+              : normalizeNumber(variant.packageQuantity),
         }))
       : [];
 
@@ -623,7 +630,13 @@ const Products = () => {
 
   const updateVariant = (
     index: number,
-    field: "name" | "price" | "defaultPrice" | "qty" | "weight",
+    field:
+      | "name"
+      | "price"
+      | "defaultPrice"
+      | "qty"
+      | "weight"
+      | "packageQuantity",
     value: string,
   ) => {
     if (!selectedProduct) {
@@ -677,6 +690,7 @@ const Products = () => {
         qty: "",
 
         weight: "",
+        packageQuantity: 1,
       },
     ];
 
@@ -864,6 +878,19 @@ const Products = () => {
       return;
     }
 
+    const invalidPackageIndex = (selectedProduct.variants || []).findIndex(
+      (variant) =>
+        !Number.isSafeInteger(Number(variant.packageQuantity)) ||
+        Number(variant.packageQuantity) < 1 ||
+        variant.packageQuantity === "",
+    );
+    if (invalidPackageIndex !== -1) {
+      setErrorMessage(
+        `SL/kiện ở phân loại ${invalidPackageIndex + 1} phải là số nguyên lớn hơn 0`,
+      );
+      return;
+    }
+
     try {
       setSaving(true);
 
@@ -925,6 +952,8 @@ const Products = () => {
           variant.weight === undefined
             ? 0
             : Number(variant.weight) || 0,
+
+        packageQuantity: Number(variant.packageQuantity),
       }));
 
       // =================================================
@@ -1975,6 +2004,56 @@ const Products = () => {
                                   min: 0,
                                 }}
                               />
+                            </Grid>
+
+                            {/* SỐ LƯỢNG TRONG MỖI KIỆN */}
+
+                            <Grid size={{ xs: 6, sm: 3, md: 2 }}>
+                              <TextField
+                                fullWidth
+                                size="small"
+                                type="number"
+                                label="SL/kiện"
+                                value={variant.packageQuantity ?? 1}
+                                onChange={(e) =>
+                                  updateVariant(
+                                    index,
+                                    "packageQuantity",
+                                    e.target.value,
+                                  )
+                                }
+                                inputProps={{ min: 1, step: 1 }}
+                                error={
+                                  variant.packageQuantity === "" ||
+                                  !Number.isSafeInteger(
+                                    Number(variant.packageQuantity),
+                                  ) ||
+                                  Number(variant.packageQuantity) < 1
+                                }
+                                helperText="Sản phẩm/kiện"
+                              />
+                            </Grid>
+
+                            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                              >
+                                {(() => {
+                                  const qty = Number(variant.qty) || 0;
+                                  const perPackage = Number(
+                                    variant.packageQuantity,
+                                  );
+                                  if (
+                                    !Number.isSafeInteger(perPackage) ||
+                                    perPackage < 1 ||
+                                    qty < 0
+                                  ) {
+                                    return "Quy cách kiện chưa hợp lệ";
+                                  }
+                                  return `${Math.floor(qty / perPackage)} kiện + ${qty % perPackage} cái lẻ`;
+                                })()}
+                              </Typography>
                             </Grid>
 
                             {/* DELETE */}

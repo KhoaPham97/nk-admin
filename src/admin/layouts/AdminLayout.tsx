@@ -3,11 +3,13 @@ import { Box, useMediaQuery, useTheme } from "@mui/material";
 import { Outlet } from "react-router-dom";
 import AdminSidebar from "../components/AdminSidebar";
 import AdminHeader from "../components/AdminHeader";
+import { useAuthSession } from "../../hooks/useAuthSession";
 
 const DRAWER_WIDTH = 260;
 const HEADER_HEIGHT = 64;
 
 const AdminLayout = () => {
+  useAuthSession();
   const theme = useTheme();
 
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));

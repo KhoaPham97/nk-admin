@@ -67,7 +67,7 @@ const CreateOrder = () => {
   // =========================================================
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedVariant, setSelectedVariant] = useState("");
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState(0);
 
   // =========================================================
   // ORDER ITEMS
@@ -171,6 +171,15 @@ const CreateOrder = () => {
       : [];
   }, [selectedProduct]);
 
+  // Quy cách đóng kiện của phân loại đang chọn.
+  const currentPackageQuantity = useMemo(() => {
+    const variant = variants.find(
+      (item) => String(item.name).trim() === String(selectedVariant).trim(),
+    );
+    const count = Number(variant?.packageQuantity);
+    return Number.isInteger(count) && count > 0 ? count : 1;
+  }, [variants, selectedVariant]);
+
   // =========================================================
   // CURRENT PRODUCT PRICE
   // =========================================================
@@ -214,7 +223,7 @@ const CreateOrder = () => {
   // =========================================================
   const handleSelectProduct = (_, value) => {
     setSelectedProduct(value);
-    setQuantity(1);
+    setQuantity(0);
 
     // Tự động chọn phân loại đầu tiên
     if (
@@ -231,6 +240,19 @@ const CreateOrder = () => {
 
     // Giữ ô search gọn sau khi chọn
     setProductSearch("");
+  };
+
+  // Cộng thêm đúng 1 kiện vào số lượng đang chọn.
+  const handleAddOnePackage = () => {
+    if (!selectedProduct || variants.length === 0) return;
+    const nextQty = getNumber(quantity) + currentPackageQuantity;
+    if (nextQty > currentStock) {
+      alert(
+        `Không đủ tồn kho: 1 kiện có ${currentPackageQuantity} cái, hiện còn ${currentStock} cái.`,
+      );
+      return;
+    }
+    setQuantity(nextQty);
   };
 
   // =========================================================
@@ -305,7 +327,7 @@ const CreateOrder = () => {
 
     setSelectedProduct(null);
     setSelectedVariant("");
-    setQuantity(1);
+    setQuantity(0);
   };
 
   // =========================================================
@@ -355,7 +377,10 @@ const CreateOrder = () => {
   const totalAmount = useMemo(() => {
     return Math.max(0, subtotal - getNumber(discount) + getNumber(shippingFee));
   }, [subtotal, discount, shippingFee]);
-
+  // Tự động cập nhật số tiền đã thanh toán bằng tổng tiền
+  useEffect(() => {
+    setPaidAmount(totalAmount);
+  }, [totalAmount]);
   const debt = useMemo(() => {
     return Math.max(0, totalAmount - getNumber(paidAmount));
   }, [totalAmount, paidAmount]);
@@ -743,7 +768,10 @@ const CreateOrder = () => {
                       fullWidth
                       label="Phân loại"
                       value={selectedVariant}
-                      onChange={(e) => setSelectedVariant(e.target.value)}
+                      onChange={(e) => {
+                        setSelectedVariant(e.target.value);
+                        setQuantity(0);
+                      }}
                       disabled={!selectedProduct || variants.length === 0}
                     >
                       {variants.length === 0 ? (
@@ -770,7 +798,12 @@ const CreateOrder = () => {
                                 color="text.secondary"
                               >
                                 {formatMoney(variant.price)} · Còn{" "}
-                                {getNumber(variant.qty)}
+                                {getNumber(variant.qty)} ·{" "}
+                                {Math.max(
+                                  1,
+                                  Number(variant.packageQuantity) || 1,
+                                )}{" "}
+                                cái/kiện
                               </Typography>
                             </Box>
                           </MenuItem>
@@ -797,8 +830,8 @@ const CreateOrder = () => {
                         let number = Number(value);
 
                         // Không cho số âm
-                        if (number < 1) {
-                          number = 1;
+                        if (number < 0) {
+                          number = 0;
                         }
 
                         // Không vượt quá tồn kho
@@ -809,7 +842,7 @@ const CreateOrder = () => {
                         setQuantity(number);
                       }}
                       inputProps={{
-                        min: 1,
+                        min: 0,
                         max: currentStock > 0 ? currentStock : undefined,
                       }}
                       disabled={!selectedProduct}
@@ -833,6 +866,39 @@ const CreateOrder = () => {
                     </Button>
                   </Grid>
                 </Grid>
+
+                {/* NÚT CỘNG 1 KIỆN VÀ THÀNH TIỀN DỰ KIẾN */}
+                {selectedProduct && variants.length > 0 && (
+                  <Stack
+                    direction={{ xs: "column", sm: "row" }}
+                    spacing={1.5}
+                    alignItems={{ xs: "stretch", sm: "center" }}
+                    sx={{ mt: 1.5 }}
+                  >
+                    <Button
+                      variant="outlined"
+                      startIcon={<Add />}
+                      onClick={handleAddOnePackage}
+                      disabled={
+                        currentStock <= 0 ||
+                        getNumber(quantity) + currentPackageQuantity >
+                          currentStock
+                      }
+                    >
+                      +1 kiện ({currentPackageQuantity} cái)
+                    </Button>
+                    <Typography variant="body2" color="text.secondary">
+                      Số lượng mua: {getNumber(quantity)} cái
+                    </Typography>
+                    <Typography
+                      fontWeight={700}
+                      sx={{ ml: { sm: "auto !important" } }}
+                    >
+                      Thành tiền:{" "}
+                      {formatMoney(currentPrice * getNumber(quantity))}
+                    </Typography>
+                  </Stack>
+                )}
 
                 {/* CURRENT PRODUCT INFO */}
                 {selectedProduct && (
