@@ -35,6 +35,7 @@ import { API_ENDPOINTS } from "../../api";
 const formatMoney = (value) => {
   return Number(value || 0).toLocaleString("vi-VN") + " đ";
 };
+const token = localStorage.getItem("adminToken"); // Hoặc accessToken tùy tên bạn lưu
 
 const getNumber = (value) => {
   const number = Number(value);
@@ -258,7 +259,7 @@ const CreateOrder = () => {
   // =========================================================
   // ADD PRODUCT
   // =========================================================
-  const handleAddProduct = () => {
+  const handleAddProduct = async () => {
     if (!selectedProduct) {
       alert("Vui lòng chọn sản phẩm");
       return;
@@ -283,6 +284,31 @@ const CreateOrder = () => {
 
     const variantName = selectedVariant || "";
 
+    let availableBatches = [];
+    try {
+      const batchResponse = await axios.get(
+        `${API_ENDPOINTS.INVENTORY_BATCHES}/product/${selectedProduct._id}`,
+        {
+          params: { variantName },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      availableBatches = batchResponse?.data?.batches || [];
+    } catch (error) {
+      console.error("Load inventory batches:", error);
+      alert("Không tải được danh sách lô nhập. Kiểm tra API quản lý lô.");
+      return;
+    }
+
+    if (!availableBatches.length) {
+      alert(
+        "Sản phẩm/Variant này chưa có lô tồn. Hãy chạy truy xuất tồn kho cũ hoặc kiểm tra phiếu nhập.",
+      );
+      return;
+    }
+
     const existingIndex = items.findIndex(
       (item) =>
         String(item.productId) === String(selectedProduct._id) &&
@@ -302,6 +328,8 @@ const CreateOrder = () => {
         ...newItems[existingIndex],
         qty: newQty,
         total: newQty * newItems[existingIndex].price,
+        availableBatches,
+        batchAllocations: [],
       };
 
       setItems(newItems);
@@ -320,6 +348,8 @@ const CreateOrder = () => {
         stock: currentStock,
         thumbnail: selectedProduct.thumbnail || "",
         total: currentPrice * qty,
+        availableBatches,
+        batchAllocations: [],
       };
 
       setItems((prev) => [...prev, newItem]);
@@ -328,6 +358,29 @@ const CreateOrder = () => {
     setSelectedProduct(null);
     setSelectedVariant("");
     setQuantity(0);
+  };
+
+  // =========================================================
+  // PHÂN BỔ SỐ LƯỢNG THEO LÔ
+  // =========================================================
+  const handleBatchAllocationChange = (itemIndex, batch, value) => {
+    const qty = Math.max(0, Math.floor(getNumber(value)));
+    setItems((prev) =>
+      prev.map((item, index) => {
+        if (index !== itemIndex) return item;
+        const current = (item.batchAllocations || []).filter(
+          (x) => String(x.batchId) !== String(batch._id),
+        );
+        if (qty > 0)
+          current.push({
+            batchId: batch._id,
+            batchCode: batch.batchCode,
+            qty,
+            unitCost: getNumber(batch.unitCost),
+          });
+        return { ...item, batchAllocations: current };
+      }),
+    );
   };
 
   // =========================================================
@@ -394,6 +447,19 @@ const CreateOrder = () => {
       return;
     }
 
+    for (const item of items) {
+      const allocated = (item.batchAllocations || []).reduce(
+        (sum, allocation) => sum + getNumber(allocation.qty),
+        0,
+      );
+      if (allocated !== Number(item.qty)) {
+        alert(
+          `Sản phẩm "${item.productTitle}" cần phân bổ đủ ${item.qty} cái theo lô (hiện ${allocated}).`,
+        );
+        return;
+      }
+    }
+
     const paid = getNumber(paidAmount);
 
     if (paid > totalAmount) {
@@ -411,6 +477,9 @@ const CreateOrder = () => {
           productId: item.productId,
           variantName: item.variantName || "",
           qty: Number(item.qty),
+          batchAllocations: (item.batchAllocations || []).filter(
+            (allocation) => getNumber(allocation.qty) > 0,
+          ),
         })),
 
         discount: getNumber(discount),
@@ -1069,6 +1138,92 @@ const CreateOrder = () => {
                             <Typography variant="body2" color="text.secondary">
                               {formatMoney(item.price)}
                             </Typography>
+                          </Box>
+
+                          {/* CHỌN LÔ NHẬP */}
+                          <Box
+                            sx={{
+                              width: { xs: "100%", sm: 280 },
+                              flexShrink: 0,
+                            }}
+                          >
+                            <Typography variant="caption" fontWeight={700}>
+                              Phân bổ lô nhập (tổng phải bằng {item.qty})
+                            </Typography>
+                            <Stack spacing={0.75} sx={{ mt: 0.5 }}>
+                              {(item.availableBatches || []).map((batch) => {
+                                const selectedQty =
+                                  (item.batchAllocations || []).find(
+                                    (x) =>
+                                      String(x.batchId) === String(batch._id),
+                                  )?.qty || 0;
+                                return (
+                                  <Stack
+                                    key={batch._id}
+                                    direction="row"
+                                    spacing={1}
+                                    alignItems="center"
+                                  >
+                                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                                      <Typography
+                                        variant="caption"
+                                        fontWeight={700}
+                                        noWrap
+                                      >
+                                        {batch.batchCode}
+                                      </Typography>
+                                      <Typography
+                                        variant="caption"
+                                        color="text.secondary"
+                                        display="block"
+                                      >
+                                        Còn {batch.remainingQty} ·{" "}
+                                        {new Date(
+                                          batch.importDate,
+                                        ).toLocaleDateString("vi-VN")}
+                                      </Typography>
+                                    </Box>
+                                    <TextField
+                                      size="small"
+                                      type="number"
+                                      label="SL"
+                                      value={selectedQty}
+                                      onChange={(e) =>
+                                        handleBatchAllocationChange(
+                                          index,
+                                          batch,
+                                          e.target.value,
+                                        )
+                                      }
+                                      inputProps={{
+                                        min: 0,
+                                        max: batch.remainingQty,
+                                        step: 1,
+                                      }}
+                                      sx={{ width: 82 }}
+                                    />
+                                  </Stack>
+                                );
+                              })}
+                              <Typography
+                                variant="caption"
+                                color={
+                                  (item.batchAllocations || []).reduce(
+                                    (s, a) => s + getNumber(a.qty),
+                                    0,
+                                  ) === Number(item.qty)
+                                    ? "success.main"
+                                    : "error.main"
+                                }
+                              >
+                                Đã phân bổ:{" "}
+                                {(item.batchAllocations || []).reduce(
+                                  (s, a) => s + getNumber(a.qty),
+                                  0,
+                                )}{" "}
+                                / {item.qty}
+                              </Typography>
+                            </Stack>
                           </Box>
 
                           {/* QTY */}

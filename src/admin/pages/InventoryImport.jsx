@@ -601,17 +601,16 @@ const InventoryImport = () => {
   // ==========================================================
 
   const handleSave = async () => {
-    if (!validateBeforeSave()) {
-      return;
-    }
+    if (!validateBeforeSave()) return;
 
     try {
       setSaving(true);
 
+      const token = localStorage.getItem("adminToken");
+
       const payload = {
         supplier: supplier.trim(),
         note: note.trim(),
-
         items: items.map((item) => ({
           productId: item.productId,
           variantName: item.variantName || "",
@@ -620,10 +619,8 @@ const InventoryImport = () => {
         })),
       };
 
-      const token = localStorage.getItem("adminToken");
-
       const response = await axios.post(
-        API_ENDPOINTS.INVENTORY_RECEIPTS,
+        API_ENDPOINTS.INVENTORY_BATCH_IMPORT_MULTIPLE,
         payload,
         {
           headers: {
@@ -633,36 +630,27 @@ const InventoryImport = () => {
         },
       );
 
-      if (response?.data?.success === false) {
-        throw new Error(
-          response?.data?.message || "Không thể lưu phiếu nhập kho",
-        );
+      if (response?.data?.success !== true) {
+        throw new Error(response?.data?.message || "Không thể nhập kho");
       }
 
-      showSnackbar("Nhập kho thành công", "success");
+      const result = response.data.data || {};
 
-      // ======================================================
-      // RESET
-      // ======================================================
+      showSnackbar(
+        `Nhập thành công ${result.totalItems || items.length} lô, ` +
+          `${Number(result.totalQty || 0).toLocaleString("vi-VN")} sản phẩm`,
+        "success",
+      );
 
       setItems([]);
-
       setSupplier("");
-
       setNote("");
-
       setSelectedProduct(null);
-
       setSelectedVariant("");
-
       setQty("");
-
       setUnitCost("");
-
       setProducts([]);
-
       setProductSearch("");
-
       scanSearchPendingRef.current = false;
     } catch (error) {
       console.error("handleSave:", error);

@@ -29,6 +29,8 @@ import Images from "./pages/Images";
 import Vehicles from "./pages/Vehicles";
 import CustomerPurchaseStats from "./pages/CustomerPurchaseStats";
 import ProductQuotePage from "../quotes/QuoteImage";
+import BestSellingProducts from "./pages/BestSellingProducts";
+import InventoryBatchPage from "./pages/InventoryBatchPage";
 
 export default function BasicExample() {
   return (
@@ -102,6 +104,14 @@ export default function BasicExample() {
           <Route
             path="customer-purchase-stats"
             element={<CustomerPurchaseStats />}
+          />
+          <Route
+            path="best-selling-products"
+            element={<BestSellingProducts />}
+          />
+          <Route
+            path="/admin/inventory-batches"
+            element={<InventoryBatchPage />}
           />
           // Bên trong Routes
           <Route path="/admin/product-quote" element={<ProductQuotePage />} />

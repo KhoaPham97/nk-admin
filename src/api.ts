@@ -89,4 +89,7 @@ export const API_ENDPOINTS = {
   // =========================
   INVENTORY_HISTORY: `${BASE_URL}/inventory-history`,
   INVENTORY_RECEIPTS: `${BASE_URL}/inventory`,
+  INVENTORY_BATCHES: `${BASE_URL}/inventory-batch`,
+  INVENTORY_BATCH_IMPORT: `${BASE_URL}/inventory-batch/import`,
+  INVENTORY_BATCH_IMPORT_MULTIPLE: `${BASE_URL}/inventory-batch/import-multiple`,
 };

@@ -12,21 +12,28 @@ import {
 } from "@mui/material";
 
 import DashboardIcon from "@mui/icons-material/Dashboard";
-import Inventory2Icon from "@mui/icons-material/Inventory2";
-import CategoryIcon from "@mui/icons-material/Category";
-import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
-import PeopleIcon from "@mui/icons-material/People";
-import SettingsIcon from "@mui/icons-material/Settings";
-import StorefrontIcon from "@mui/icons-material/Storefront";
-import AddBoxIcon from "@mui/icons-material/AddBox";
-import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
-import PostAddIcon from "@mui/icons-material/PostAdd";
 import ChatIcon from "@mui/icons-material/Chat";
-import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
 import ImageIcon from "@mui/icons-material/Image";
+import Inventory2Icon from "@mui/icons-material/Inventory2";
+import PostAddIcon from "@mui/icons-material/PostAdd";
+import StorefrontIcon from "@mui/icons-material/Storefront";
+import CategoryIcon from "@mui/icons-material/Category";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
-import PeopleAltOutlined from "@mui/icons-material/PeopleAltOutlined";
-
+import PriceChangeIcon from "@mui/icons-material/PriceChange";
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
+import WarehouseIcon from "@mui/icons-material/Warehouse";
+import AddBoxIcon from "@mui/icons-material/AddBox";
+import InventoryIcon from "@mui/icons-material/Inventory";
+import HistoryIcon from "@mui/icons-material/History";
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
+import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
+import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
+import PeopleIcon from "@mui/icons-material/People";
+import RequestQuoteIcon from "@mui/icons-material/RequestQuote";
+import SettingsIcon from "@mui/icons-material/Settings";
+import MoveToInboxIcon from "@mui/icons-material/MoveToInbox";
+import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import { useLocation, useNavigate } from "react-router-dom";
 
 interface Props {
@@ -58,21 +65,15 @@ const AdminSidebar = ({
     },
 
     {
-      title: "CHAT",
+      title: "GIAO TIẾP",
       items: [
         {
           label: "Chat",
-          path: "/admin/chat",
           icon: <ChatIcon />,
+          path: "/admin/chat",
         },
-      ],
-    },
-
-    {
-      title: "Hình Ảnh",
-      items: [
         {
-          label: "Hình ảnh",
+          label: "Quản lý hình ảnh",
           icon: <ImageIcon />,
           path: "/admin/images",
         },
@@ -87,78 +88,80 @@ const AdminSidebar = ({
           icon: <Inventory2Icon />,
           path: "/admin/products",
         },
-
         {
           label: "Nhập sản phẩm",
           icon: <PostAddIcon />,
           path: "/admin/products/create",
         },
-
         {
           label: "Phụ tùng xe đạp",
           icon: <StorefrontIcon />,
           path: "/admin/products/bicycle",
         },
-
         {
           label: "Phụ tùng xe điện",
           icon: <StorefrontIcon />,
           path: "/admin/products/electric",
         },
-
         {
           label: "Phụ tùng xe ba gác",
           icon: <StorefrontIcon />,
           path: "/admin/products/tricycle",
         },
-
         {
-          label: "Danh mục",
+          label: "Danh mục sản phẩm",
           icon: <CategoryIcon />,
           path: "/admin/categories",
         },
-
         {
-          label: "Tính giá sản phẩm",
-          icon: <Inventory2Icon />,
-          path: "/admin/products-pricing",
-        },
-
-        // ========================================
-        // VEHICLES
-        // ========================================
-        {
-          label: "Xe / Vehicles",
+          label: "Xe tương thích",
           icon: <DirectionsCarIcon />,
           path: "/admin/vehicles",
+        },
+        {
+          label: "Sản phẩm bán chạy",
+          icon: <TrendingUpIcon />,
+          path: "/admin/best-selling-products",
+        },
+        {
+          label: "Tính giá sản phẩm",
+          icon: <PriceChangeIcon />,
+          path: "/admin/products-pricing",
+        },
+        {
+          label: "Báo giá sản phẩm",
+          icon: <RequestQuoteIcon />,
+          path: "/admin/product-quote",
         },
       ],
     },
 
     {
-      title: "KHO HÀNG",
+      title: "QUẢN LÝ KHO",
       items: [
         {
-          label: "Tồn kho",
-          icon: <Inventory2Icon />,
+          label: "Tổng quan tồn kho",
+          icon: <WarehouseIcon />,
           path: "/admin/inventory",
         },
-
         {
           label: "Nhập kho",
-          icon: <AddBoxIcon />,
+          icon: <MoveToInboxIcon />,
           path: "/admin/inventory/import",
         },
-
+        {
+          label: "Quản lý lô hàng",
+          icon: <InventoryIcon />,
+          path: "/admin/inventory-batches",
+        },
         {
           label: "Lịch sử nhập kho",
+          icon: <AddBoxIcon />,
           path: "/admin/inventory-receipts",
-          icon: <Inventory2Icon />,
         },
-
         {
           label: "Lịch sử xuất kho",
-          icon: <RemoveCircleOutlineIcon />,
+          icon: <LocalShippingIcon />,
           path: "/admin/inventory-history",
         },
       ],
@@ -172,26 +175,26 @@ const AdminSidebar = ({
           icon: <ShoppingCartIcon />,
           path: "/admin/orders",
         },
-
         {
           label: "Tạo đơn hàng",
-          path: "/admin/orders/create",
           icon: <AddShoppingCartIcon />,
+          path: "/admin/orders/create",
         },
+      ],
+    },
+
+    {
+      title: "KHÁCH HÀNG",
+      items: [
         {
-          label: "Thống kê khách hàng",
-          path: "/admin/customer-purchase-stats",
-          icon: <PeopleAltOutlined />,
-        },
-        {
-          label: "Khách hàng",
+          label: "Danh sách khách hàng",
           icon: <PeopleIcon />,
           path: "/admin/customers",
         },
         {
-          label: "Báo giá",
-          icon: <PeopleIcon />,
-          path: "/admin/product-quote",
+          label: "Thống kê mua hàng",
+          icon: <PeopleAltIcon />,
+          path: "/admin/customer-purchase-stats",
         },
       ],
     },
