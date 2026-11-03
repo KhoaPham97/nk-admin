@@ -46,12 +46,14 @@ import {
 
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-
+import SyncBatchCostsButton from "./SyncBatchCostsButton";
 import { API_ENDPOINTS } from "../../api";
 
 const InventoryReceipts = () => {
   const navigate = useNavigate();
-
+  const CNY_VND_RATE = Number(localStorage.getItem("CNY_VND_RATE")) || 3650;
+  const formatVND = (value) =>
+    `${Math.round(Number(value || 0) * CNY_VND_RATE).toLocaleString("vi-VN")} ₫`;
   // =====================================================
   // STATE
   // =====================================================
@@ -568,15 +570,22 @@ const InventoryReceipts = () => {
             Theo dõi các phiếu nhập kho và sản phẩm đã nhập
           </Typography>
         </Box>
-
-        <Button
-          variant="outlined"
-          startIcon={loading ? <CircularProgress size={18} /> : <Inventory2 />}
-          disabled={loading}
-          onClick={loadReceipts}
-        >
-          {loading ? "Đang tải..." : "Làm mới"}
-        </Button>
+        <div>
+          <SyncBatchCostsButton
+            apiUrl={API_ENDPOINTS.INVENTORY_RECEIPTS}
+            isZero={true}
+          />
+          <Button
+            variant="outlined"
+            startIcon={
+              loading ? <CircularProgress size={18} /> : <Inventory2 />
+            }
+            disabled={loading}
+            onClick={loadReceipts}
+          >
+            {loading ? "Đang tải..." : "Làm mới"}
+          </Button>
+        </div>
       </Stack>
 
       {/* =================================================
@@ -919,6 +928,13 @@ const InventoryReceipts = () => {
                       <TableCell>
                         <Typography fontWeight={700} color="success.main">
                           {formatMoney(totalAmount)}
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          fontWeight={700}
+                          color="success.main"
+                        >
+                          Quy đổi VNĐ: {formatVND(receipt.totalAmount)}
                         </Typography>
                       </TableCell>
 

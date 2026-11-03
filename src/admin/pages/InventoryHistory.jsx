@@ -428,15 +428,17 @@ const InventoryHistory = () => {
             Theo dõi toàn bộ biến động nhập xuất tồn kho
           </Typography>
         </Box>
-        <SyncBatchCostsButton apiUrl={API_ENDPOINTS.INVENTORY_HISTORY} />
-        <Button
-          variant="outlined"
-          startIcon={loading ? <CircularProgress size={18} /> : <Refresh />}
-          disabled={loading}
-          onClick={loadHistory}
-        >
-          Làm mới
-        </Button>
+        <div>
+          <SyncBatchCostsButton apiUrl={API_ENDPOINTS.INVENTORY_HISTORY} />
+          <Button
+            variant="outlined"
+            startIcon={loading ? <CircularProgress size={18} /> : <Refresh />}
+            disabled={loading}
+            onClick={loadHistory}
+          >
+            Làm mới
+          </Button>
+        </div>
       </Stack>
 
       {/* =================================================

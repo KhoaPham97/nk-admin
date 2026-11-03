@@ -207,15 +207,13 @@ const InventoryImport = () => {
   // SELECT PRODUCT
   // AUTO SELECT FIRST VARIANT
   // ==========================================================
-
   const handleProductChange = (_, product) => {
     setSelectedProduct(product);
-
     setQty("");
-    setUnitCost("");
 
     if (!product) {
       setSelectedVariant("");
+      setUnitCost("");
       return;
     }
 
@@ -225,11 +223,14 @@ const InventoryImport = () => {
       const firstVariant = productVariants[0];
 
       setSelectedVariant(firstVariant?.name ? String(firstVariant.name) : "");
+      setUnitCost(
+        firstVariant?.unitCost > 0 ? String(firstVariant.unitCost) : "",
+      );
     } else {
       setSelectedVariant("");
+      setUnitCost(Number(product.unitCost) > 0 ? String(product.unitCost) : "");
     }
   };
-
   // ==========================================================
   // SEARCH PRODUCTS
   // ==========================================================
@@ -396,11 +397,12 @@ const InventoryImport = () => {
     const value = String(event.target.value || "");
 
     setSelectedVariant(value);
-
     setQty("");
-    setUnitCost("");
-  };
 
+    const variant = variants.find((item) => String(item?.name || "") === value);
+
+    setUnitCost(Number(variant?.unitCost) > 0 ? String(variant.unitCost) : "");
+  };
   // ==========================================================
   // ADD ITEM
   // ==========================================================
@@ -423,13 +425,6 @@ const InventoryImport = () => {
       return;
     }
 
-    const price = Number(unitCost);
-
-    if (!Number.isFinite(price) || price < 0) {
-      showSnackbar("Giá nhập không hợp lệ", "warning");
-      return;
-    }
-
     const variant =
       variants.find(
         (item) => String(item?.name || "") === String(selectedVariant || ""),
@@ -443,6 +438,19 @@ const InventoryImport = () => {
     }
 
     const variantName = variant?.name ? String(variant.name) : "";
+
+    // Ưu tiên giá đang nhập trên giao diện
+    const manualPrice = String(unitCost).trim();
+
+    const price =
+      manualPrice !== ""
+        ? Number(manualPrice)
+        : Number(variant?.unitCost || selectedProduct?.unitCost || 0);
+
+    if (!Number.isFinite(price) || price < 0) {
+      showSnackbar("Giá nhập không hợp lệ", "warning");
+      return;
+    }
 
     const newItem = {
       productId,
@@ -460,24 +468,21 @@ const InventoryImport = () => {
     setItems((prev) => {
       const index = prev.findIndex(
         (item) =>
-          String(item.productId) === String(newItem.productId) &&
-          String(item.variantName || "") === String(newItem.variantName || ""),
+          String(item.productId) === productId &&
+          String(item.variantName || "") === variantName,
       );
 
       if (index !== -1) {
         const clone = [...prev];
-
         const oldItem = clone[index];
 
-        const nextQty = Number(oldItem.qty || 0) + Number(newItem.qty || 0);
-
-        const nextUnitCost = Number(newItem.unitCost || 0);
+        const nextQty = Number(oldItem.qty || 0) + quantity;
 
         clone[index] = {
           ...oldItem,
           qty: nextQty,
-          unitCost: nextUnitCost,
-          total: nextQty * nextUnitCost,
+          unitCost: price,
+          total: nextQty * price,
         };
 
         return clone;
@@ -491,7 +496,6 @@ const InventoryImport = () => {
 
     showSnackbar("Đã thêm sản phẩm vào phiếu nhập", "success");
   };
-
   // ==========================================================
   // DELETE ITEM
   // ==========================================================
@@ -1099,7 +1103,7 @@ const InventoryImport = () => {
 
                   setUnitCost(value);
                 }}
-                placeholder="VD: 25.000"
+                placeholder="VD: 5"
                 InputProps={{
                   endAdornment: "¥",
                 }}

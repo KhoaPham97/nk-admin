@@ -14,7 +14,7 @@ import {
 } from "@mui/material";
 import SyncIcon from "@mui/icons-material/Sync";
 
-const SyncBatchCostsButton = ({ apiUrl }) => {
+const SyncBatchCostsButton = ({ apiUrl, isZero = false }) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
@@ -25,13 +25,13 @@ const SyncBatchCostsButton = ({ apiUrl }) => {
       setLoading(true);
       setError("");
       setResult(null);
-
+      let url = isZero ? "sync-zero-costs" : "sync-costs";
       const token =
         localStorage.getItem("adminToken") ||
         localStorage.getItem("accessToken");
 
       const response = await axios.post(
-        `${apiUrl}/sync-costs`,
+        `${apiUrl}/${url}`,
         {},
         {
           headers: {

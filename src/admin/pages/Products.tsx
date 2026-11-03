@@ -48,7 +48,7 @@ interface Variant {
 
   price: number | string;
 
-  defaultPrice: number | string;
+  unitCost?: number | string;
 
   qty: number | string;
 
@@ -275,7 +275,7 @@ const Products = () => {
 
           price: normalizeNumber(variant.price),
 
-          defaultPrice: normalizeNumber(variant.defaultPrice),
+          unitCost: normalizeNumber(variant.unitCost),
 
           qty: normalizeNumber(variant.qty),
 
@@ -630,13 +630,7 @@ const Products = () => {
 
   const updateVariant = (
     index: number,
-    field:
-      | "name"
-      | "price"
-      | "defaultPrice"
-      | "qty"
-      | "weight"
-      | "packageQuantity",
+    field: "name" | "price" | "unitCost" | "qty" | "weight" | "packageQuantity",
     value: string,
   ) => {
     if (!selectedProduct) {
@@ -685,7 +679,7 @@ const Products = () => {
 
         price: "",
 
-        defaultPrice: "",
+        unitCost: "",
 
         qty: "",
 
@@ -924,12 +918,12 @@ const Products = () => {
         // DEFAULT PRICE
         // =================================================
 
-        defaultPrice:
-          variant.defaultPrice === "" ||
-          variant.defaultPrice === null ||
-          variant.defaultPrice === undefined
-            ? "0"
-            : variant.defaultPrice,
+        unitCost:
+          variant.unitCost === "" ||
+          variant.unitCost === null ||
+          variant.unitCost === undefined
+            ? 0
+            : Number(variant.unitCost) || 0,
 
         // =================================================
         // QTY
@@ -1935,11 +1929,11 @@ const Products = () => {
                                 fullWidth
                                 size="small"
                                 label="Giá gốc"
-                                value={variant.defaultPrice}
+                                value={variant.unitCost}
                                 onChange={(e) =>
                                   updateVariant(
                                     index,
-                                    "defaultPrice",
+                                    "unitCost",
                                     e.target.value,
                                   )
                                 }

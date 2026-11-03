@@ -31,6 +31,7 @@ import CustomerPurchaseStats from "./pages/CustomerPurchaseStats";
 import ProductQuotePage from "../quotes/QuoteImage";
 import BestSellingProducts from "./pages/BestSellingProducts";
 import InventoryBatchPage from "./pages/InventoryBatchPage";
+import CostManagement from "./pages/CostManagement";
 
 export default function BasicExample() {
   return (
@@ -113,6 +114,7 @@ export default function BasicExample() {
             path="/admin/inventory-batches"
             element={<InventoryBatchPage />}
           />
+          <Route path="cost-management" element={<CostManagement />} />
           // Bên trong Routes
           <Route path="/admin/product-quote" element={<ProductQuotePage />} />
         </Route>

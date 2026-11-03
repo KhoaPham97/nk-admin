@@ -19,7 +19,6 @@ import PostAddIcon from "@mui/icons-material/PostAdd";
 import StorefrontIcon from "@mui/icons-material/Storefront";
 import CategoryIcon from "@mui/icons-material/Category";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
-import PriceChangeIcon from "@mui/icons-material/PriceChange";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import WarehouseIcon from "@mui/icons-material/Warehouse";
 import AddBoxIcon from "@mui/icons-material/AddBox";
@@ -35,6 +34,7 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import MoveToInboxIcon from "@mui/icons-material/MoveToInbox";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import { useLocation, useNavigate } from "react-router-dom";
+import PriceChangeIcon from "@mui/icons-material/PriceChange";
 
 interface Props {
   drawerWidth: number;
@@ -145,6 +145,11 @@ const AdminSidebar = ({
           path: "/admin/inventory",
         },
         {
+          label: "Quản lý giá vốn",
+          icon: <PriceChangeIcon />,
+          path: "/admin/cost-management",
+        },
+        {
           label: "Nhập kho",
           icon: <MoveToInboxIcon />,
           path: "/admin/inventory/import",
@@ -154,6 +159,7 @@ const AdminSidebar = ({
           icon: <InventoryIcon />,
           path: "/admin/inventory-batches",
         },
+
         {
           label: "Lịch sử nhập kho",
           icon: <AddBoxIcon />,
