@@ -32,9 +32,11 @@ import {
   Close,
   FactCheck,
 } from "@mui/icons-material";
+import SyncBatchCostsButton from "./SyncBatchCostsButton";
+
 import { API_ENDPOINTS } from "../../api";
 
-const money = (v) => `${Number(v || 0).toLocaleString("vi-VN")} đ`;
+const money = (v) => `¥${Number(v || 0).toLocaleString("vi-VN")}`;
 const date = (v) => (v ? new Date(v).toLocaleDateString("vi-VN") : "—");
 const sourceLabel = {
   receipt: "Phiếu nhập",
@@ -192,6 +194,7 @@ export default function InventoryBatchPage() {
           </Typography>
         </Box>
         <Stack direction="row" spacing={1} flexWrap="wrap">
+          <SyncBatchCostsButton apiUrl={`${endpoint}`} />
           <Button
             variant="outlined"
             startIcon={<FactCheck />}

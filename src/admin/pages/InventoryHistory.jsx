@@ -39,6 +39,7 @@ import {
 import axios from "axios";
 import { API_ENDPOINTS } from "../../api";
 import { useNavigate } from "react-router-dom";
+import SyncBatchCostsButton from "./SyncBatchCostsButton";
 
 const InventoryHistory = () => {
   const navigate = useNavigate();
@@ -427,7 +428,7 @@ const InventoryHistory = () => {
             Theo dõi toàn bộ biến động nhập xuất tồn kho
           </Typography>
         </Box>
-
+        <SyncBatchCostsButton apiUrl={API_ENDPOINTS.INVENTORY_HISTORY} />
         <Button
           variant="outlined"
           startIcon={loading ? <CircularProgress size={18} /> : <Refresh />}

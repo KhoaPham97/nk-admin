@@ -48,7 +48,7 @@ import {
 } from "@mui/icons-material";
 
 import { useNavigate } from "react-router-dom";
-
+import ProfitAnalytics from "./ProfitAnalytics";
 import { API_ENDPOINTS } from "../../api";
 
 // ============================================================
@@ -790,7 +790,74 @@ const AdminStatistics: React.FC = () => {
       .sort((a, b) => b.soldCount - a.soldCount)
       .slice(0, 30);
   }, [products]);
+  // ==========================================================
+  // MONTHLY REVENUE
+  // ==========================================================
 
+  const monthlyRevenue = useMemo(() => {
+    const now = new Date();
+
+    const months = Array.from({ length: 12 }, (_, index) => {
+      const date = new Date(now.getFullYear(), now.getMonth() - 11 + index, 1);
+
+      return {
+        key: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+          2,
+          "0",
+        )}`,
+        label: `T${date.getMonth() + 1}/${date.getFullYear()}`,
+        revenue: 0,
+        orderCount: 0,
+      };
+    });
+
+    const monthMap = new Map(months.map((month) => [month.key, month]));
+
+    orders.forEach((order) => {
+      if (order.status !== "completed") return;
+
+      const orderDate = new Date(order.created_at || order.createdAt || "");
+
+      if (Number.isNaN(orderDate.getTime())) return;
+
+      const key = `${orderDate.getFullYear()}-${String(
+        orderDate.getMonth() + 1,
+      ).padStart(2, "0")}`;
+
+      const month = monthMap.get(key);
+
+      if (!month) return;
+
+      month.revenue += Number(order.totalAmount || 0);
+      month.orderCount += 1;
+    });
+
+    const totalRevenue = months.reduce((sum, month) => sum + month.revenue, 0);
+
+    const maxRevenue = Math.max(...months.map((month) => month.revenue), 1);
+
+    const currentMonth = months[months.length - 1];
+    const previousMonth = months[months.length - 2];
+
+    const growth =
+      previousMonth.revenue > 0
+        ? ((currentMonth.revenue - previousMonth.revenue) /
+            previousMonth.revenue) *
+          100
+        : currentMonth.revenue > 0
+          ? 100
+          : 0;
+
+    return {
+      months,
+      totalRevenue,
+      maxRevenue,
+      totalOrders: months.reduce((sum, month) => sum + month.orderCount, 0),
+      currentMonth,
+      previousMonth,
+      growth,
+    };
+  }, [orders]);
   // ==========================================================
   // ANALYTICS SAFE DATA
   // ==========================================================
@@ -987,6 +1054,7 @@ const AdminStatistics: React.FC = () => {
         </Grid>
       </Grid>
 
+      <ProfitAnalytics />
       {/* ====================================================
           WEBSITE ANALYTICS
       ==================================================== */}
