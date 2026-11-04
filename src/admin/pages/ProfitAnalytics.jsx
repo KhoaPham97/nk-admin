@@ -289,7 +289,9 @@ const ProfitAnalytics = () => {
           if (allocatedQty === qty && validCost) {
             orderCost += allocations.reduce(
               (sum, allocation) =>
-                sum + Math.abs(n(allocation.qty)) * n(allocation.unitCost),
+                sum +
+                Math.abs(n(allocation.qty)) *
+                  n(allocation.unitCost * CNY_VND_RATE),
               0,
             );
             return;
@@ -381,7 +383,7 @@ const ProfitAnalytics = () => {
       if (missingCost || !(n(unitCost) > 0)) {
         current.missingCost = true;
       } else {
-        current.cost += qty * n(unitCost);
+        current.cost += qty * n(unitCost * CNY_VND_RATE);
       }
 
       batchMap.set(key, current);
@@ -808,7 +810,7 @@ const ProfitAnalytics = () => {
                 Giá vốn
               </Typography>
               <Typography variant="h6" fontWeight={800}>
-                {moneyCost(batchSummary.cost)}
+                {money(batchSummary.cost)}
               </Typography>
             </Grid>
 
