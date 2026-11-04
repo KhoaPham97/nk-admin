@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import {
   Alert,
@@ -8,15 +9,11 @@ import {
   Button,
   Card,
   CardContent,
-  Chip,
   CircularProgress,
   Divider,
   Grid,
   IconButton,
-  MenuItem,
   Paper,
-  Select,
-  Snackbar,
   Stack,
   Table,
   TableBody,
@@ -26,6 +23,8 @@ import {
   TableRow,
   TextField,
   Typography,
+  Snackbar,
+  MenuItem,
 } from "@mui/material";
 
 import {
@@ -35,1282 +34,661 @@ import {
   SaveOutlined,
 } from "@mui/icons-material";
 
-import { useNavigate } from "react-router-dom";
-import { API_ENDPOINTS } from "../../api";
+import { API_ENDPOINTS, BASE_URL } from "../../api";
 import ProductImageScanner from "../components/ProductImageScanner";
 
-// ============================================================
-// HELPERS
-// ============================================================
+const INVENTORY_API = "/inventory";
+const DRAFTS_API = BASE_URL + `${INVENTORY_API}/import-drafts`;
+const PRODUCTS_API = API_ENDPOINTS.PRODUCTS;
 
-const formatMoney = (value) => {
-  const number = Number(value || 0);
+const getToken = () => localStorage.getItem("adminToken");
 
-  if (!Number.isFinite(number)) {
-    return "0";
-  }
+const getHeaders = () => ({
+  Authorization: `Bearer ${getToken()}`,
+});
 
-  return number.toLocaleString("zh-CN");
+const numberValue = (value) => {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : 0;
 };
 
-const parseMoney = (value) => {
-  return String(value ?? "").replace(/\D/g, "");
-};
+const formatMoney = (value) =>
+  `${Math.round(numberValue(value)).toLocaleString("vi-VN")} ¥`;
 
-const getProductVariants = (product) => {
-  if (!Array.isArray(product?.variants)) {
-    return [];
-  }
+const getProductTitle = (product) =>
+  product?.title || product?.name || product?.productTitle || "";
 
-  return product.variants;
-};
+const getProductImage = (product) =>
+  product?.thumbnail || product?.image || product?.images?.[0] || "";
 
-const getProductTitle = (product) => {
-  return (
-    product?.title || product?.name || product?.code || "Sản phẩm không tên"
+const getVariants = (product) =>
+  Array.isArray(product?.variants) ? product.variants : [];
+
+const getCurrentQty = (product, variantName) => {
+  if (!product) return 0;
+
+  if (!variantName) return numberValue(product.qty);
+
+  const variant = getVariants(product).find(
+    (item) => item.name === variantName,
   );
+
+  return numberValue(variant?.qty);
 };
 
-const getImageUrl = (thumbnail) => {
-  if (!thumbnail) {
-    return "";
+const getUnitCost = (product, variantName) => {
+  if (!product) return 0;
+
+  if (variantName) {
+    const variant = getVariants(product).find(
+      (item) => item.name === variantName,
+    );
+
+    return numberValue(variant?.unitCost ?? variant?.defaultPrice);
   }
 
-  const value = String(thumbnail);
-
-  if (
-    value.startsWith("http://") ||
-    value.startsWith("https://") ||
-    value.startsWith("data:")
-  ) {
-    return value;
-  }
-
-  if (value.startsWith("/")) {
-    return value;
-  }
-
-  return `/images/${value}`;
+  return numberValue(product.unitCost ?? product.defaultPrice);
 };
 
-// ============================================================
-// COMPONENT
-// ============================================================
-
-const InventoryImport = () => {
+export default function InventoryImport() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  // ==========================================================
-  // PRODUCTS
-  // ==========================================================
+  const draftId = searchParams.get("draftId");
 
+  const [search, setSearch] = useState("");
   const [products, setProducts] = useState([]);
-  const [productSearch, setProductSearch] = useState("");
-  const [loadingProducts, setLoadingProducts] = useState(false);
-
-  // ==========================================================
-  // SCAN
-  // ==========================================================
-
-  // Khi scan xong sẽ = true.
-  // Sau khi API trả kết quả, nếu có sản phẩm thì tự chọn.
-  const scanSearchPendingRef = useRef(false);
-
-  // ==========================================================
-  // SELECTED PRODUCT
-  // ==========================================================
-
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedVariant, setSelectedVariant] = useState("");
 
-  // ==========================================================
-  // IMPORT INPUT
-  // ==========================================================
+  const [qty, setQty] = useState(1);
+  const [unitCost, setUnitCost] = useState(0);
 
-  const [qty, setQty] = useState("");
-  const [unitCost, setUnitCost] = useState("");
-
+  const [items, setItems] = useState([]);
   const [supplier, setSupplier] = useState("");
   const [note, setNote] = useState("");
 
-  // ==========================================================
-  // ITEMS
-  // ==========================================================
+  const [loadingProducts, setLoadingProducts] = useState(false);
+  const [loadingDraft, setLoadingDraft] = useState(false);
+  const [savingDraft, setSavingDraft] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const [items, setItems] = useState([]);
+  const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState("success");
 
-  // ==========================================================
-  // SAVING
-  // ==========================================================
+  const searchTimer = useRef(null);
 
-  const [saving, setSaving] = useState(false);
+  const totalQty = useMemo(
+    () => items.reduce((sum, item) => sum + numberValue(item.qty), 0),
+    [items],
+  );
 
-  // ==========================================================
-  // SNACKBAR
-  // ==========================================================
+  const totalAmount = useMemo(
+    () =>
+      items.reduce(
+        (sum, item) => sum + numberValue(item.qty) * numberValue(item.unitCost),
+        0,
+      ),
+    [items],
+  );
 
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    severity: "success",
-    message: "",
-  });
-
-  const showSnackbar = (message, severity = "success") => {
-    setSnackbar({
-      open: true,
-      message,
-      severity,
-    });
+  const showMessage = (text, type = "success") => {
+    setMessageType(type);
+    setMessage(text);
   };
 
-  // ==========================================================
-  // VARIANTS
-  // ==========================================================
-
-  const variants = useMemo(() => {
-    return getProductVariants(selectedProduct);
-  }, [selectedProduct]);
-
-  // ==========================================================
-  // SELECTED VARIANT OBJECT
-  // ==========================================================
-
-  const selectedVariantObject = useMemo(() => {
-    if (!selectedProduct || !selectedVariant) {
-      return null;
-    }
-
-    return (
-      variants.find(
-        (variant) => String(variant?.name || "") === String(selectedVariant),
-      ) || null
-    );
-  }, [selectedProduct, selectedVariant, variants]);
-
-  // ==========================================================
-  // CURRENT STOCK
-  // ==========================================================
-
-  const currentSelectedQty = useMemo(() => {
-    if (!selectedProduct) {
-      return 0;
-    }
-
-    if (variants.length > 0) {
-      return Number(selectedVariantObject?.qty || 0);
-    }
-
-    return Number(selectedProduct.qty || 0);
-  }, [selectedProduct, variants, selectedVariantObject]);
-
-  // ==========================================================
-  // SELECT PRODUCT
-  // AUTO SELECT FIRST VARIANT
-  // ==========================================================
-  const handleProductChange = (_, product) => {
-    setSelectedProduct(product);
-    setQty("");
-
-    if (!product) {
-      setSelectedVariant("");
-      setUnitCost("");
-      return;
-    }
-
-    const productVariants = getProductVariants(product);
-
-    if (productVariants.length > 0) {
-      const firstVariant = productVariants[0];
-
-      setSelectedVariant(firstVariant?.name ? String(firstVariant.name) : "");
-      setUnitCost(
-        firstVariant?.unitCost > 0 ? String(firstVariant.unitCost) : "",
-      );
-    } else {
-      setSelectedVariant("");
-      setUnitCost(Number(product.unitCost) > 0 ? String(product.unitCost) : "");
-    }
-  };
-  // ==========================================================
-  // SEARCH PRODUCTS
-  // ==========================================================
-
-  const searchProducts = async (keyword) => {
-    const search = String(keyword || "").trim();
-
-    if (search.length < 2) {
+  const loadProducts = async (keyword) => {
+    if (!keyword || keyword.trim().length < 2) {
       setProducts([]);
-      setLoadingProducts(false);
       return;
     }
 
     try {
       setLoadingProducts(true);
 
-      const response = await axios.get(API_ENDPOINTS.PRODUCTS, {
+      const response = await axios.get(PRODUCTS_API, {
         params: {
-          search,
+          search: keyword,
           type: "all",
           page: 1,
           limit: 20,
         },
+        headers: getHeaders(),
       });
 
-      const data = response?.data;
+      const data = response.data?.data || response.data;
+      const list = Array.isArray(data) ? data : data?.products || [];
 
-      const productList =
-        data?.products || data?.data?.products || data?.data || [];
-
-      const result = Array.isArray(productList) ? productList : [];
-
-      setProducts(result);
-
-      // ======================================================
-      // AUTO SELECT SAU KHI SCAN
-      // ======================================================
-
-      if (scanSearchPendingRef.current) {
-        scanSearchPendingRef.current = false;
-
-        if (result.length === 0) {
-          showSnackbar(`Không tìm thấy sản phẩm với "${search}"`, "warning");
-        } else {
-          // Nếu chỉ có 1 kết quả -> chọn luôn
-          if (result.length === 1) {
-            const product = result[0];
-
-            handleProductChange(null, product);
-
-            showSnackbar(`Đã tìm thấy: ${getProductTitle(product)}`, "success");
-          } else {
-            // Có nhiều kết quả.
-            // Ưu tiên kết quả title/name/code chứa keyword.
-            const normalizedSearch = search.toLowerCase();
-
-            const exactProduct = result.find((product) => {
-              const title = String(
-                product?.title || product?.name || "",
-              ).toLowerCase();
-
-              const code = String(product?.code || "").toLowerCase();
-
-              const brand = String(product?.brand || "").toLowerCase();
-
-              return (
-                title.includes(normalizedSearch) ||
-                code.includes(normalizedSearch) ||
-                brand.includes(normalizedSearch)
-              );
-            });
-
-            if (exactProduct) {
-              handleProductChange(null, exactProduct);
-
-              showSnackbar(
-                `Đã chọn: ${getProductTitle(exactProduct)}`,
-                "success",
-              );
-            } else {
-              showSnackbar(
-                `Tìm thấy ${result.length} sản phẩm. Vui lòng chọn sản phẩm.`,
-                "info",
-              );
-            }
-          }
-        }
-      }
+      setProducts(list);
     } catch (error) {
-      console.error("searchProducts:", error);
-
+      console.error(error);
       setProducts([]);
-
-      scanSearchPendingRef.current = false;
-
-      showSnackbar(
-        error?.response?.data?.message || "Không thể tìm kiếm sản phẩm",
-        "error",
-      );
     } finally {
       setLoadingProducts(false);
     }
   };
 
-  // ==========================================================
-  // DEBOUNCE SEARCH
-  // ==========================================================
-
   useEffect(() => {
-    const keyword = productSearch.trim();
+    clearTimeout(searchTimer.current);
 
-    if (keyword.length < 2) {
-      setProducts([]);
-      setLoadingProducts(false);
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      searchProducts(keyword);
+    searchTimer.current = setTimeout(() => {
+      loadProducts(search);
     }, 350);
 
-    return () => clearTimeout(timer);
-  }, [productSearch]);
+    return () => clearTimeout(searchTimer.current);
+  }, [search]);
 
-  // ==========================================================
-  // SCANNER RESULT
-  // ==========================================================
+  const selectProduct = (product) => {
+    setSelectedProduct(product || null);
 
-  const handleScannerResult = ({ chineseText, vietnameseText }) => {
-    const vietnamese = String(vietnameseText || "").trim();
-    const chinese = String(chineseText || "").trim();
+    const variants = getVariants(product);
+    const firstVariant = variants[0]?.name || "";
 
-    const keyword = vietnamese || chinese;
-
-    if (!keyword) {
-      showSnackbar("Không nhận diện được tên sản phẩm từ hình ảnh", "warning");
-
-      return;
-    }
-
-    // Đánh dấu đây là search từ scanner.
-    scanSearchPendingRef.current = true;
-
-    // Clear sản phẩm cũ trước khi tìm sản phẩm mới.
-    setSelectedProduct(null);
-    setSelectedVariant("");
-    setQty("");
-    setUnitCost("");
-
-    // Hiển thị text đã dịch vào ô tìm kiếm.
-    setProductSearch(keyword);
-
-    showSnackbar(
-      vietnamese ? `Đã nhận diện: ${vietnamese}` : `Đã nhận diện: ${chinese}`,
-      "info",
-    );
+    setSelectedVariant(firstVariant);
+    setUnitCost(getUnitCost(product, firstVariant));
+    setQty(1);
   };
 
-  // ==========================================================
-  // CHANGE VARIANT
-  // ==========================================================
+  useEffect(() => {
+    if (!selectedProduct) return;
 
-  const handleVariantChange = (event) => {
-    const value = String(event.target.value || "");
+    setUnitCost(getUnitCost(selectedProduct, selectedVariant));
+  }, [selectedVariant, selectedProduct]);
 
-    setSelectedVariant(value);
-    setQty("");
-
-    const variant = variants.find((item) => String(item?.name || "") === value);
-
-    setUnitCost(Number(variant?.unitCost) > 0 ? String(variant.unitCost) : "");
-  };
-  // ==========================================================
-  // ADD ITEM
-  // ==========================================================
-
-  const handleAddItem = () => {
+  const addItem = () => {
     if (!selectedProduct) {
-      showSnackbar("Vui lòng chọn sản phẩm", "warning");
+      showMessage("Vui lòng chọn sản phẩm", "warning");
       return;
     }
 
-    if (variants.length > 0 && !selectedVariant) {
-      showSnackbar("Vui lòng chọn phân loại sản phẩm", "warning");
+    const quantity = numberValue(qty);
+    const cost = numberValue(unitCost);
+
+    if (quantity <= 0) {
+      showMessage("Số lượng phải lớn hơn 0", "warning");
       return;
     }
 
-    const quantity = Number(qty);
-
-    if (!Number.isFinite(quantity) || quantity <= 0) {
-      showSnackbar("Số lượng nhập phải lớn hơn 0", "warning");
+    if (cost < 0) {
+      showMessage("Giá vốn không hợp lệ", "warning");
       return;
     }
 
-    const variant =
-      variants.find(
-        (item) => String(item?.name || "") === String(selectedVariant || ""),
-      ) || null;
-
-    const productId = String(selectedProduct?._id || "");
-
-    if (!productId) {
-      showSnackbar("Sản phẩm không có ID hợp lệ", "error");
-      return;
-    }
-
-    const variantName = variant?.name ? String(variant.name) : "";
-
-    // Ưu tiên giá đang nhập trên giao diện
-    const manualPrice = String(unitCost).trim();
-
-    const price =
-      manualPrice !== ""
-        ? Number(manualPrice)
-        : Number(variant?.unitCost || selectedProduct?.unitCost || 0);
-
-    if (!Number.isFinite(price) || price < 0) {
-      showSnackbar("Giá nhập không hợp lệ", "warning");
-      return;
-    }
+    const productId = selectedProduct._id;
+    const variantName = selectedVariant || "";
 
     const newItem = {
       productId,
       productTitle: getProductTitle(selectedProduct),
+      productCode:
+        selectedProduct.code ||
+        selectedProduct.productCode ||
+        selectedProduct.sku ||
+        "",
+      thumbnail: getProductImage(selectedProduct),
       variantName,
       qty: quantity,
-      unitCost: price,
-      total: quantity * price,
-      thumbnail: selectedProduct.thumbnail || "",
-      currentQty: variant
-        ? Number(variant.qty || 0)
-        : Number(selectedProduct.qty || 0),
+      unitCost: cost,
+      currentQty: getCurrentQty(selectedProduct, variantName),
     };
 
-    setItems((prev) => {
-      const index = prev.findIndex(
+    setItems((previous) => {
+      const index = previous.findIndex(
         (item) =>
-          String(item.productId) === productId &&
-          String(item.variantName || "") === variantName,
+          String(item.productId) === String(productId) &&
+          item.variantName === variantName,
       );
 
-      if (index !== -1) {
-        const clone = [...prev];
-        const oldItem = clone[index];
+      if (index === -1) return [...previous, newItem];
 
-        const nextQty = Number(oldItem.qty || 0) + quantity;
+      const next = [...previous];
 
-        clone[index] = {
-          ...oldItem,
-          qty: nextQty,
-          unitCost: price,
-          total: nextQty * price,
-        };
-
-        return clone;
-      }
-
-      return [...prev, newItem];
-    });
-
-    setQty("");
-    setUnitCost("");
-
-    showSnackbar("Đã thêm sản phẩm vào phiếu nhập", "success");
-  };
-  // ==========================================================
-  // DELETE ITEM
-  // ==========================================================
-
-  const handleDeleteItem = (index) => {
-    setItems((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  // ==========================================================
-  // UPDATE ITEM QTY
-  // ==========================================================
-
-  const handleChangeQty = (index, value) => {
-    const quantity = Math.max(Number(value) || 0, 0);
-
-    setItems((prev) =>
-      prev.map((item, i) => {
-        if (i !== index) {
-          return item;
-        }
-
-        return {
-          ...item,
-          qty: quantity,
-          total: quantity * Number(item.unitCost || 0),
-        };
-      }),
-    );
-  };
-
-  // ==========================================================
-  // UPDATE ITEM UNIT COST
-  // ==========================================================
-
-  const handleChangeUnitCost = (index, value) => {
-    const price = value ?? 0;
-
-    setItems((prev) =>
-      prev.map((item, i) => {
-        if (i !== index) {
-          return item;
-        }
-
-        return {
-          ...item,
-          unitCost: price,
-          total: Number(item.qty || 0) * price,
-        };
-      }),
-    );
-  };
-
-  // ==========================================================
-  // TOTAL QTY
-  // ==========================================================
-
-  const totalQty = useMemo(() => {
-    return items.reduce((sum, item) => sum + Number(item.qty || 0), 0);
-  }, [items]);
-
-  // ==========================================================
-  // TOTAL AMOUNT
-  // ==========================================================
-
-  const totalAmount = useMemo(() => {
-    return items.reduce((sum, item) => sum + Number(item.total || 0), 0);
-  }, [items]);
-
-  // ==========================================================
-  // VALIDATE
-  // ==========================================================
-
-  const validateBeforeSave = () => {
-    if (items.length === 0) {
-      showSnackbar("Chưa có sản phẩm nào trong phiếu nhập", "warning");
-
-      return false;
-    }
-
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
-
-      if (!item.productId) {
-        showSnackbar(`Sản phẩm dòng ${i + 1} không hợp lệ`, "error");
-
-        return false;
-      }
-
-      if (Number(item.qty || 0) <= 0) {
-        showSnackbar(`Số lượng dòng ${i + 1} phải lớn hơn 0`, "warning");
-
-        return false;
-      }
-
-      if (Number(item.unitCost || 0) < 0) {
-        showSnackbar(`Giá nhập dòng ${i + 1} không hợp lệ`, "warning");
-
-        return false;
-      }
-    }
-
-    return true;
-  };
-
-  // ==========================================================
-  // SAVE IMPORT
-  // ==========================================================
-
-  const handleSave = async () => {
-    if (!validateBeforeSave()) return;
-
-    try {
-      setSaving(true);
-
-      const token = localStorage.getItem("adminToken");
-
-      const payload = {
-        supplier: supplier.trim(),
-        note: note.trim(),
-        items: items.map((item) => ({
-          productId: item.productId,
-          variantName: item.variantName || "",
-          qty: Number(item.qty),
-          unitCost: Number(item.unitCost || 0),
-        })),
+      next[index] = {
+        ...next[index],
+        qty: numberValue(next[index].qty) + quantity,
+        unitCost: cost,
       };
 
-      const response = await axios.post(
-        API_ENDPOINTS.INVENTORY_BATCH_IMPORT_MULTIPLE,
-        payload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        },
-      );
+      return next;
+    });
 
-      if (response?.data?.success !== true) {
-        throw new Error(response?.data?.message || "Không thể nhập kho");
+    setSelectedProduct(null);
+    setSelectedVariant("");
+    setSearch("");
+    setQty(1);
+    setUnitCost(0);
+  };
+
+  const updateItem = (index, field, value) => {
+    setItems((previous) =>
+      previous.map((item, i) =>
+        i === index
+          ? {
+              ...item,
+              [field]: numberValue(value),
+            }
+          : item,
+      ),
+    );
+  };
+
+  const removeItem = (index) => {
+    setItems((previous) => previous.filter((_, i) => i !== index));
+  };
+
+  const buildPayload = () => ({
+    supplier,
+    note,
+    items: items.map((item) => ({
+      productId: item.productId,
+      productTitle: item.productTitle,
+      productCode: item.productCode,
+      thumbnail: item.thumbnail,
+      variantName: item.variantName,
+      qty: numberValue(item.qty),
+      unitCost: numberValue(item.unitCost),
+      currentQty: numberValue(item.currentQty),
+    })),
+  });
+
+  const resetForm = () => {
+    setItems([]);
+    setSupplier("");
+    setNote("");
+    setSelectedProduct(null);
+    setSelectedVariant("");
+    setSearch("");
+    setQty(1);
+    setUnitCost(0);
+  };
+
+  const loadDraft = async (id) => {
+    try {
+      setLoadingDraft(true);
+
+      const response = await axios.get(`${DRAFTS_API}/${id}`, {
+        headers: getHeaders(),
+      });
+
+      const draft = response.data?.draft;
+
+      if (!draft) {
+        throw new Error("Không tìm thấy dữ liệu phiếu nháp");
       }
 
-      const result = response.data.data || {};
+      if (draft.status !== "draft") {
+        showMessage("Phiếu này đã được nhập kho", "warning");
+        setSearchParams({});
+        return;
+      }
 
-      showSnackbar(
-        `Nhập thành công ${result.totalItems || items.length} lô, ` +
-          `${Number(result.totalQty || 0).toLocaleString("vi-VN")} sản phẩm`,
-        "success",
-      );
-
-      setItems([]);
-      setSupplier("");
-      setNote("");
-      setSelectedProduct(null);
-      setSelectedVariant("");
-      setQty("");
-      setUnitCost("");
-      setProducts([]);
-      setProductSearch("");
-      scanSearchPendingRef.current = false;
+      setSupplier(draft.supplier || "");
+      setNote(draft.note || "");
+      setItems(draft.items || []);
     } catch (error) {
-      console.error("handleSave:", error);
-
-      showSnackbar(
-        error?.response?.data?.message ||
-          error?.message ||
-          "Không thể nhập kho",
+      showMessage(
+        error.response?.data?.message ||
+          error.message ||
+          "Không tải được phiếu nháp",
         "error",
       );
     } finally {
-      setSaving(false);
+      setLoadingDraft(false);
     }
   };
 
-  // ==========================================================
-  // RENDER
-  // ==========================================================
+  useEffect(() => {
+    if (draftId) loadDraft(draftId);
+  }, [draftId]);
+
+  const saveDraft = async () => {
+    try {
+      setSavingDraft(true);
+
+      const payload = buildPayload();
+
+      let response;
+
+      if (draftId) {
+        response = await axios.put(`${DRAFTS_API}/${draftId}`, payload, {
+          headers: getHeaders(),
+        });
+      } else {
+        response = await axios.post(DRAFTS_API, payload, {
+          headers: getHeaders(),
+        });
+      }
+
+      const draft = response.data?.draft;
+
+      if (!draft?._id) {
+        throw new Error("Server không trả về thông tin phiếu nháp");
+      }
+
+      if (!draftId) {
+        setSearchParams({ draftId: draft._id });
+      }
+
+      showMessage("Đã lưu phiếu nhập nháp");
+    } catch (error) {
+      showMessage(
+        error.response?.data?.message || error.message || "Lưu nháp thất bại",
+        "error",
+      );
+    } finally {
+      setSavingDraft(false);
+    }
+  };
+
+  const submitImport = async () => {
+    if (!items.length) {
+      showMessage("Vui lòng thêm sản phẩm nhập kho", "warning");
+      return;
+    }
+
+    const invalidItem = items.find(
+      (item) =>
+        !item.productId ||
+        numberValue(item.qty) <= 0 ||
+        numberValue(item.unitCost) < 0,
+    );
+
+    if (invalidItem) {
+      showMessage("Vui lòng kiểm tra số lượng và giá vốn", "warning");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+
+      const payload = {
+        ...buildPayload(),
+        ...(draftId ? { draftId } : {}),
+      };
+
+      const response = await axios.post(
+        `BASE_URL${INVENTORY_API}/batch-import-multiple`,
+        payload,
+        { headers: getHeaders() },
+      );
+
+      if (!response.data?.success) {
+        throw new Error(response.data?.message || "Nhập kho thất bại");
+      }
+
+      const receipt = response.data?.receipt;
+
+      showMessage(
+        `Nhập kho thành công${receipt?.code ? `: ${receipt.code}` : ""}`,
+      );
+
+      resetForm();
+      setSearchParams({});
+    } catch (error) {
+      showMessage(
+        error.response?.data?.message || error.message || "Nhập kho thất bại",
+        "error",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loadingDraft) {
+    return (
+      <Box display="flex" justifyContent="center" py={8}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box>
-      {/* ======================================================
-          HEADER
-      ====================================================== */}
-
       <Stack
-        direction={{
-          xs: "column",
-          sm: "row",
-        }}
+        direction={{ xs: "column", sm: "row" }}
         justifyContent="space-between"
-        alignItems={{
-          xs: "stretch",
-          sm: "center",
-        }}
+        alignItems={{ xs: "stretch", sm: "center" }}
         spacing={2}
         mb={3}
       >
         <Box>
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <Inventory2Outlined color="primary" />
-
-            <Typography variant="h5" fontWeight={700}>
-              Nhập kho
-            </Typography>
-          </Stack>
-
-          <Typography variant="body2" color="text.secondary" mt={0.5}>
-            Tạo phiếu nhập hàng và cập nhật tồn kho
+          <Typography variant="h5" fontWeight={700}>
+            Nhập kho
+          </Typography>
+          <Typography color="text.secondary" variant="body2">
+            Giá vốn được lưu bằng CNY (¥)
           </Typography>
         </Box>
 
-        <Button variant="outlined" onClick={() => navigate("/admin/inventory")}>
-          Quay lại tồn kho
-        </Button>
+        <Stack direction="row" spacing={1} flexWrap="wrap">
+          <Button
+            variant="outlined"
+            onClick={() => navigate("/admin/inventory-drafts")}
+          >
+            Phiếu nháp
+          </Button>
+
+          <Button
+            variant="outlined"
+            startIcon={<SaveOutlined />}
+            onClick={saveDraft}
+            disabled={savingDraft || submitting}
+          >
+            {savingDraft ? "Đang lưu..." : "Lưu nháp"}
+          </Button>
+
+          <Button
+            variant="contained"
+            startIcon={<Inventory2Outlined />}
+            onClick={submitImport}
+            disabled={submitting || savingDraft}
+          >
+            {submitting ? "Đang nhập..." : "Xác nhận nhập kho"}
+          </Button>
+        </Stack>
       </Stack>
 
-      {/* ======================================================
-          THÔNG TIN PHIẾU
-      ====================================================== */}
+      {draftId && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          Đang chỉnh sửa phiếu nháp: {draftId}
+        </Alert>
+      )}
 
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Typography fontWeight={700} mb={2}>
-            Thông tin phiếu nhập
-          </Typography>
-
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Nhà cung cấp"
-                value={supplier}
-                onChange={(e) => setSupplier(e.target.value)}
-                placeholder="Nhập tên nhà cung cấp"
-              />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Ghi chú"
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder="Ví dụ: Nhập hàng Trung Quốc"
-              />
-            </Grid>
-          </Grid>
-        </CardContent>
-      </Card>
-
-      {/* ======================================================
-          ADD PRODUCT
-      ====================================================== */}
-
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          {/* ==================================================
-              TITLE + SCANNER
-          ================================================== */}
-
-          <Stack
-            direction={{
-              xs: "column",
-              sm: "row",
-            }}
-            justifyContent="space-between"
-            alignItems={{
-              xs: "stretch",
-              sm: "center",
-            }}
-            spacing={2}
-            mb={2}
-          >
-            <Box>
-              <Typography fontWeight={700}>Thêm sản phẩm nhập kho</Typography>
-
-              <Typography variant="body2" color="text.secondary" mt={0.5}>
-                Tìm sản phẩm bằng tên, mã, thương hiệu hoặc quét hình ảnh
+      <Grid container spacing={2}>
+        <Grid item xs={12} md={8}>
+          <Card>
+            <CardContent>
+              <Typography fontWeight={700} mb={2}>
+                Thông tin sản phẩm
               </Typography>
-            </Box>
 
-            {/* ==================================================
-                SCANNER
-            ================================================== */}
+              <Stack spacing={2}>
+                <ProductImageScanner
+                  onResult={(result) => {
+                    const text =
+                      typeof result === "string"
+                        ? result
+                        : result?.text || result?.name || "";
 
-            <ProductImageScanner onResult={handleScannerResult} />
-          </Stack>
-
-          {/* ==================================================
-              SCAN SEARCH INFO
-          ================================================== */}
-
-          {productSearch.trim() && (
-            <Paper
-              variant="outlined"
-              sx={{
-                mb: 2,
-                px: 2,
-                py: 1.25,
-                background: "rgba(25, 118, 210, 0.04)",
-              }}
-            >
-              <Stack
-                direction={{
-                  xs: "column",
-                  sm: "row",
-                }}
-                spacing={1}
-                alignItems={{
-                  xs: "flex-start",
-                  sm: "center",
-                }}
-              >
-                <Typography variant="body2" color="text.secondary">
-                  Từ khóa tìm kiếm:
-                </Typography>
-
-                <Chip size="small" color="primary" label={productSearch} />
-              </Stack>
-            </Paper>
-          )}
-
-          <Grid container spacing={2}>
-            {/* ==================================================
-                PRODUCT
-            ================================================== */}
-
-            <Grid item xs={12} md={5}>
-              <Autocomplete
-                options={products}
-                loading={loadingProducts}
-                value={selectedProduct}
-                onChange={handleProductChange}
-                onInputChange={(_, value, reason) => {
-                  if (reason === "input") {
-                    scanSearchPendingRef.current = false;
-
-                    setProductSearch(value);
-                  }
-
-                  if (reason === "clear") {
-                    scanSearchPendingRef.current = false;
-
-                    setProductSearch("");
-
-                    setProducts([]);
-
-                    setSelectedProduct(null);
-
-                    setSelectedVariant("");
-
-                    setQty("");
-
-                    setUnitCost("");
-                  }
-                }}
-                filterOptions={(options) => options}
-                getOptionLabel={(option) => getProductTitle(option)}
-                isOptionEqualToValue={(option, value) =>
-                  option?._id === value?._id
-                }
-                noOptionsText={
-                  productSearch.trim()
-                    ? "Không tìm thấy sản phẩm"
-                    : "Nhập tên, mã hoặc thương hiệu để tìm"
-                }
-                loadingText="Đang tìm sản phẩm..."
-                renderOption={(props, option) => {
-                  const imageUrl = getImageUrl(option?.thumbnail);
-
-                  return (
-                    <li {...props} key={option._id}>
-                      <Stack
-                        direction="row"
-                        spacing={1.5}
-                        alignItems="center"
-                        sx={{
-                          width: "100%",
-                        }}
-                      >
-                        {imageUrl ? (
-                          <Box
-                            component="img"
-                            src={imageUrl}
-                            alt={getProductTitle(option)}
-                            sx={{
-                              width: 44,
-                              height: 44,
-                              borderRadius: 1,
-                              objectFit: "cover",
-                              flexShrink: 0,
-                              background: "#f5f5f5",
-                            }}
-                            onError={(e) => {
-                              e.currentTarget.style.display = "none";
-                            }}
-                          />
-                        ) : (
-                          <Box
-                            sx={{
-                              width: 44,
-                              height: 44,
-                              borderRadius: 1,
-                              background: "#f1f3f5",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              flexShrink: 0,
-                            }}
-                          >
-                            <Inventory2Outlined
-                              fontSize="small"
-                              color="disabled"
-                            />
-                          </Box>
-                        )}
-
-                        <Box
-                          sx={{
-                            minWidth: 0,
-                            flex: 1,
-                          }}
-                        >
-                          <Typography fontWeight={600} noWrap>
-                            {getProductTitle(option)}
-                          </Typography>
-
-                          <Stack
-                            direction="row"
-                            spacing={1}
-                            flexWrap="wrap"
-                            alignItems="center"
-                          >
-                            {option.code && (
-                              <Typography
-                                variant="caption"
-                                color="text.secondary"
-                              >
-                                Mã: {option.code}
-                              </Typography>
-                            )}
-
-                            {option.brand && (
-                              <Typography
-                                variant="caption"
-                                color="text.secondary"
-                              >
-                                • {option.brand}
-                              </Typography>
-                            )}
-
-                            <Typography
-                              variant="caption"
-                              color="primary"
-                              fontWeight={600}
-                            >
-                              Tồn:{" "}
-                              {Number(option.qty || 0).toLocaleString("vi-VN")}
-                            </Typography>
-
-                            {Array.isArray(option.variants) &&
-                              option.variants.length > 0 && (
-                                <Typography
-                                  variant="caption"
-                                  color="text.secondary"
-                                >
-                                  • {option.variants.length} phân loại
-                                </Typography>
-                              )}
-                          </Stack>
-                        </Box>
-                      </Stack>
-                    </li>
-                  );
-                }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Sản phẩm"
-                    placeholder="Nhập tên, mã, thương hiệu..."
-                    helperText={
-                      productSearch.trim()
-                        ? "Đang tìm sản phẩm trên server"
-                        : "Nhập ít nhất 2 ký tự để tìm hoặc quét ảnh"
-                    }
-                    InputProps={{
-                      ...params.InputProps,
-
-                      endAdornment: (
-                        <>
-                          {loadingProducts ? (
-                            <CircularProgress size={20} />
-                          ) : null}
-
-                          {params.InputProps.endAdornment}
-                        </>
-                      ),
-                    }}
-                  />
-                )}
-              />
-            </Grid>
-
-            {/* ==================================================
-                VARIANT
-            ================================================== */}
-
-            <Grid item xs={12} md={3}>
-              {variants.length > 0 ? (
-                <Select
-                  fullWidth
-                  displayEmpty
-                  value={selectedVariant}
-                  onChange={handleVariantChange}
-                  renderValue={(value) => {
-                    if (!value) {
-                      return (
-                        <Typography color="text.secondary">
-                          Chọn phân loại
-                        </Typography>
-                      );
-                    }
-
-                    return value;
+                    if (text) setSearch(text);
                   }}
-                >
-                  <MenuItem value="">Chọn phân loại</MenuItem>
-
-                  {variants.map((variant, index) => (
-                    <MenuItem
-                      key={`${variant?.name}-${index}`}
-                      value={variant?.name || ""}
-                    >
-                      <Box
-                        sx={{
-                          width: "100%",
-                          display: "flex",
-                          justifyContent: "space-between",
-                          gap: 2,
-                        }}
-                      >
-                        <span>{variant?.name}</span>
-
-                        <Typography variant="caption" color="text.secondary">
-                          Tồn:{" "}
-                          {Number(variant?.qty || 0).toLocaleString("vi-VN")}
-                        </Typography>
-                      </Box>
-                    </MenuItem>
-                  ))}
-                </Select>
-              ) : (
-                <TextField
-                  fullWidth
-                  disabled
-                  value={selectedProduct ? "Sản phẩm không có phân loại" : ""}
-                  label="Phân loại"
-                  placeholder="Không có phân loại"
                 />
-              )}
 
-              {selectedProduct && (
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  sx={{
-                    display: "block",
-                    mt: 0.5,
-                  }}
-                >
-                  Tồn hiện tại: {currentSelectedQty.toLocaleString("vi-VN")}
-                </Typography>
-              )}
-            </Grid>
+                <Autocomplete
+                  options={products}
+                  loading={loadingProducts}
+                  value={selectedProduct}
+                  inputValue={search}
+                  getOptionLabel={getProductTitle}
+                  isOptionEqualToValue={(a, b) =>
+                    String(a?._id) === String(b?._id)
+                  }
+                  onInputChange={(_, value) => setSearch(value)}
+                  onChange={(_, value) => selectProduct(value)}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Tìm sản phẩm"
+                      placeholder="Nhập tên, mã sản phẩm..."
+                      InputProps={{
+                        ...params.InputProps,
+                        endAdornment: (
+                          <>
+                            {loadingProducts ? (
+                              <CircularProgress size={18} />
+                            ) : null}
+                            {params.InputProps.endAdornment}
+                          </>
+                        ),
+                      }}
+                    />
+                  )}
+                />
 
-            {/* ==================================================
-                QTY
-            ================================================== */}
-
-            <Grid item xs={12} sm={6} md={2}>
-              <TextField
-                fullWidth
-                type="number"
-                label="Số lượng"
-                value={qty}
-                onChange={(e) => setQty(e.target.value)}
-                inputProps={{
-                  min: 1,
-                  step: 1,
-                }}
-              />
-            </Grid>
-
-            {/* ==================================================
-                PRICE
-            ================================================== */}
-
-            <Grid item xs={12} sm={6} md={2}>
-              <TextField
-                fullWidth
-                label="Giá nhập"
-                value={unitCost ? unitCost : ""}
-                onChange={(e) => {
-                  const value = e.target.value;
-
-                  setUnitCost(value);
-                }}
-                placeholder="VD: 5"
-                InputProps={{
-                  endAdornment: "¥",
-                }}
-              />
-            </Grid>
-
-            {/* ==================================================
-                CURRENT STOCK
-            ================================================== */}
-
-            {selectedProduct && (
-              <Grid item xs={12}>
-                <Paper
-                  variant="outlined"
-                  sx={{
-                    p: 1.5,
-                    background: "#fafafa",
-                  }}
-                >
-                  <Stack
-                    direction={{
-                      xs: "column",
-                      sm: "row",
-                    }}
-                    spacing={{
-                      xs: 0.5,
-                      sm: 3,
-                    }}
-                  >
-                    <Typography variant="body2">
-                      Sản phẩm:{" "}
-                      <strong>{getProductTitle(selectedProduct)}</strong>
+                {selectedProduct && (
+                  <>
+                    <Typography fontWeight={600}>
+                      {getProductTitle(selectedProduct)}
                     </Typography>
 
-                    {selectedVariant && (
-                      <Typography variant="body2">
-                        Phân loại: <strong>{selectedVariant}</strong>
-                      </Typography>
+                    {getVariants(selectedProduct).length > 0 && (
+                      <TextField
+                        select
+                        label="Phân loại"
+                        value={selectedVariant}
+                        onChange={(event) =>
+                          setSelectedVariant(event.target.value)
+                        }
+                        fullWidth
+                      >
+                        {getVariants(selectedProduct).map((variant) => (
+                          <MenuItem
+                            key={variant._id || variant.name}
+                            value={variant.name}
+                          >
+                            {variant.name} — tồn: {numberValue(variant.qty)}
+                          </MenuItem>
+                        ))}
+                      </TextField>
                     )}
 
-                    <Typography variant="body2">
-                      Tồn hiện tại:{" "}
-                      <strong>
-                        {currentSelectedQty.toLocaleString("vi-VN")}
-                      </strong>
-                    </Typography>
-                  </Stack>
-                </Paper>
-              </Grid>
-            )}
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} sm={6}>
+                        <TextField
+                          fullWidth
+                          type="number"
+                          label="Số lượng nhập"
+                          value={qty}
+                          onChange={(event) => setQty(event.target.value)}
+                          inputProps={{ min: 1 }}
+                        />
+                      </Grid>
 
-            {/* ==================================================
-                BUTTON
-            ================================================== */}
+                      <Grid item xs={12} sm={6}>
+                        <TextField
+                          fullWidth
+                          type="number"
+                          label="Giá vốn (CNY)"
+                          value={unitCost}
+                          onChange={(event) => setUnitCost(event.target.value)}
+                          inputProps={{ min: 0 }}
+                        />
+                      </Grid>
+                    </Grid>
 
-            <Grid item xs={12}>
-              <Button
-                variant="contained"
-                startIcon={<AddOutlined />}
-                onClick={handleAddItem}
-                disabled={!selectedProduct}
-              >
-                Thêm vào phiếu
-              </Button>
-            </Grid>
-          </Grid>
-        </CardContent>
-      </Card>
+                    <Button
+                      variant="contained"
+                      startIcon={<AddOutlined />}
+                      onClick={addItem}
+                    >
+                      Thêm vào phiếu
+                    </Button>
+                  </>
+                )}
+              </Stack>
+            </CardContent>
+          </Card>
+        </Grid>
 
-      {/* ======================================================
-          ITEMS
-      ====================================================== */}
-
-      <Card>
-        <CardContent>
-          <Stack
-            direction={{
-              xs: "column",
-              sm: "row",
-            }}
-            justifyContent="space-between"
-            spacing={2}
-            mb={2}
-          >
-            <Box>
-              <Typography fontWeight={700}>Chi tiết nhập kho</Typography>
-
-              <Typography variant="body2" color="text.secondary">
-                {items.length} dòng · {totalQty.toLocaleString("vi-VN")} sản
-                phẩm
+        <Grid item xs={12} md={4}>
+          <Card>
+            <CardContent>
+              <Typography fontWeight={700} mb={2}>
+                Thông tin phiếu nhập
               </Typography>
-            </Box>
 
-            <Chip
-              label={`Tổng: ${formatMoney(totalAmount)} ¥`}
-              color="primary"
-            />
-          </Stack>
+              <Stack spacing={2}>
+                <TextField
+                  label="Nhà cung cấp"
+                  value={supplier}
+                  onChange={(event) => setSupplier(event.target.value)}
+                  fullWidth
+                />
 
-          <Divider sx={{ mb: 2 }} />
+                <TextField
+                  label="Ghi chú"
+                  value={note}
+                  onChange={(event) => setNote(event.target.value)}
+                  multiline
+                  minRows={3}
+                  fullWidth
+                />
 
-          {items.length === 0 ? (
-            <Paper
-              variant="outlined"
-              sx={{
-                py: 6,
-                textAlign: "center",
-              }}
-            >
-              <Inventory2Outlined
-                sx={{
-                  fontSize: 48,
-                  color: "text.disabled",
-                  mb: 1,
-                }}
-              />
+                <Divider />
 
-              <Typography color="text.secondary">
-                Chưa có sản phẩm trong phiếu nhập
+                <Stack direction="row" justifyContent="space-between">
+                  <Typography color="text.secondary">Tổng số lượng</Typography>
+                  <Typography fontWeight={700}>{totalQty}</Typography>
+                </Stack>
+
+                <Stack direction="row" justifyContent="space-between">
+                  <Typography color="text.secondary">Tổng tiền hàng</Typography>
+                  <Typography fontWeight={700} color="primary.main">
+                    {formatMoney(totalAmount)}
+                  </Typography>
+                </Stack>
+              </Stack>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12}>
+          <Card>
+            <CardContent>
+              <Typography fontWeight={700} mb={2}>
+                Danh sách hàng nhập ({items.length})
               </Typography>
-            </Paper>
-          ) : (
-            <TableContainer component={Paper} variant="outlined">
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Sản phẩm</TableCell>
 
-                    <TableCell>Phân loại</TableCell>
+              <TableContainer component={Paper} variant="outlined">
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Sản phẩm</TableCell>
+                      <TableCell>Phân loại</TableCell>
+                      <TableCell align="right">Tồn hiện tại</TableCell>
+                      <TableCell align="right">Số lượng nhập</TableCell>
+                      <TableCell align="right">Giá vốn CNY</TableCell>
+                      <TableCell align="right">Thành tiền</TableCell>
+                      <TableCell align="center">Xóa</TableCell>
+                    </TableRow>
+                  </TableHead>
 
-                    <TableCell align="right">Tồn hiện tại</TableCell>
-
-                    <TableCell align="right">Số lượng nhập</TableCell>
-
-                    <TableCell align="right">Giá nhập</TableCell>
-
-                    <TableCell align="right">Thành tiền</TableCell>
-
-                    <TableCell align="center">#</TableCell>
-                  </TableRow>
-                </TableHead>
-
-                <TableBody>
-                  {items.map((item, index) => {
-                    const imageUrl = getImageUrl(item.thumbnail);
-
-                    return (
-                      <TableRow
-                        key={`${item.productId}-${item.variantName}-${index}`}
-                      >
+                  <TableBody>
+                    {items.map((item, index) => (
+                      <TableRow key={`${item.productId}-${item.variantName}`}>
                         <TableCell>
-                          <Stack
-                            direction="row"
-                            spacing={1.5}
-                            alignItems="center"
-                          >
-                            {imageUrl ? (
-                              <Box
-                                component="img"
-                                src={imageUrl}
-                                alt={item.productTitle}
-                                sx={{
-                                  width: 46,
-                                  height: 46,
-                                  borderRadius: 1,
-                                  objectFit: "cover",
-                                  background: "#f5f5f5",
-                                }}
-                                onError={(e) => {
-                                  e.currentTarget.style.display = "none";
-                                }}
-                              />
-                            ) : (
-                              <Box
-                                sx={{
-                                  width: 46,
-                                  height: 46,
-                                  borderRadius: 1,
-                                  background: "#f1f3f5",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                }}
-                              >
-                                <Inventory2Outlined
-                                  fontSize="small"
-                                  color="disabled"
-                                />
-                              </Box>
-                            )}
-
-                            <Typography fontWeight={600}>
-                              {item.productTitle}
-                            </Typography>
-                          </Stack>
+                          <Typography fontWeight={600}>
+                            {item.productTitle}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {item.productCode}
+                          </Typography>
                         </TableCell>
 
-                        <TableCell>
-                          {item.variantName ? (
-                            <Chip size="small" label={item.variantName} />
-                          ) : (
-                            <Chip size="small" label="Mặc định" />
-                          )}
-                        </TableCell>
+                        <TableCell>{item.variantName || "Mặc định"}</TableCell>
 
                         <TableCell align="right">
-                          {Number(item.currentQty || 0).toLocaleString("zh-CN")}
+                          {numberValue(item.currentQty)}
                         </TableCell>
 
                         <TableCell align="right">
@@ -1318,153 +696,73 @@ const InventoryImport = () => {
                             size="small"
                             type="number"
                             value={item.qty}
-                            onChange={(e) =>
-                              handleChangeQty(index, e.target.value)
+                            onChange={(event) =>
+                              updateItem(index, "qty", event.target.value)
                             }
-                            inputProps={{
-                              min: 1,
-                              step: 1,
-                              style: {
-                                textAlign: "right",
-                              },
-                            }}
-                            sx={{
-                              width: 100,
-                            }}
+                            inputProps={{ min: 0, style: { width: 70 } }}
                           />
                         </TableCell>
 
                         <TableCell align="right">
                           <TextField
                             size="small"
-                            value={item.unitCost ? item.unitCost : ""}
-                            onChange={(e) =>
-                              handleChangeUnitCost(index, e.target.value)
+                            type="number"
+                            value={item.unitCost}
+                            onChange={(event) =>
+                              updateItem(index, "unitCost", event.target.value)
                             }
-                            InputProps={{
-                              endAdornment: "¥",
-                            }}
-                            inputProps={{
-                              style: {
-                                textAlign: "right",
-                              },
-                            }}
-                            sx={{
-                              width: 145,
-                            }}
+                            inputProps={{ min: 0, style: { width: 90 } }}
                           />
                         </TableCell>
 
                         <TableCell align="right">
-                          <Typography fontWeight={600}>
-                            {formatMoney(item.total)} ¥
-                          </Typography>
+                          {formatMoney(
+                            numberValue(item.qty) * numberValue(item.unitCost),
+                          )}
                         </TableCell>
 
                         <TableCell align="center">
                           <IconButton
                             color="error"
-                            onClick={() => handleDeleteItem(index)}
-                            disabled={saving}
+                            onClick={() => removeItem(index)}
                           >
                             <DeleteOutline />
                           </IconButton>
                         </TableCell>
                       </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
+                    ))}
 
-          {/* ==================================================
-              FOOTER
-          ================================================== */}
-
-          {items.length > 0 && (
-            <>
-              <Divider sx={{ my: 3 }} />
-
-              <Stack
-                direction={{
-                  xs: "column",
-                  sm: "row",
-                }}
-                justifyContent="space-between"
-                alignItems={{
-                  xs: "stretch",
-                  sm: "center",
-                }}
-                spacing={2}
-              >
-                <Box>
-                  <Typography variant="body2" color="text.secondary">
-                    Tổng số lượng
-                  </Typography>
-
-                  <Typography variant="h6" fontWeight={700}>
-                    {totalQty.toLocaleString("vi-VN")}
-                  </Typography>
-                </Box>
-
-                <Box>
-                  <Typography variant="body2" color="text.secondary">
-                    Tổng tiền nhập
-                  </Typography>
-
-                  <Typography variant="h5" fontWeight={700} color="primary">
-                    {formatMoney(totalAmount)} ¥
-                  </Typography>
-                </Box>
-
-                <Button
-                  variant="contained"
-                  size="large"
-                  startIcon={<SaveOutlined />}
-                  onClick={handleSave}
-                  disabled={saving}
-                  sx={{
-                    minWidth: 200,
-                  }}
-                >
-                  {saving ? "Đang lưu..." : "Lưu phiếu nhập"}
-                </Button>
-              </Stack>
-            </>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* ======================================================
-          SNACKBAR
-      ====================================================== */}
+                    {!items.length && (
+                      <TableRow>
+                        <TableCell colSpan={7} align="center">
+                          <Typography color="text.secondary" py={3}>
+                            Chưa có sản phẩm trong phiếu nhập
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
 
       <Snackbar
-        open={snackbar.open}
+        open={Boolean(message)}
         autoHideDuration={3500}
-        onClose={() =>
-          setSnackbar((prev) => ({
-            ...prev,
-            open: false,
-          }))
-        }
+        onClose={() => setMessage("")}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       >
         <Alert
-          severity={snackbar.severity}
-          onClose={() =>
-            setSnackbar((prev) => ({
-              ...prev,
-              open: false,
-            }))
-          }
+          severity={messageType}
+          onClose={() => setMessage("")}
           variant="filled"
         >
-          {snackbar.message}
+          {message}
         </Alert>
       </Snackbar>
     </Box>
   );
-};
-
-export default InventoryImport;
+}
