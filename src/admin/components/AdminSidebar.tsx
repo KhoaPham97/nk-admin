@@ -33,6 +33,7 @@ import RequestQuoteIcon from "@mui/icons-material/RequestQuote";
 import SettingsIcon from "@mui/icons-material/Settings";
 import MoveToInboxIcon from "@mui/icons-material/MoveToInbox";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
+import ShoppingBagIcon from "@mui/icons-material/ShoppingBag";
 import { useLocation, useNavigate } from "react-router-dom";
 import PriceChangeIcon from "@mui/icons-material/PriceChange";
 
@@ -201,6 +202,16 @@ const AdminSidebar = ({
           label: "Thống kê mua hàng",
           icon: <PeopleAltIcon />,
           path: "/admin/customer-purchase-stats",
+        },
+      ],
+    },
+    {
+      title: "eShop",
+      items: [
+        {
+          label: "Quản lý Shopee",
+          icon: <ShoppingBagIcon />,
+          path: "/admin/shopee",
         },
       ],
     },

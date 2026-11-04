@@ -33,7 +33,7 @@ import BestSellingProducts from "./pages/BestSellingProducts";
 import InventoryBatchPage from "./pages/InventoryBatchPage";
 import CostManagement from "./pages/CostManagement";
 import ImportDrafts from "./pages/ImportDrafts";
-
+import ShopeeManagement from "./pages/ShopeeManagement";
 export default function BasicExample() {
   return (
     <Routes>
@@ -119,6 +119,7 @@ export default function BasicExample() {
           <Route path="cost-management" element={<CostManagement />} />
           // Bên trong Routes
           <Route path="/admin/product-quote" element={<ProductQuotePage />} />
+          <Route path="/admin/shopee" element={<ShopeeManagement />} />
         </Route>
       </Route>
     </Routes>

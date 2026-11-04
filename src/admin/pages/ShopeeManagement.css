@@ -1,0 +1,472 @@
+.shopee-page {
+  padding: 24px;
+  color: var(--text-color, #202938);
+  min-height: 100%;
+}
+
+.shopee-page-header,
+.shopee-section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.shopee-page-header {
+  margin-bottom: 24px;
+}
+
+.shopee-breadcrumb {
+  color: #8993a4;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.shopee-breadcrumb span {
+  margin: 0 7px;
+}
+
+.shopee-page-header h1 {
+  font-size: 25px;
+  font-weight: 700;
+  margin: 0 0 7px;
+}
+
+.shopee-page-header p,
+.shopee-section-heading p {
+  color: #8993a4;
+  font-size: 14px;
+  margin: 0;
+}
+
+.shopee-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.shopee-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px;
+  border: 1px solid var(--border-color, #e8ebf0);
+  border-radius: 12px;
+  background: var(--card-bg, #fff);
+}
+
+.shopee-stat-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-size: 19px;
+}
+
+.shopee-stat-icon.orange {
+  background: #fff1e8;
+  color: #ee4d2d;
+}
+
+.shopee-stat-icon.green {
+  background: #e8f8ef;
+  color: #16a05d;
+}
+
+.shopee-stat-icon.blue {
+  background: #eaf2ff;
+  color: #3978d5;
+}
+
+.shopee-stat-card span,
+.shopee-shop-details span {
+  display: block;
+  color: #8993a4;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.shopee-stat-card strong {
+  font-size: 23px;
+  font-weight: 700;
+}
+
+.shopee-section {
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--border-color, #e8ebf0);
+  border-radius: 13px;
+  padding: 22px;
+  margin-bottom: 20px;
+}
+
+.shopee-section-heading {
+  margin-bottom: 20px;
+}
+
+.shopee-section-heading h2 {
+  font-size: 17px;
+  margin: 0 0 6px;
+  font-weight: 700;
+}
+
+.shopee-btn {
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: 0.2s ease;
+  white-space: nowrap;
+}
+
+.shopee-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.shopee-btn-primary {
+  color: white;
+  background: #ee4d2d;
+  border-color: #ee4d2d;
+}
+
+.shopee-btn-primary:hover:not(:disabled) {
+  background: #d94325;
+}
+
+.shopee-btn-outline {
+  color: var(--text-color, #344054);
+  background: var(--card-bg, white);
+  border-color: var(--border-color, #dfe3e9);
+}
+
+.shopee-btn-outline:hover:not(:disabled) {
+  background: var(--hover-bg, #f5f6f8);
+}
+
+.shopee-btn-danger-outline {
+  color: #dc3545;
+  background: transparent;
+  border-color: #f1c5ca;
+}
+
+.shopee-btn-danger-outline:hover:not(:disabled) {
+  background: #fff2f3;
+}
+
+.shopee-alert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 15px;
+  border-radius: 9px;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.shopee-alert span {
+  flex: 1;
+}
+
+.shopee-alert button {
+  border: 0;
+  background: transparent;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.shopee-alert-error {
+  color: #b42318;
+  background: #fff1f0;
+  border: 1px solid #ffd6d2;
+}
+
+.shopee-alert-success {
+  color: #16834b;
+  background: #edfbf3;
+  border: 1px solid #c8f0d8;
+}
+
+.shopee-empty {
+  text-align: center;
+  padding: 45px 15px;
+  color: #8993a4;
+}
+
+.shopee-empty > i {
+  font-size: 25px;
+}
+
+.shopee-empty-icon {
+  width: 65px;
+  height: 65px;
+  border-radius: 18px;
+  margin: 0 auto 15px;
+  display: grid;
+  place-items: center;
+  background: #fff1e8;
+  color: #ee4d2d;
+  font-size: 27px;
+}
+
+.shopee-empty h3 {
+  color: var(--text-color, #344054);
+  font-size: 16px;
+  margin: 0 0 8px;
+}
+
+.shopee-empty p {
+  font-size: 13px;
+  margin: 0 0 18px;
+}
+
+.shopee-shop-list {
+  display: grid;
+  gap: 16px;
+}
+
+.shopee-shop-card {
+  border: 1px solid var(--border-color, #e8ebf0);
+  border-radius: 11px;
+  padding: 18px;
+}
+
+.shopee-shop-top {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.shopee-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  color: #ee4d2d;
+  background: #fff1e8;
+  font-size: 23px;
+}
+
+.shopee-shop-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.shopee-shop-info h3 {
+  font-size: 15px;
+  margin: 0 0 5px;
+}
+
+.shopee-shop-info span {
+  color: #8993a4;
+  font-size: 12px;
+}
+
+.shopee-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 20px;
+}
+
+.shopee-status > span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.shopee-status.is-connected {
+  color: #16834b;
+  background: #edfbf3;
+}
+
+.shopee-status.is-connected > span {
+  background: #16a05d;
+}
+
+.shopee-status.is-disconnected {
+  color: #b54748;
+  background: #fff1f0;
+}
+
+.shopee-status.is-disconnected > span {
+  background: #dc3545;
+}
+
+.shopee-shop-details {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 15px;
+  padding: 17px 0;
+  margin: 16px 0;
+  border-top: 1px solid var(--border-color, #edf0f3);
+  border-bottom: 1px solid var(--border-color, #edf0f3);
+}
+
+.shopee-shop-details strong {
+  font-size: 13px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.shopee-shop-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.shopee-sync-form {
+  margin-top: 17px;
+  padding: 14px;
+  background: var(--hover-bg, #f8f9fb);
+  border-radius: 9px;
+}
+
+.shopee-sync-form-title {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.shopee-date-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.shopee-date-fields label span {
+  display: block;
+  color: #8993a4;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.shopee-date-fields input {
+  width: 100%;
+  height: 39px;
+  border: 1px solid var(--border-color, #dfe3e9);
+  border-radius: 7px;
+  padding: 0 10px;
+  background: var(--card-bg, white);
+  color: var(--text-color, #344054);
+  outline: none;
+}
+
+.shopee-date-fields input:focus {
+  border-color: #ee4d2d;
+}
+
+.shopee-sync-results {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.shopee-sync-results > div {
+  padding: 15px;
+  border-radius: 9px;
+  background: var(--hover-bg, #f8f9fb);
+}
+
+.shopee-sync-results span {
+  display: block;
+  color: #8993a4;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.shopee-sync-results strong {
+  font-size: 22px;
+}
+
+.text-green {
+  color: #16a05d;
+}
+
+.text-red {
+  color: #dc3545;
+}
+
+.shopee-note {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 10px;
+  background: #eef6ff;
+  color: #285b91;
+  font-size: 13px;
+}
+
+.shopee-note > i {
+  font-size: 18px;
+  margin-top: 2px;
+}
+
+.shopee-note strong {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.shopee-note p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+  .shopee-page {
+    padding: 15px;
+  }
+
+  .shopee-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .shopee-section {
+    padding: 15px;
+  }
+
+  .shopee-section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .shopee-shop-top {
+    flex-wrap: wrap;
+  }
+
+  .shopee-status {
+    margin-left: 60px;
+  }
+
+  .shopee-shop-details {
+    grid-template-columns: 1fr;
+    gap: 13px;
+  }
+
+  .shopee-shop-actions {
+    flex-direction: column;
+  }
+
+  .shopee-shop-actions .shopee-btn {
+    width: 100%;
+  }
+
+  .shopee-date-fields,
+  .shopee-sync-results {
+    grid-template-columns: 1fr 1fr;
+  }
+}
