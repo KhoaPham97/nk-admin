@@ -168,7 +168,7 @@
 
 .shopee-btn-orange {
   color: #fff;
-  background: var(--shopee-orange);
+  /* background: var(--shopee-orange); */
   box-shadow: 0 4px 10px rgba(238, 77, 45, 0.16);
 }
 
@@ -1565,4 +1565,991 @@
   .shopee-safety-note p {
     font-size: 9px;
   }
+}
+
+/* =========================================================
+   SHOPEE MANAGEMENT - PREMIUM UI OVERRIDES
+   Nhật Khang Bike
+   Dán cuối ShopeeManagement.css
+========================================================= */
+
+.shopee-page {
+  --shopee-orange: #ee4d2d;
+  --shopee-orange-dark: #d83c20;
+  --shopee-orange-soft: #fff3ef;
+  --shopee-text: #202938;
+  --shopee-muted: #8490a1;
+  --shopee-border: #e8edf3;
+  --shopee-bg: #f4f6f9;
+
+  padding: 28px;
+  background: #f4f6f9;
+  color: #202938;
+  font-size: 13px;
+}
+
+.shopee-page button,
+.shopee-page input,
+.shopee-page select {
+  font-family: inherit;
+}
+
+.shopee-page button:focus-visible,
+.shopee-page input:focus-visible,
+.shopee-page select:focus-visible {
+  outline: 3px solid rgba(238, 77, 45, 0.16);
+  outline-offset: 2px;
+}
+
+/* HERO */
+
+.shopee-hero {
+  min-height: 185px;
+  padding: 32px 36px;
+  border-radius: 20px;
+  background:
+    radial-gradient(
+      circle at 85% 20%,
+      rgba(255, 255, 255, 0.17),
+      transparent 23%
+    ),
+    radial-gradient(
+      circle at 72% 110%,
+      rgba(255, 255, 255, 0.12),
+      transparent 28%
+    ),
+    linear-gradient(115deg, #d83d24 0%, #ed5933 48%, #fa8650 100%);
+  box-shadow: 0 12px 30px rgba(218, 68, 39, 0.15);
+}
+
+.shopee-hero h1 {
+  font-size: clamp(27px, 3vw, 35px);
+  letter-spacing: -1px;
+  font-weight: 850;
+}
+
+.shopee-hero p {
+  font-size: 13px;
+  max-width: 550px;
+  line-height: 1.8;
+}
+
+.shopee-eyebrow {
+  font-size: 10px;
+  letter-spacing: 1.7px;
+}
+
+.shopee-hero-actions {
+  gap: 12px;
+}
+
+.shopee-hero-actions .shopee-btn {
+  min-height: 43px;
+  padding: 11px 17px;
+  border-radius: 10px;
+}
+
+/* BUTTONS */
+
+.shopee-btn {
+  min-height: 41px;
+  padding: 10px 16px;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.shopee-btn-orange {
+  background: linear-gradient(135deg, #f05a38, #e74426) !important;
+  box-shadow: 0 5px 12px rgba(238, 77, 45, 0.16);
+}
+
+.shopee-btn-orange:hover:not(:disabled) {
+  background: linear-gradient(135deg, #e94b2c, #d9381c);
+  box-shadow: 0 7px 17px rgba(238, 77, 45, 0.23);
+}
+
+.shopee-icon-btn {
+  width: 39px;
+  height: 39px;
+  flex-basis: 39px;
+  border-radius: 10px;
+}
+
+/* ALERT */
+
+.shopee-alert {
+  padding: 14px 16px;
+  border-radius: 11px;
+  font-size: 12px;
+  box-shadow: 0 3px 10px rgba(20, 30, 45, 0.025);
+}
+
+/* OVERVIEW */
+
+.shopee-overview {
+  gap: 16px;
+  margin-bottom: 23px;
+}
+
+.shopee-overview-card {
+  position: relative;
+  min-height: 112px;
+  padding: 19px;
+  gap: 15px;
+  border: 1px solid #e9edf2;
+  border-radius: 15px;
+  box-shadow: 0 4px 14px rgba(25, 35, 50, 0.025);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.shopee-overview-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 9px 22px rgba(25, 35, 50, 0.07);
+}
+
+.shopee-overview-icon {
+  width: 48px;
+  height: 48px;
+  flex-basis: 48px;
+  border-radius: 14px;
+  font-size: 19px;
+}
+
+.shopee-overview-card span {
+  color: #788496;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.shopee-overview-card strong {
+  margin-top: 3px;
+  color: #202938;
+  font-size: 25px;
+  font-weight: 850;
+  letter-spacing: -0.5px;
+}
+
+.shopee-overview-card small {
+  color: #9aa4b2;
+  font-size: 10px;
+}
+
+/* TABS */
+
+.shopee-tabs {
+  position: sticky;
+  top: 8px;
+  z-index: 20;
+  gap: 6px;
+  padding: 7px;
+  margin-bottom: 20px;
+  border-radius: 13px;
+  box-shadow: 0 5px 18px rgba(25, 35, 50, 0.045);
+}
+
+.shopee-tab {
+  min-height: 44px;
+  padding: 11px 18px;
+  border-radius: 9px;
+  font-size: 12px;
+  transition: all 0.2s ease;
+}
+
+.shopee-tab.active {
+  color: #d94224;
+  background: #fff0eb;
+  border-color: #ffdbd1;
+  box-shadow: inset 0 0 0 1px rgba(238, 77, 45, 0.025);
+}
+
+.shopee-tab i {
+  font-size: 13px;
+}
+
+/* PANEL */
+
+.shopee-panel {
+  padding: 26px;
+  margin-bottom: 20px;
+  border-radius: 16px;
+  border-color: #e8edf3;
+  box-shadow: 0 4px 16px rgba(25, 35, 50, 0.025);
+}
+
+.shopee-panel-heading {
+  margin-bottom: 24px;
+}
+
+.shopee-panel-heading h2 {
+  color: #202938;
+  font-size: 19px;
+  font-weight: 850;
+  letter-spacing: -0.45px;
+}
+
+.shopee-panel-heading p {
+  color: #8994a3;
+  font-size: 12px;
+}
+
+.shopee-heading-kicker {
+  font-size: 9px;
+  letter-spacing: 1.5px;
+}
+
+.shopee-count,
+.shopee-readonly {
+  padding: 9px 12px;
+  border-radius: 9px;
+  font-size: 10px;
+}
+
+/* SHOP CARD */
+
+.shopee-shop-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.shopee-shop-card {
+  padding: 20px;
+  border-radius: 14px;
+  border-color: #e8edf3;
+}
+
+.shopee-shop-card.selected {
+  border: 1px solid #ee927c;
+  background: linear-gradient(145deg, #fff 60%, #fff7f3);
+  box-shadow: 0 0 0 3px rgba(238, 77, 45, 0.055);
+}
+
+.shopee-shop-brand {
+  width: 47px;
+  height: 47px;
+  border-radius: 14px;
+  font-size: 20px;
+  box-shadow: 0 5px 12px rgba(238, 77, 45, 0.17);
+}
+
+.shopee-shop-card h3 {
+  font-size: 16px;
+}
+
+.shopee-shop-id {
+  font-size: 11px;
+}
+
+.shopee-shop-meta {
+  margin: 19px 0;
+  padding: 15px 0;
+}
+
+.shopee-shop-meta span {
+  font-size: 10px;
+}
+
+.shopee-shop-meta strong {
+  font-size: 11px;
+}
+
+/* FORM */
+
+.shopee-filter-grid {
+  padding: 20px;
+  gap: 16px;
+  border-radius: 13px;
+  background: #f9fafc;
+}
+
+.shopee-field {
+  gap: 8px;
+}
+
+.shopee-field > span {
+  color: #596579;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.shopee-field input,
+.shopee-field select,
+.shopee-return-form input,
+.shopee-return-form select {
+  height: 43px;
+  padding: 0 13px;
+  border: 1px solid #dfe5ec;
+  border-radius: 9px;
+  color: #293548;
+  background: #fff;
+  font-size: 12px;
+  transition:
+    border 0.2s,
+    box-shadow 0.2s;
+}
+
+.shopee-field input:hover,
+.shopee-field select:hover,
+.shopee-return-form input:hover {
+  border-color: #c6ced9;
+}
+
+.shopee-field input:focus,
+.shopee-field select:focus,
+.shopee-return-form input:focus {
+  border-color: #ed8c75;
+  box-shadow: 0 0 0 3px rgba(238, 77, 45, 0.08);
+}
+
+.shopee-filter-submit .shopee-btn {
+  height: 43px;
+}
+
+/* ORDER TOOLBAR */
+
+.shopee-orders-toolbar {
+  padding: 3px 0 15px;
+}
+
+.shopee-orders-toolbar > div:first-child strong {
+  color: #283548;
+  font-size: 13px;
+}
+
+.shopee-order-search {
+  height: 42px;
+  width: min(330px, 100%);
+  border-radius: 9px;
+}
+
+.shopee-order-search input {
+  font-size: 11px;
+}
+
+/* TABLE */
+
+.shopee-table-wrap {
+  border-radius: 12px;
+  border-color: #e7ebf0;
+}
+
+.shopee-orders-table {
+  min-width: 900px;
+}
+
+.shopee-orders-table th {
+  padding: 15px 14px;
+  color: #667286;
+  background: #f7f8fa;
+  font-size: 10px;
+  letter-spacing: 0.2px;
+}
+
+.shopee-orders-table td {
+  padding: 15px 14px;
+  font-size: 11px;
+}
+
+.shopee-orders-table tbody tr:hover {
+  background: #fff8f5;
+}
+
+.shopee-orders-table td strong {
+  font-size: 11px;
+}
+
+.shopee-cell-sub {
+  font-size: 10px;
+}
+
+.shopee-order-status {
+  padding: 7px 10px;
+  border-radius: 7px;
+  font-size: 10px;
+}
+
+.shopee-order-total {
+  font-size: 12px !important;
+}
+
+/* EMPTY STATES */
+
+.shopee-empty,
+.shopee-orders-empty,
+.shopee-feature-empty {
+  border-radius: 14px;
+  background: #fafbfd;
+}
+
+.shopee-empty-icon,
+.shopee-orders-empty > div,
+.shopee-feature-icon {
+  border-radius: 17px;
+}
+
+/* SKU MAPPING */
+
+.shopee-feature-empty {
+  padding: 45px 24px;
+}
+
+.shopee-feature-empty h3 {
+  font-size: 17px;
+}
+
+.shopee-feature-empty p {
+  font-size: 12px;
+}
+
+.shopee-feature-steps {
+  gap: 14px;
+}
+
+.shopee-feature-steps > div {
+  padding: 15px;
+  border-radius: 11px;
+}
+
+/* RETURNS */
+
+.shopee-return-warning {
+  padding: 16px;
+  border-radius: 12px;
+}
+
+.shopee-return-warning strong {
+  font-size: 13px;
+}
+
+.shopee-return-warning p {
+  font-size: 12px;
+}
+
+.shopee-return-form {
+  gap: 18px;
+}
+
+.shopee-return-summary {
+  padding: 16px 18px;
+  border-radius: 11px;
+}
+
+/* HISTORY */
+
+.shopee-history-toolbar {
+  gap: 18px;
+}
+
+.shopee-history-footer {
+  padding-top: 18px;
+  font-size: 11px;
+}
+
+/* SAFETY */
+
+.shopee-safety-note {
+  padding: 19px;
+  border-radius: 13px;
+  background: #f1f6fc;
+}
+
+.shopee-safety-note strong {
+  font-size: 13px;
+}
+
+.shopee-safety-note p {
+  font-size: 11px;
+  line-height: 1.8;
+}
+
+/* MODAL */
+
+.shopee-modal-backdrop {
+  background: rgba(16, 24, 39, 0.64);
+  backdrop-filter: blur(5px);
+}
+
+.shopee-modal {
+  width: min(680px, 100%);
+  padding: 27px;
+  border-radius: 17px;
+  box-shadow: 0 25px 90px rgba(0, 0, 0, 0.25);
+}
+
+.shopee-modal-heading {
+  padding-bottom: 20px;
+}
+
+.shopee-modal-heading h2 {
+  font-size: 21px;
+  font-weight: 850;
+}
+
+.shopee-modal-info {
+  gap: 12px;
+  margin: 20px 0 25px;
+}
+
+.shopee-modal-info > div {
+  padding: 15px;
+  border-radius: 11px;
+}
+
+.shopee-modal-info span {
+  font-size: 10px;
+}
+
+.shopee-modal-info strong {
+  font-size: 12px;
+}
+
+.shopee-modal > h3 {
+  font-size: 15px;
+}
+
+.shopee-modal-item {
+  padding: 14px;
+  border-radius: 11px;
+}
+
+.shopee-modal-warning {
+  padding: 14px;
+  border-radius: 10px;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 1100px) {
+  .shopee-page {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .shopee-page {
+    padding: 14px;
+  }
+
+  .shopee-hero {
+    padding: 24px;
+  }
+
+  .shopee-panel {
+    padding: 19px;
+  }
+
+  .shopee-shop-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .shopee-tabs {
+    top: 5px;
+  }
+}
+
+@media (max-width: 640px) {
+  .shopee-page {
+    padding: 11px;
+  }
+
+  .shopee-hero {
+    padding: 21px 17px;
+    border-radius: 14px;
+  }
+
+  .shopee-hero h1 {
+    font-size: 25px;
+  }
+
+  .shopee-hero-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .shopee-hero-actions .shopee-btn {
+    width: 100%;
+    white-space: normal;
+    font-size: 11px;
+  }
+
+  .shopee-overview {
+    gap: 9px;
+  }
+
+  .shopee-overview-card {
+    min-height: 105px;
+    padding: 12px;
+  }
+
+  .shopee-overview-card strong {
+    font-size: 20px;
+  }
+
+  .shopee-overview-card small {
+    font-size: 9px;
+  }
+
+  .shopee-panel {
+    padding: 15px;
+  }
+
+  .shopee-panel-heading h2 {
+    font-size: 17px;
+  }
+
+  .shopee-tab {
+    padding: 9px 13px;
+  }
+
+  .shopee-return-form {
+    gap: 14px;
+  }
+
+  .shopee-modal {
+    padding: 17px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shopee-page *,
+  .shopee-page *::before,
+  .shopee-page *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* =====================================================
+   SHOPEE SKU MAPPING
+===================================================== */
+
+.shopee-mapping {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.shopee-mapping-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.shopee-mapping-stats article {
+  padding: 19px 21px;
+  background: #fff;
+  border: 1px solid #e8ecf2;
+  border-radius: 13px;
+  box-shadow: 0 4px 15px rgba(25, 39, 60, 0.035);
+}
+
+.shopee-mapping-stats article span {
+  display: block;
+  color: #7b8493;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.shopee-mapping-stats article strong {
+  display: block;
+  margin-top: 9px;
+  color: #202938;
+  font-size: 27px;
+  font-weight: 800;
+}
+
+.shopee-mapping-stats .mapping-green {
+  color: #159b68;
+}
+
+.shopee-mapping-stats .mapping-gray {
+  color: #8a94a4;
+}
+
+.mapping-section-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0 17px;
+}
+
+.mapping-section-title > span {
+  display: flex;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  align-items: center;
+  justify-content: center;
+  color: #e96827;
+  background: #fff0e7;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.mapping-section-title strong {
+  display: block;
+  color: #273244;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.mapping-section-title small {
+  display: block;
+  margin-top: 4px;
+  color: #8993a3;
+  font-size: 11px;
+}
+
+.mapping-section-second {
+  margin-top: 26px;
+  padding-top: 23px;
+  border-top: 1px solid #edf0f4;
+}
+
+.mapping-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 15px;
+}
+
+.mapping-form-grid .mapping-full {
+  grid-column: 1 / -1;
+}
+
+.mapping-form-grid .shopee-field b {
+  color: #e64e42;
+}
+
+.mapping-form-grid textarea {
+  width: 100%;
+  min-height: 85px;
+  padding: 11px 12px;
+  color: #273244;
+  background: #fff;
+  border: 1px solid #dfe4eb;
+  border-radius: 8px;
+  outline: none;
+  resize: vertical;
+  font: inherit;
+  font-size: 13px;
+}
+
+.mapping-form-grid textarea:focus {
+  border-color: #ed8a53;
+  box-shadow: 0 0 0 3px rgba(237, 107, 39, 0.09);
+}
+
+.mapping-form-grid .shopee-field small {
+  color: #8993a3;
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.mapping-form-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+  padding-top: 19px;
+  border-top: 1px solid #edf0f4;
+}
+
+.mapping-toolbar {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) 190px 180px;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.mapping-toolbar > select {
+  width: 100%;
+  min-width: 0;
+  padding: 0 12px;
+  color: #465267;
+  background: #fff;
+  border: 1px solid #dfe4eb;
+  border-radius: 8px;
+  outline: none;
+  font-size: 12px;
+}
+
+.mapping-toolbar > select:focus {
+  border-color: #ed8a53;
+}
+
+.mapping-table td {
+  vertical-align: middle;
+}
+
+.mapping-quantity {
+  display: inline-flex;
+  min-width: 40px;
+  height: 29px;
+  align-items: center;
+  justify-content: center;
+  color: #315caa;
+  background: #edf3ff;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.mapping-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 9px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.mapping-status.active {
+  color: #16845a;
+  background: #e8f7ef;
+}
+
+.mapping-status.disabled {
+  color: #858d9a;
+  background: #f0f1f3;
+}
+
+.mapping-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mapping-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 30px;
+  padding: 0 9px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.mapping-edit-btn {
+  color: #315caa;
+  background: #edf3ff;
+}
+
+.mapping-edit-btn:hover {
+  background: #dce8ff;
+}
+
+.mapping-disable-btn {
+  color: #c4473d;
+  background: #fff0ef;
+}
+
+.mapping-disable-btn:hover {
+  background: #ffe0dd;
+}
+
+.mapping-actions button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.mapping-table-footer {
+  padding-top: 14px;
+  color: #8791a0;
+  font-size: 11px;
+  text-align: right;
+}
+
+@media (max-width: 900px) {
+  .mapping-toolbar {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .mapping-toolbar .shopee-order-search {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 600px) {
+  .shopee-mapping-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .mapping-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mapping-form-grid .mapping-full {
+    grid-column: auto;
+  }
+
+  .mapping-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .mapping-toolbar .shopee-order-search {
+    grid-column: auto;
+  }
+
+  .mapping-form-footer {
+    flex-direction: column-reverse;
+  }
+
+  .mapping-form-footer .shopee-btn {
+    width: 100%;
+  }
+
+  .mapping-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+/* Luôn hiển thị chữ và icon trên nút */
+button,
+.btn,
+.action-btn,
+.tab-btn {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Không ẩn chữ khi chưa hover */
+button span,
+.btn span,
+.action-btn span,
+.tab-btn span {
+  opacity: 1;
+  visibility: visible;
+  color: inherit;
+}
+
+/* Icon Font Awesome */
+.fa,
+.fas,
+.far,
+.fab,
+.fa-solid,
+.fa-regular,
+.fa-brands {
+  display: inline-block;
+  opacity: 1;
+  visibility: visible;
+  color: inherit;
+}
+
+/* Hover chỉ đổi màu nền, không làm mất chữ */
+button:hover,
+.btn:hover,
+.action-btn:hover,
+.tab-btn:hover {
+  opacity: 1;
 }

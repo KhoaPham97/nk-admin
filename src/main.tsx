@@ -10,7 +10,7 @@ import App from "./App.tsx";
 import { store } from "./redux/store";
 
 import { fetchSettings } from "./redux/features/settingsSlice";
-
+import "@fortawesome/fontawesome-free/css/all.min.css";
 import "./index.css";
 
 /* =========================================================
