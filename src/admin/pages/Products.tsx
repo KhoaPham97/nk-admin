@@ -22,7 +22,7 @@ import {
   FormControlLabel,
   Switch,
 } from "@mui/material";
-
+import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import { getProductPriceRange } from "../common/CommonFunc";
 
 import SearchIcon from "@mui/icons-material/Search";
@@ -53,7 +53,8 @@ interface Variant {
   qty: number | string;
 
   weight: number | string;
-
+  variantCode?: string;
+  sku?: string;
   packageQuantity?: number | string;
 
   [key: string]: any;
@@ -630,7 +631,15 @@ const Products = () => {
 
   const updateVariant = (
     index: number,
-    field: "name" | "price" | "unitCost" | "qty" | "weight" | "packageQuantity",
+    field:
+      | "name"
+      | "price"
+      | "unitCost"
+      | "qty"
+      | "weight"
+      | "packageQuantity"
+      | "variantCode"
+      | "sku",
     value: string,
   ) => {
     if (!selectedProduct) {
@@ -1840,252 +1849,321 @@ const Products = () => {
 
                   {/* VARIANTS */}
 
-                  <Stack spacing={1.5}>
-                    {(selectedProduct.variants || []).map((variant, index) => (
-                      <Card
-                        key={variant._id || variant.id || index}
-                        variant="outlined"
-                        sx={{
-                          borderRadius: 2,
+                  <Stack spacing={2}>
+                    {(selectedProduct.variants || []).map((variant, index) => {
+                      const qty = Math.max(0, Number(variant.qty) || 0);
+                      const perPackage = Number(variant.packageQuantity ?? 1);
 
-                          backgroundColor: "background.paper",
-                        }}
-                      >
-                        <CardContent
+                      const validPackage =
+                        Number.isSafeInteger(perPackage) && perPackage >= 1;
+
+                      return (
+                        <Card
+                          key={variant._id || variant.id || index}
+                          variant="outlined"
                           sx={{
-                            p: 1.5,
-
-                            "&:last-child": {
-                              pb: 1.5,
-                            },
+                            borderRadius: 2,
+                            overflow: "hidden",
+                            backgroundColor: "background.paper",
                           }}
                         >
-                          <Grid container spacing={1.5} alignItems="center">
-                            {/* PHÂN LOẠI */}
-
-                            <Grid
-                              size={{
-                                xs: 12,
-                                sm: 6,
-                                md: 3,
-                              }}
+                          {/* HEADER */}
+                          <Box
+                            sx={{
+                              px: 2,
+                              py: 1,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              bgcolor: "action.hover",
+                              borderBottom: "1px solid",
+                              borderColor: "divider",
+                            }}
+                          >
+                            <Stack
+                              direction="row"
+                              spacing={1}
+                              alignItems="center"
                             >
-                              <TextField
-                                fullWidth
-                                size="small"
-                                label="Phân loại"
-                                placeholder="VD: 20*50"
-                                value={variant.name || ""}
-                                onChange={(e) =>
-                                  updateVariant(index, "name", e.target.value)
-                                }
-                              />
-                            </Grid>
-
-                            {/* GIÁ BÁN */}
-
-                            <Grid
-                              size={{
-                                xs: 12,
-                                sm: 6,
-                                md: 2.5,
-                              }}
-                            >
-                              <TextField
-                                fullWidth
-                                size="small"
-                                label="Giá bán"
-                                value={formatVND(variant.price)}
-                                onChange={(e) =>
-                                  updateVariant(
-                                    index,
-                                    "price",
-                                    parsePrice(e.target.value),
-                                  )
-                                }
-                                InputProps={{
-                                  endAdornment: (
-                                    <InputAdornment position="end">
-                                      ₫
-                                    </InputAdornment>
-                                  ),
-                                }}
-                                inputProps={{
-                                  inputMode: "numeric",
-                                }}
-                              />
-                            </Grid>
-
-                            {/* GIÁ GỐC */}
-
-                            <Grid
-                              size={{
-                                xs: 12,
-                                sm: 6,
-                                md: 2.5,
-                              }}
-                            >
-                              <TextField
-                                fullWidth
-                                size="small"
-                                label="Giá gốc"
-                                value={variant.unitCost}
-                                onChange={(e) =>
-                                  updateVariant(
-                                    index,
-                                    "unitCost",
-                                    e.target.value,
-                                  )
-                                }
-                              />
-                            </Grid>
-
-                            {/* CÂN NẶNG */}
-
-                            <Grid
-                              size={{
-                                xs: 6,
-                                sm: 3,
-                                md: 1.5,
-                              }}
-                            >
-                              <TextField
-                                fullWidth
-                                size="small"
-                                type="number"
-                                label="Cân nặng"
-                                placeholder="0.120"
-                                value={variant.weight ?? ""}
-                                onChange={(e) =>
-                                  updateVariant(index, "weight", e.target.value)
-                                }
-                                inputProps={{
-                                  min: 0,
-
-                                  step: 0.001,
-
-                                  inputMode: "decimal",
-                                }}
-                                InputProps={{
-                                  endAdornment: (
-                                    <InputAdornment position="end">
-                                      kg
-                                    </InputAdornment>
-                                  ),
-                                }}
-                              />
-                            </Grid>
-
-                            {/* SỐ LƯỢNG */}
-
-                            <Grid
-                              size={{
-                                xs: 6,
-                                sm: 3,
-                                md: 1.5,
-                              }}
-                            >
-                              <TextField
-                                fullWidth
-                                size="small"
-                                type="number"
-                                label="Số lượng"
-                                value={variant.qty ?? ""}
-                                onChange={(e) =>
-                                  updateVariant(index, "qty", e.target.value)
-                                }
-                                inputProps={{
-                                  min: 0,
-                                }}
-                              />
-                            </Grid>
-
-                            {/* SỐ LƯỢNG TRONG MỖI KIỆN */}
-
-                            <Grid size={{ xs: 6, sm: 3, md: 2 }}>
-                              <TextField
-                                fullWidth
-                                size="small"
-                                type="number"
-                                label="SL/kiện"
-                                value={variant.packageQuantity ?? 1}
-                                onChange={(e) =>
-                                  updateVariant(
-                                    index,
-                                    "packageQuantity",
-                                    e.target.value,
-                                  )
-                                }
-                                inputProps={{ min: 1, step: 1 }}
-                                error={
-                                  variant.packageQuantity === "" ||
-                                  !Number.isSafeInteger(
-                                    Number(variant.packageQuantity),
-                                  ) ||
-                                  Number(variant.packageQuantity) < 1
-                                }
-                                helperText="Sản phẩm/kiện"
-                              />
-                            </Grid>
-
-                            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                              <Typography
-                                variant="body2"
-                                color="text.secondary"
-                              >
-                                {(() => {
-                                  const qty = Number(variant.qty) || 0;
-                                  const perPackage = Number(
-                                    variant.packageQuantity,
-                                  );
-                                  if (
-                                    !Number.isSafeInteger(perPackage) ||
-                                    perPackage < 1 ||
-                                    qty < 0
-                                  ) {
-                                    return "Quy cách kiện chưa hợp lệ";
-                                  }
-                                  return `${Math.floor(qty / perPackage)} kiện + ${qty % perPackage} cái lẻ`;
-                                })()}
+                              <Typography fontWeight={700} variant="subtitle2">
+                                Phân loại {index + 1}
                               </Typography>
-                            </Grid>
 
-                            {/* DELETE */}
+                              {variant.variantCode && (
+                                <Chip
+                                  size="small"
+                                  label={variant.variantCode}
+                                  variant="outlined"
+                                  color="primary"
+                                />
+                              )}
+                            </Stack>
 
-                            <Grid
-                              size={{
-                                xs: 12,
-                                sm: 1,
-                                md: 1,
-                              }}
-                              sx={{
-                                display: "flex",
-
-                                justifyContent: "center",
-
-                                alignItems: "center",
-                              }}
+                            <IconButton
+                              color="error"
+                              size="small"
+                              onClick={() => deleteVariant(index)}
+                              title="Xóa phân loại"
                             >
-                              <IconButton
-                                color="error"
-                                onClick={() => deleteVariant(index)}
+                              <DeleteOutlineIcon fontSize="small" />
+                            </IconButton>
+                          </Box>
+
+                          <CardContent sx={{ p: 2, "&:last-child": { pb: 2 } }}>
+                            <Stack spacing={2}>
+                              {/* THÔNG TIN PHÂN LOẠI */}
+                              <Box>
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                  fontWeight={700}
+                                  sx={{ display: "block", mb: 1 }}
+                                >
+                                  THÔNG TIN PHÂN LOẠI
+                                </Typography>
+
+                                <Grid container spacing={1.5}>
+                                  <Grid size={{ xs: 12, md: 4 }}>
+                                    <TextField
+                                      fullWidth
+                                      size="small"
+                                      label="Tên phân loại"
+                                      placeholder="VD: 20*50"
+                                      value={variant.name || ""}
+                                      onChange={(e) =>
+                                        updateVariant(
+                                          index,
+                                          "name",
+                                          e.target.value,
+                                        )
+                                      }
+                                    />
+                                  </Grid>
+
+                                  <Grid size={{ xs: 12, md: 4 }}>
+                                    <TextField
+                                      fullWidth
+                                      size="small"
+                                      label="Variant Code"
+                                      placeholder="VD: NK000001"
+                                      value={variant.variantCode || ""}
+                                      onChange={(e) =>
+                                        updateVariant(
+                                          index,
+                                          "variantCode",
+                                          e.target.value,
+                                        )
+                                      }
+                                      helperText="Mã định danh nội bộ"
+                                    />
+                                  </Grid>
+
+                                  <Grid size={{ xs: 12, md: 4 }}>
+                                    <TextField
+                                      fullWidth
+                                      size="small"
+                                      label="SKU"
+                                      placeholder="VD: 30205"
+                                      value={variant.sku || ""}
+                                      onChange={(e) =>
+                                        updateVariant(
+                                          index,
+                                          "sku",
+                                          e.target.value,
+                                        )
+                                      }
+                                      helperText="Mã đối chiếu Shopee"
+                                    />
+                                  </Grid>
+                                </Grid>
+                              </Box>
+
+                              <Divider />
+
+                              {/* GIÁ VÀ TỒN KHO */}
+                              <Box>
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                  fontWeight={700}
+                                  sx={{ display: "block", mb: 1 }}
+                                >
+                                  GIÁ VÀ TỒN KHO
+                                </Typography>
+
+                                <Grid container spacing={1.5}>
+                                  <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                                    <TextField
+                                      fullWidth
+                                      size="small"
+                                      label="Giá bán"
+                                      value={formatVND(variant.price)}
+                                      onChange={(e) =>
+                                        updateVariant(
+                                          index,
+                                          "price",
+                                          parsePrice(e.target.value),
+                                        )
+                                      }
+                                      InputProps={{
+                                        endAdornment: (
+                                          <InputAdornment position="end">
+                                            ₫
+                                          </InputAdornment>
+                                        ),
+                                      }}
+                                      inputProps={{ inputMode: "numeric" }}
+                                    />
+                                  </Grid>
+
+                                  <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                                    <TextField
+                                      fullWidth
+                                      size="small"
+                                      label="Giá vốn"
+                                      value={variant.unitCost ?? ""}
+                                      onChange={(e) =>
+                                        updateVariant(
+                                          index,
+                                          "unitCost",
+                                          e.target.value,
+                                        )
+                                      }
+                                      InputProps={{
+                                        endAdornment: (
+                                          <InputAdornment position="end">
+                                            ¥
+                                          </InputAdornment>
+                                        ),
+                                      }}
+                                    />
+                                  </Grid>
+
+                                  <Grid size={{ xs: 6, sm: 4, md: 2 }}>
+                                    <TextField
+                                      fullWidth
+                                      size="small"
+                                      type="number"
+                                      label="Cân nặng"
+                                      placeholder="0.120"
+                                      value={variant.weight ?? ""}
+                                      onChange={(e) =>
+                                        updateVariant(
+                                          index,
+                                          "weight",
+                                          e.target.value,
+                                        )
+                                      }
+                                      inputProps={{
+                                        min: 0,
+                                        step: 0.001,
+                                        inputMode: "decimal",
+                                      }}
+                                      InputProps={{
+                                        endAdornment: (
+                                          <InputAdornment position="end">
+                                            kg
+                                          </InputAdornment>
+                                        ),
+                                      }}
+                                    />
+                                  </Grid>
+
+                                  <Grid size={{ xs: 6, sm: 4, md: 2 }}>
+                                    <TextField
+                                      fullWidth
+                                      size="small"
+                                      type="number"
+                                      label="Tồn kho"
+                                      value={variant.qty ?? ""}
+                                      onChange={(e) =>
+                                        updateVariant(
+                                          index,
+                                          "qty",
+                                          e.target.value,
+                                        )
+                                      }
+                                      inputProps={{ min: 0 }}
+                                    />
+                                  </Grid>
+
+                                  <Grid size={{ xs: 12, sm: 4, md: 2 }}>
+                                    <TextField
+                                      fullWidth
+                                      size="small"
+                                      type="number"
+                                      label="SL / kiện"
+                                      value={variant.packageQuantity ?? 1}
+                                      onChange={(e) =>
+                                        updateVariant(
+                                          index,
+                                          "packageQuantity",
+                                          e.target.value,
+                                        )
+                                      }
+                                      inputProps={{ min: 1, step: 1 }}
+                                      error={
+                                        variant.packageQuantity === "" ||
+                                        !validPackage
+                                      }
+                                      helperText="Cái / kiện"
+                                    />
+                                  </Grid>
+                                </Grid>
+                              </Box>
+
+                              {/* QUY CÁCH KIỆN */}
+                              <Box
                                 sx={{
-                                  border: "1px solid",
-
-                                  borderColor: "error.light",
-
-                                  width: 38,
-
-                                  height: 38,
+                                  p: 1.5,
+                                  borderRadius: 1.5,
+                                  bgcolor: "action.hover",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "space-between",
+                                  flexWrap: "wrap",
+                                  gap: 1,
                                 }}
                               >
-                                <DeleteOutlineIcon fontSize="small" />
-                              </IconButton>
-                            </Grid>
-                          </Grid>
-                        </CardContent>
-                      </Card>
-                    ))}
+                                <Stack
+                                  direction="row"
+                                  spacing={1}
+                                  alignItems="center"
+                                >
+                                  <Inventory2OutlinedIcon
+                                    fontSize="small"
+                                    color="action"
+                                  />
+                                  <Typography variant="body2" fontWeight={600}>
+                                    Quy cách đóng gói
+                                  </Typography>
+                                </Stack>
+
+                                {validPackage ? (
+                                  <Typography variant="body2" fontWeight={600}>
+                                    {Math.floor(qty / perPackage)} kiện
+                                    {" + "}
+                                    {qty % perPackage} cái lẻ
+                                    <Typography
+                                      component="span"
+                                      color="text.secondary"
+                                      variant="caption"
+                                      sx={{ ml: 1 }}
+                                    >
+                                      ({qty} sản phẩm)
+                                    </Typography>
+                                  </Typography>
+                                ) : (
+                                  <Typography variant="body2" color="error">
+                                    SL/kiện chưa hợp lệ
+                                  </Typography>
+                                )}
+                              </Box>
+                            </Stack>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
                   </Stack>
                 </Box>
 

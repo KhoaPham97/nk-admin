@@ -1,0 +1,548 @@
+/* =====================================================
+   SHOPEE MANAGEMENT
+===================================================== */
+
+.shopee-management {
+  --shopee-primary: #ee4d2d;
+  --shopee-primary-dark: #d93c20;
+  --shopee-bg: #f5f6f8;
+  --shopee-card: #ffffff;
+  --shopee-text: #202124;
+  --shopee-muted: #747b86;
+  --shopee-border: #e8eaf0;
+
+  min-height: 100vh;
+  padding: 22px;
+  background: var(--shopee-bg);
+  color: var(--shopee-text);
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.shopee-management *,
+.shopee-management *::before,
+.shopee-management *::after {
+  box-sizing: border-box;
+}
+
+.shopee-management button {
+  font: inherit;
+}
+
+/* =====================================================
+   HEADER
+===================================================== */
+
+.shopee-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.shopee-header-left {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.shopee-logo {
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 15px;
+  background: var(--shopee-primary);
+  color: white;
+  box-shadow: 0 5px 15px rgba(238, 77, 45, 0.2);
+}
+
+.shopee-header h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 850;
+  letter-spacing: -0.5px;
+}
+
+.shopee-header p {
+  margin: 5px 0 0;
+  color: var(--shopee-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.shopee-refresh-button {
+  min-height: 42px;
+  padding: 0 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--shopee-border);
+  border-radius: 10px;
+  background: white;
+  color: #343a40;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.shopee-refresh-button:hover {
+  border-color: var(--shopee-primary);
+  color: var(--shopee-primary);
+}
+
+.shopee-refresh-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* =====================================================
+   STATISTICS
+===================================================== */
+
+.shopee-dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.shopee-stat-card {
+  min-height: 100px;
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--shopee-card);
+  border: 1px solid var(--shopee-border);
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(20, 30, 50, 0.025);
+}
+
+.shopee-stat-icon {
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+}
+
+.shopee-stat-icon.orange {
+  color: #ee4d2d;
+  background: #fff0eb;
+}
+
+.shopee-stat-icon.blue {
+  color: #2775d7;
+  background: #edf5ff;
+}
+
+.shopee-stat-icon.purple {
+  color: #8054cf;
+  background: #f3efff;
+}
+
+.shopee-stat-icon.green {
+  color: #15966b;
+  background: #eaf8f2;
+}
+
+.shopee-stat-card span {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--shopee-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.shopee-stat-card strong {
+  display: block;
+  color: var(--shopee-text);
+  font-size: 25px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+/* =====================================================
+   WARNING
+===================================================== */
+
+.shopee-dashboard-warning {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 15px;
+  margin-bottom: 18px;
+  border: 1px solid #f3d6a0;
+  border-radius: 10px;
+  background: #fff9ed;
+  color: #94620d;
+  font-size: 13px;
+}
+
+.shopee-dashboard-warning span {
+  flex: 1;
+}
+
+.shopee-dashboard-warning button {
+  padding: 6px 12px;
+  border: 1px solid #e8c985;
+  border-radius: 7px;
+  background: white;
+  color: #94620d;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* =====================================================
+   MAIN LAYOUT
+===================================================== */
+
+.shopee-layout {
+  display: grid;
+  grid-template-columns: 245px minmax(0, 1fr);
+  align-items: start;
+  gap: 18px;
+}
+
+/* =====================================================
+   SIDEBAR
+===================================================== */
+
+.shopee-sidebar {
+  position: sticky;
+  top: 15px;
+  padding: 15px 10px 10px;
+  border: 1px solid var(--shopee-border);
+  border-radius: 15px;
+  background: white;
+}
+
+.shopee-sidebar-title {
+  padding: 5px 12px 14px;
+  color: #9aa0aa;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.shopee-navigation {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.shopee-nav-item {
+  width: 100%;
+  min-height: 64px;
+  padding: 9px 10px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: #515966;
+  text-align: left;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.shopee-nav-item:hover {
+  background: #fff5f1;
+  color: var(--shopee-primary);
+}
+
+.shopee-nav-item.active {
+  border-color: #ffe0d7;
+  background: #fff0eb;
+  color: var(--shopee-primary);
+}
+
+.shopee-nav-icon {
+  width: 35px;
+  height: 35px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  background: #f5f6f8;
+}
+
+.shopee-nav-item.active .shopee-nav-icon {
+  background: #ffe0d7;
+}
+
+.shopee-nav-content {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.shopee-nav-content strong {
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.shopee-nav-content span {
+  color: #9298a2;
+  font-size: 10px;
+  line-height: 1.3;
+}
+
+.shopee-sidebar-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 15px;
+  padding: 13px 10px 5px;
+  border-top: 1px solid var(--shopee-border);
+  color: #818894;
+  font-size: 11px;
+}
+
+.shopee-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #20b77a;
+}
+
+/* =====================================================
+   MAIN CONTENT
+===================================================== */
+
+.shopee-main {
+  min-width: 0;
+}
+
+.shopee-content-heading {
+  min-height: 90px;
+  margin-bottom: 14px;
+  padding: 17px 21px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid var(--shopee-border);
+  border-radius: 14px;
+  background: white;
+}
+
+.shopee-breadcrumb {
+  margin-bottom: 7px;
+  color: #a0a5ad;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.shopee-content-heading h2 {
+  margin: 0;
+  color: var(--shopee-text);
+  font-size: 21px;
+  font-weight: 800;
+}
+
+.shopee-content-heading p {
+  margin: 5px 0 0;
+  color: var(--shopee-muted);
+  font-size: 12px;
+}
+
+.shopee-content-body {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--shopee-border);
+  border-radius: 14px;
+  background: white;
+  min-height: 450px;
+}
+
+/* =====================================================
+   ANIMATION
+===================================================== */
+
+.shopee-spin {
+  animation: shopee-spin 1s linear infinite;
+}
+
+@keyframes shopee-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* =====================================================
+   RESPONSIVE TABLET
+===================================================== */
+
+@media (max-width: 1100px) {
+  .shopee-dashboard-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .shopee-layout {
+    grid-template-columns: 205px minmax(0, 1fr);
+  }
+}
+
+/* =====================================================
+   RESPONSIVE MOBILE
+===================================================== */
+
+@media (max-width: 768px) {
+  .shopee-management {
+    padding: 12px;
+  }
+
+  .shopee-header {
+    align-items: center;
+  }
+
+  .shopee-logo {
+    width: 43px;
+    height: 43px;
+    border-radius: 12px;
+  }
+
+  .shopee-header h1 {
+    font-size: 17px;
+  }
+
+  .shopee-header p {
+    font-size: 9px;
+  }
+
+  .shopee-refresh-button {
+    min-height: 39px;
+    padding: 0 10px;
+  }
+
+  .shopee-refresh-button span {
+    display: none;
+  }
+
+  .shopee-dashboard-stats {
+    gap: 9px;
+  }
+
+  .shopee-stat-card {
+    min-height: 82px;
+    padding: 11px;
+    gap: 9px;
+  }
+
+  .shopee-stat-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .shopee-stat-card span {
+    font-size: 10px;
+  }
+
+  .shopee-stat-card strong {
+    font-size: 20px;
+  }
+
+  .shopee-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .shopee-sidebar {
+    position: static;
+    width: 100%;
+    padding: 10px;
+    overflow: hidden;
+  }
+
+  .shopee-sidebar-title {
+    padding: 3px 5px 9px;
+  }
+
+  .shopee-navigation {
+    flex-direction: row;
+    gap: 7px;
+    overflow-x: auto;
+    padding-bottom: 5px;
+    scrollbar-width: thin;
+  }
+
+  .shopee-nav-item {
+    width: auto;
+    min-width: 112px;
+    min-height: 62px;
+    padding: 8px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+
+  .shopee-nav-icon {
+    width: 26px;
+    height: 26px;
+  }
+
+  .shopee-nav-content {
+    gap: 0;
+  }
+
+  .shopee-nav-content strong {
+    font-size: 11px;
+  }
+
+  .shopee-nav-content span {
+    display: none;
+  }
+
+  .shopee-sidebar-footer {
+    display: none;
+  }
+
+  .shopee-content-heading {
+    min-height: 75px;
+    padding: 13px;
+  }
+
+  .shopee-content-heading h2 {
+    font-size: 18px;
+  }
+
+  .shopee-content-body {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 420px) {
+  .shopee-management {
+    padding: 9px;
+  }
+
+  .shopee-dashboard-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .shopee-stat-card {
+    min-height: 75px;
+  }
+
+  .shopee-dashboard-warning {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+}
