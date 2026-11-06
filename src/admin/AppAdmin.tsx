@@ -34,6 +34,8 @@ import InventoryBatchPage from "./pages/InventoryBatchPage";
 import CostManagement from "./pages/CostManagement";
 import ImportDrafts from "./pages/ImportDrafts";
 import ShopeeManagement from "./pages/admin/ShopeeManagement";
+import SkuManagement from "./pages/SkuManagement";
+
 export default function BasicExample() {
   return (
     <Routes>
@@ -120,6 +122,7 @@ export default function BasicExample() {
           // Bên trong Routes
           <Route path="/admin/product-quote" element={<ProductQuotePage />} />
           <Route path="/admin/shopee" element={<ShopeeManagement />} />
+          <Route path="/admin/sku" element={<SkuManagement />} />
         </Route>
       </Route>
     </Routes>

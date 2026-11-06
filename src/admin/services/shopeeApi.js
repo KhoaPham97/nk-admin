@@ -37,6 +37,23 @@ function getToken() {
     ""
   );
 }
+// =====================================================
+// SHOP QUERY HELPER
+// =====================================================
+
+const withShopId = (params = {}) => {
+  const shopId = params.shop_id ?? params.shopId;
+
+  if (!shopId) {
+    throw new Error("Vui lòng chọn shop Shopee trước.");
+  }
+
+  return {
+    ...params,
+    shop_id: String(shopId),
+    shopId: String(shopId),
+  };
+};
 
 // =====================================================
 // REQUEST
@@ -187,7 +204,7 @@ export const shopeeApi = {
 
   syncOrders: (data = {}) => post("/orders/sync", data),
 
-  getOrders: (params = {}) => get("/orders", params),
+  getOrders: (params = {}) => get("/orders", withShopId(params)),
 
   getOrderDetail: (orderSn, params = {}) =>
     get(`/orders/${encode(orderSn)}`, params),
@@ -196,12 +213,12 @@ export const shopeeApi = {
 
   updateOrderStatus: (orderSn, data = {}) =>
     put(`/orders/${encode(orderSn)}/status`, data),
-
   // ---------------------------------------------------
   // SKU MAPPING
   // ---------------------------------------------------
 
-  getSkuMappings: (params = {}) => get("/management/sku-mappings", params),
+  getSkuMappings: (params = {}) =>
+    get("/management/sku-mappings", withShopId(params)),
 
   createSkuMapping: (data = {}) => post("/management/sku-mappings", data),
 
@@ -212,7 +229,6 @@ export const shopeeApi = {
 
   autoMatchSkuMappings: (data = {}) =>
     post("/management/sku-mappings/auto-match", data),
-
   // ---------------------------------------------------
   // STOCK MANAGEMENT
   // ---------------------------------------------------

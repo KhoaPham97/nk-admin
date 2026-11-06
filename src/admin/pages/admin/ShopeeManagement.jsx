@@ -1,6 +1,4 @@
-// src/pages/admin/ShopeeManagement.jsx
-
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   Store,
   ShoppingCart,
@@ -23,6 +21,7 @@ import ShopeeStock from "../../components/shopee/ShopeeStock";
 import ShopeeReturns from "../../components/shopee/ShopeeReturns";
 import ShopeeStockHistory from "../../components/shopee/ShopeeStockHistory";
 import ShopeeAutoStockPage from "../../components/shopee/ShopeeAutoStockPage";
+
 import "../../styles/shopee-management.css";
 
 const MENU_ITEMS = [
@@ -77,6 +76,27 @@ const DEFAULT_STATS = {
   mappings: 0,
 };
 
+// Chuẩn hóa dữ liệu shop từ các dạng response API
+const extractShops = (response) => {
+  const candidates = [
+    response?.shops,
+    response?.data?.shops,
+    response?.data?.data?.shops,
+    response?.data?.items,
+    response?.items,
+    response?.data,
+    response,
+  ];
+
+  return candidates.find(Array.isArray) || [];
+};
+
+const getShopId = (shop) =>
+  String(shop?.shop_id ?? shop?.shopId ?? shop?.id ?? "");
+
+const getShopName = (shop) =>
+  shop?.shop_name || shop?.shopName || shop?.name || `Shop ${getShopId(shop)}`;
+
 function getErrorMessage(error) {
   return (
     error?.response?.data?.message ||
@@ -89,102 +109,157 @@ export default function ShopeeManagement() {
   const [activeTab, setActiveTab] = useState("shops");
 
   const [stats, setStats] = useState(DEFAULT_STATS);
+  const [shops, setShops] = useState([]);
+  const [selectedShopId, setSelectedShopId] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // =====================================================
-  // LOAD DASHBOARD DATA
-  // =====================================================
+  // ==========================================
+  // LOAD DASHBOARD
+  // ==========================================
 
-  const loadDashboard = async () => {
+  const loadDashboard = useCallback(async () => {
     setLoading(true);
     setError("");
 
     try {
-      const [shopsResult, ordersResult, mappingsResult] =
-        await Promise.allSettled([
-          shopeeApi.getShops(),
+      const nextStats = { ...DEFAULT_STATS };
+
+      // ==========================================
+      // 1. TẢI DANH SÁCH SHOP TRƯỚC
+      // ==========================================
+
+      let currentShopId = selectedShopId;
+      let shopList = [];
+
+      try {
+        const shopResponse = await shopeeApi.getShops();
+
+        shopList = extractShops(shopResponse).filter((shop) => getShopId(shop));
+
+        setShops(shopList);
+        nextStats.shops = shopList.length;
+
+        // Giữ shop đang chọn nếu vẫn tồn tại
+        const currentShopExists = shopList.some(
+          (shop) => getShopId(shop) === String(currentShopId),
+        );
+
+        if (!currentShopExists) {
+          currentShopId = shopList.length ? getShopId(shopList[0]) : "";
+        }
+
+        setSelectedShopId(currentShopId);
+      } catch (shopError) {
+        console.error("Get Shopee shops error:", shopError);
+        setShops([]);
+        currentShopId = "";
+      }
+
+      // ==========================================
+      // 2. CHỈ TẢI ĐƠN VÀ SKU KHI ĐÃ CÓ SHOP
+      // ==========================================
+
+      if (currentShopId) {
+        const [ordersResult, mappingsResult] = await Promise.allSettled([
           shopeeApi.getOrders({
             page: 1,
             limit: 1,
+            shop_id: currentShopId,
           }),
+
           shopeeApi.getSkuMappings({
             page: 1,
             limit: 1,
+            shop_id: currentShopId,
           }),
         ]);
 
-      const nextStats = { ...DEFAULT_STATS };
+        if (ordersResult.status === "fulfilled") {
+          const data = ordersResult.value;
 
-      if (shopsResult.status === "fulfilled") {
-        const data = shopsResult.value;
+          nextStats.orders = Number(
+            data?.total ??
+              data?.totalOrders ??
+              data?.pagination?.total ??
+              data?.data?.total ??
+              data?.data?.pagination?.total ??
+              0,
+          );
+        } else {
+          console.error("Get Shopee orders error:", ordersResult.reason);
+        }
 
-        const shops = data?.shops || data?.data?.shops || data?.data || [];
+        if (mappingsResult.status === "fulfilled") {
+          const data = mappingsResult.value;
 
-        nextStats.shops = Array.isArray(shops)
-          ? shops.length
-          : Number(data?.total || 0);
-      }
+          nextStats.mappings = Number(
+            data?.total ??
+              data?.totalMappings ??
+              data?.pagination?.total ??
+              data?.data?.total ??
+              data?.data?.pagination?.total ??
+              0,
+          );
+        } else {
+          console.error("Get Shopee mappings error:", mappingsResult.reason);
+        }
 
-      if (ordersResult.status === "fulfilled") {
-        const data = ordersResult.value;
+        const failed =
+          ordersResult.status === "rejected" ||
+          mappingsResult.status === "rejected";
 
-        nextStats.orders = Number(
-          data?.total ||
-            data?.totalOrders ||
-            data?.pagination?.total ||
-            data?.data?.total ||
-            0,
-        );
-      }
+        if (failed) {
+          setError("Một số dữ liệu đơn hàng hoặc SKU Mapping chưa tải được.");
+        }
+      } else {
+        nextStats.orders = 0;
+        nextStats.mappings = 0;
 
-      if (mappingsResult.status === "fulfilled") {
-        const data = mappingsResult.value;
-
-        nextStats.mappings = Number(
-          data?.total ||
-            data?.totalMappings ||
-            data?.pagination?.total ||
-            data?.data?.total ||
-            0,
-        );
+        setError("Chưa có gian hàng Shopee được kết nối.");
       }
 
       setStats(nextStats);
-
-      const failed = [shopsResult, ordersResult, mappingsResult].some(
-        (item) => item.status === "rejected",
-      );
-
-      if (failed) {
-        setError(
-          "Một số dữ liệu thống kê chưa tải được. Bạn vẫn có thể sử dụng các khu vực chức năng.",
-        );
-      }
     } catch (err) {
+      console.error("Load Shopee dashboard error:", err);
       setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedShopId]);
 
   useEffect(() => {
     loadDashboard();
-  }, [refreshKey]);
+  }, [loadDashboard, refreshKey]);
 
-  // =====================================================
+  // ==========================================
+  // REFRESH
+  // ==========================================
+
+  const handleRefresh = () => {
+    setRefreshKey((value) => value + 1);
+  };
+
+  // ==========================================
+  // COMMON PROPS
+  // ==========================================
+
+  const commonProps = {
+    shops,
+    selectedShopId,
+    onShopChange: setSelectedShopId,
+    onRefresh: loadDashboard,
+    refreshKey,
+  };
+
+  // ==========================================
   // CONTENT
-  // =====================================================
+  // ==========================================
 
   const renderContent = () => {
-    const commonProps = {
-      onRefresh: loadDashboard,
-      refreshKey,
-    };
-
     switch (activeTab) {
       case "shops":
         return <ShopeeShops {...commonProps} />;
@@ -203,13 +278,10 @@ export default function ShopeeManagement() {
 
       case "history":
         return <ShopeeStockHistory {...commonProps} />;
+
       case "auto-stock":
-        return (
-          <ShopeeAutoStockPage
-            onRefresh={loadDashboard}
-            refreshKey={refreshKey}
-          />
-        );
+        return <ShopeeAutoStockPage {...commonProps} />;
+
       default:
         return <ShopeeShops {...commonProps} />;
     }
@@ -217,14 +289,12 @@ export default function ShopeeManagement() {
 
   const currentMenu = MENU_ITEMS.find((item) => item.id === activeTab);
 
-  // =====================================================
+  // ==========================================
   // RENDER
-  // =====================================================
+  // ==========================================
 
   return (
     <div className="shopee-management">
-      {/* HEADER */}
-
       <header className="shopee-header">
         <div className="shopee-header-left">
           <div className="shopee-logo">
@@ -239,13 +309,38 @@ export default function ShopeeManagement() {
 
         <button
           className="shopee-refresh-button"
-          onClick={() => setRefreshKey((value) => value + 1)}
+          onClick={handleRefresh}
           disabled={loading}
         >
           <RefreshCw size={17} className={loading ? "shopee-spin" : ""} />
           <span>Làm mới</span>
         </button>
       </header>
+
+      {/* SHOP SELECTOR */}
+
+      <section className="shopee-shop-selector">
+        <div className="shopee-shop-selector-label">
+          <Store size={18} />
+          <span>Gian hàng đang làm việc</span>
+        </div>
+
+        <select
+          value={selectedShopId}
+          onChange={(event) => setSelectedShopId(event.target.value)}
+          disabled={!shops.length}
+        >
+          {!shops.length && <option value="">Chưa có gian hàng</option>}
+
+          {shops.map((shop) => (
+            <option key={getShopId(shop)} value={getShopId(shop)}>
+              {getShopName(shop)}
+            </option>
+          ))}
+        </select>
+
+        <span className="shopee-shop-count">{shops.length} gian hàng</span>
+      </section>
 
       {/* STATISTICS */}
 
@@ -254,7 +349,6 @@ export default function ShopeeManagement() {
           <div className="shopee-stat-icon orange">
             <Store size={22} />
           </div>
-
           <div>
             <span>Gian hàng</span>
             <strong>{stats.shops}</strong>
@@ -265,7 +359,6 @@ export default function ShopeeManagement() {
           <div className="shopee-stat-icon blue">
             <ShoppingCart size={22} />
           </div>
-
           <div>
             <span>Tổng đơn hàng</span>
             <strong>{stats.orders.toLocaleString("vi-VN")}</strong>
@@ -276,7 +369,6 @@ export default function ShopeeManagement() {
           <div className="shopee-stat-icon purple">
             <Link2 size={22} />
           </div>
-
           <div>
             <span>Ánh xạ SKU</span>
             <strong>{stats.mappings.toLocaleString("vi-VN")}</strong>
@@ -287,7 +379,6 @@ export default function ShopeeManagement() {
           <div className="shopee-stat-icon green">
             <PackageCheck size={22} />
           </div>
-
           <div>
             <span>Chờ xử lý kho</span>
             <strong>--</strong>
@@ -301,7 +392,6 @@ export default function ShopeeManagement() {
         <div className="shopee-dashboard-warning">
           <AlertCircle size={18} />
           <span>{error}</span>
-
           <button onClick={loadDashboard}>Thử lại</button>
         </div>
       )}
@@ -309,8 +399,6 @@ export default function ShopeeManagement() {
       {/* MAIN LAYOUT */}
 
       <div className="shopee-layout">
-        {/* SIDEBAR */}
-
         <aside className="shopee-sidebar">
           <div className="shopee-sidebar-title">QUẢN LÝ SHOPEE</div>
 
@@ -344,8 +432,6 @@ export default function ShopeeManagement() {
           </div>
         </aside>
 
-        {/* CONTENT */}
-
         <main className="shopee-main">
           <div className="shopee-content-heading">
             <div>
@@ -354,7 +440,6 @@ export default function ShopeeManagement() {
               </div>
 
               <h2>{currentMenu?.label}</h2>
-
               <p>{currentMenu?.description}</p>
             </div>
           </div>

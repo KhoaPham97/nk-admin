@@ -38,11 +38,6 @@ const getOrderStatus = (order) =>
 
 const getStockStatus = (order) => order?.stockStatus || "pending";
 
-const getShopId = (shop) => shop?.shopId || shop?.shop_id || shop?._id || "";
-
-const getShopName = (shop) =>
-  shop?.shopName || shop?.shop_name || getShopId(shop);
-
 const getOrderShopId = (order) => order?.shopId || order?.shop_id || "";
 
 const toNumber = (value) => {
@@ -84,12 +79,25 @@ const getOrdersFromResponse = (response) => {
 
   return candidates.find(Array.isArray) || [];
 };
-
 const getShopsFromResponse = (response) => {
-  const candidates = [response?.data, response?.shops, response?.data?.shops];
+  const candidates = [
+    response?.shops,
+    response?.data?.shops,
+    response?.data?.data?.shops,
+    response?.data?.items,
+    response?.items,
+    response?.data,
+    response,
+  ];
 
   return candidates.find(Array.isArray) || [];
 };
+
+const getShopId = (shop) =>
+  String(shop?.shop_id ?? shop?.shopId ?? shop?.id ?? shop?._id ?? "");
+
+const getShopName = (shop) =>
+  shop?.shopName || shop?.shop_name || shop?.shop?.shop_name || getShopId(shop);
 
 const getPreviewFromResponse = (response) =>
   response?.data?.data || response?.data || response?.preview || response;
@@ -180,27 +188,72 @@ export default function ShopeeStock() {
       setError("");
 
       try {
+        // ==========================================
+        // BƯỚC 1: LẤY DANH SÁCH SHOP ĐÃ KẾT NỐI
+        // ==========================================
+
+        const shopResponse = await shopeeApi.getShops();
+
+        const loadedShops = getShopsFromResponse(shopResponse).filter((shop) =>
+          getShopId(shop),
+        );
+
+        setShops(loadedShops);
+
+        if (loadedShops.length === 0) {
+          setOrders([]);
+          setShopId("");
+          setPagination((current) => ({
+            ...current,
+            page: 1,
+            total: 0,
+            totalPages: 0,
+          }));
+
+          setError("Chưa có gian hàng Shopee nào được kết nối.");
+          return;
+        }
+
+        // ==========================================
+        // BƯỚC 2: TỰ ĐỘNG XÁC ĐỊNH SHOP
+        // ==========================================
+
+        let currentShopId = shopId;
+
+        const shopExists = loadedShops.some(
+          (shop) => getShopId(shop) === String(currentShopId),
+        );
+
+        if (!currentShopId || !shopExists) {
+          currentShopId = getShopId(loadedShops[0]);
+        }
+
+        setShopId(currentShopId);
+
+        // ==========================================
+        // BƯỚC 3: TẢI ĐƠN HÀNG THEO SHOP
+        // ==========================================
+
         const params = {
           page,
           limit: pagination.limit,
-          shopId,
+          shopId: currentShopId,
           search: keyword.trim(),
           orderStatus,
           stockStatus,
         };
 
-        const [orderResponse, shopResponse] = await Promise.all([
-          shopeeApi.getOrders(params),
-          shopeeApi.getShops(),
-        ]);
+        const orderResponse = await shopeeApi.getOrders(params);
 
         const loadedOrders = getOrdersFromResponse(orderResponse);
 
         setOrders(loadedOrders);
-        setShops(getShopsFromResponse(shopResponse));
 
         const responsePagination =
-          orderResponse?.pagination || orderResponse?.data?.pagination || {};
+          orderResponse?.pagination ||
+          orderResponse?.data?.pagination ||
+          orderResponse?.data?.data?.pagination ||
+          {};
 
         setPagination((current) => ({
           ...current,
@@ -211,6 +264,12 @@ export default function ShopeeStock() {
             responsePagination.totalPages ?? (loadedOrders.length ? 1 : 0),
         }));
       } catch (err) {
+        console.error(
+          "Get Shopee stock orders error:",
+          err?.status,
+          err?.data || err?.message,
+        );
+
         setError(err?.message || "Không thể tải danh sách đơn hàng Shopee.");
       } finally {
         setLoading(false);
@@ -318,7 +377,17 @@ export default function ShopeeStock() {
       setPreviewLoading(false);
     }
   };
+  // ===================================================
+  // ORDER DETAIL MODAL
+  // ===================================================
 
+  const openOrderDetail = (order) => {
+    setSelectedOrder(order);
+    setPreview(null);
+    setDetail(null);
+    setActiveModal("order");
+    setError("");
+  };
   // ===================================================
   // STOCK HISTORY
   // ===================================================
@@ -423,8 +492,15 @@ export default function ShopeeStock() {
         <div className="ss-order-top">
           <div className="ss-order-code">
             <span className="ss-eyebrow">MÃ ĐƠN SHOPEE</span>
-
-            <strong>{orderSn}</strong>
+            <button
+              type="button"
+              className="ss-order-code-button"
+              onClick={() => openOrderDetail(order)}
+              title="Xem chi tiết đơn hàng"
+            >
+              {orderSn}
+              <Eye size={15} />
+            </button>
 
             <small>
               <CalendarDays size={12} />
@@ -557,7 +633,290 @@ export default function ShopeeStock() {
       </article>
     );
   };
+  // ===================================================
+  // ORDER DETAIL MODAL
+  // ===================================================
 
+  const renderOrderModal = () => {
+    if (!selectedOrder || activeModal !== "order") {
+      return null;
+    }
+
+    const order = selectedOrder;
+    const items = Array.isArray(order.items) ? order.items : [];
+
+    const orderStatus = getOrderStatus(order);
+    const stockStatus = getStockStatus(order);
+
+    const statusClass =
+      orderStatus === "COMPLETED"
+        ? "is-completed"
+        : orderStatus === "CANCELLED"
+          ? "is-cancelled"
+          : "is-processing";
+
+    return (
+      <div className="ss-modal-backdrop" onClick={closeModal}>
+        <section
+          className="ss-modal ss-order-detail-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="ss-order-detail-title"
+          onClick={(event) => event.stopPropagation()}
+        >
+          <header className="ss-modal-header">
+            <div>
+              <span>CHI TIẾT ĐƠN SHOPEE</span>
+
+              <h2 id="ss-order-detail-title">Đơn hàng {getOrderSn(order)}</h2>
+
+              <p>Ngày tạo: {formatDate(order.createdAt)}</p>
+            </div>
+
+            <button
+              type="button"
+              className="ss-modal-close"
+              onClick={closeModal}
+              aria-label="Đóng"
+            >
+              <X size={20} />
+            </button>
+          </header>
+
+          <div className="ss-modal-body">
+            {/* TRẠNG THÁI */}
+
+            <div className="ss-order-detail-status">
+              <div>
+                <span>Trạng thái Shopee</span>
+                <strong className={`ss-order-status ${statusClass}`}>
+                  {orderStatusLabels[orderStatus] || orderStatus || "--"}
+                </strong>
+              </div>
+
+              <div>
+                <span>Trạng thái kho</span>
+                <strong className={stockStatusClasses[stockStatus] || ""}>
+                  {stockStatusLabels[stockStatus] || stockStatus}
+                </strong>
+              </div>
+
+              <div>
+                <span>Trạng thái xuất kho</span>
+                <strong
+                  className={
+                    order.stockDeducted ? "ss-value-green" : "ss-value-orange"
+                  }
+                >
+                  {order.stockDeducted ? "Đã xuất kho" : "Chưa xuất kho"}
+                </strong>
+              </div>
+            </div>
+
+            {/* KHÁCH HÀNG */}
+
+            <div className="ss-order-detail-section">
+              <h3>
+                <UserRound size={17} />
+                Thông tin khách hàng
+              </h3>
+
+              <div className="ss-order-detail-grid">
+                <div>
+                  <span>Tên tài khoản</span>
+                  <strong>{order.buyerUsername || "Khách Shopee"}</strong>
+                </div>
+
+                <div>
+                  <span>Buyer ID</span>
+                  <strong>{order.buyerUserId || "--"}</strong>
+                </div>
+
+                <div>
+                  <span>Người nhận</span>
+                  <strong>{order.recipientName || "--"}</strong>
+                </div>
+
+                <div>
+                  <span>Số điện thoại</span>
+                  <strong>{order.recipientPhone || "--"}</strong>
+                </div>
+
+                <div className="ss-detail-full">
+                  <span>
+                    <MapPin size={13} />
+                    Địa chỉ giao hàng
+                  </span>
+                  <strong>{order.recipientAddress || "--"}</strong>
+                </div>
+              </div>
+            </div>
+
+            {/* VẬN CHUYỂN VÀ THANH TOÁN */}
+
+            <div className="ss-order-detail-section">
+              <h3>
+                <Truck size={17} />
+                Vận chuyển và thanh toán
+              </h3>
+
+              <div className="ss-order-detail-grid">
+                <div>
+                  <span>Đơn vị vận chuyển</span>
+                  <strong>{order.shippingCarrier || "--"}</strong>
+                </div>
+
+                <div>
+                  <span>Phương thức thanh toán</span>
+                  <strong>{order.paymentMethod || "--"}</strong>
+                </div>
+
+                <div>
+                  <span>Gian hàng</span>
+                  <strong>{order.shopName || order.shopId || "--"}</strong>
+                </div>
+
+                <div>
+                  <span>Đồng bộ lần cuối</span>
+                  <strong>{formatDate(order.lastSyncedAt)}</strong>
+                </div>
+              </div>
+            </div>
+
+            {/* SẢN PHẨM */}
+
+            <div className="ss-order-detail-section">
+              <h3>
+                <Package size={17} />
+                Sản phẩm trong đơn ({items.length})
+              </h3>
+
+              {items.length === 0 ? (
+                <div className="ss-empty">
+                  <Package size={25} />
+                  <strong>Đơn hàng chưa có thông tin sản phẩm.</strong>
+                </div>
+              ) : (
+                <div className="ss-table-scroll">
+                  <table className="ss-table ss-order-items-table">
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>Sản phẩm Shopee</th>
+                        <th>Phân loại</th>
+                        <th>Mã SKU</th>
+                        <th>Số lượng</th>
+                        <th>Đơn giá</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {items.map((item, index) => {
+                        const itemName =
+                          item.itemName ||
+                          item.productTitle ||
+                          item.productName ||
+                          "Sản phẩm";
+
+                        const variantName =
+                          item.modelName || item.variantName || "--";
+
+                        const quantity = toNumber(item.quantity);
+
+                        const price = toNumber(
+                          item.price ??
+                            item.modelPrice ??
+                            item.unitPrice ??
+                            item.originalPrice,
+                        );
+
+                        return (
+                          <tr
+                            key={`${item.itemId || index}-${item.modelId || ""}`}
+                          >
+                            <td>{index + 1}</td>
+
+                            <td>
+                              <strong>{itemName}</strong>
+                            </td>
+
+                            <td>{variantName}</td>
+
+                            <td>
+                              {item.variantCode ||
+                                item.sku ||
+                                item.productCode ||
+                                "--"}
+                            </td>
+
+                            <td>
+                              <strong>{quantity}</strong>
+                            </td>
+
+                            <td>{price > 0 ? formatVND(price) : "--"}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* TỔNG TIỀN */}
+
+            <div className="ss-order-detail-total">
+              <div>
+                <span>Tổng số dòng sản phẩm</span>
+                <strong>{items.length}</strong>
+              </div>
+
+              <div>
+                <span>Tổng số lượng</span>
+                <strong>
+                  {items.reduce(
+                    (sum, item) => sum + toNumber(item.quantity),
+                    0,
+                  )}
+                </strong>
+              </div>
+
+              <div className="ss-order-detail-grand-total">
+                <span>Tổng thanh toán</span>
+                <strong>{formatVND(order.totalAmount)}</strong>
+              </div>
+            </div>
+
+            {order.cancelReason ? (
+              <div className="ss-item-reason">
+                <AlertTriangle size={15} />
+                Lý do hủy: {order.cancelReason}
+              </div>
+            ) : null}
+          </div>
+
+          <footer className="ss-modal-footer">
+            <button
+              type="button"
+              className="ss-btn ss-btn-outline"
+              onClick={closeModal}
+            >
+              Đóng
+            </button>
+
+            <button
+              type="button"
+              className="ss-btn ss-btn-primary"
+              onClick={() => openHistory(order)}
+            >
+              <History size={16} />
+              Xem lịch sử kho
+            </button>
+          </footer>
+        </section>
+      </div>
+    );
+  };
   // ===================================================
   // PREVIEW MODAL
   // ===================================================
@@ -1202,8 +1561,7 @@ export default function ShopeeStock() {
                 value={shopId}
                 onChange={(event) => setShopId(event.target.value)}
               >
-                <option value="">Tất cả gian hàng</option>
-
+                <option value="">Đang chọn gian hàng...</option>
                 {shops.map((shop) => {
                   const id = getShopId(shop);
 
@@ -1340,6 +1698,7 @@ export default function ShopeeStock() {
 
       {renderPreviewModal()}
       {renderHistoryModal()}
+      {renderOrderModal()}
     </div>
   );
 }

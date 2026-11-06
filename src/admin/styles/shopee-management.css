@@ -546,3 +546,61 @@
     flex-wrap: wrap;
   }
 }
+
+.shopee-shop-selector {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 14px 18px;
+  margin-bottom: 18px;
+  background: var(--shopee-card-bg, #fff);
+  border: 1px solid var(--shopee-border, #e5e7eb);
+  border-radius: 12px;
+}
+
+.shopee-shop-selector-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--shopee-text, #252525);
+}
+
+.shopee-shop-selector select {
+  min-width: 220px;
+  max-width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  outline: none;
+  background: #fff;
+  color: #222;
+  font-size: 14px;
+}
+
+.shopee-shop-selector select:focus {
+  border-color: #ee4d2d;
+  box-shadow: 0 0 0 2px rgba(238, 77, 45, 0.12);
+}
+
+.shopee-shop-count {
+  margin-left: auto;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+@media (max-width: 600px) {
+  .shopee-shop-selector {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .shopee-shop-selector select {
+    width: 100%;
+  }
+
+  .shopee-shop-count {
+    margin-left: 0;
+  }
+}

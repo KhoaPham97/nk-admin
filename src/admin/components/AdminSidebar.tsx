@@ -134,6 +134,11 @@ const AdminSidebar = ({
           icon: <RequestQuoteIcon />,
           path: "/admin/product-quote",
         },
+        {
+          label: "Quản lý SKU",
+          icon: "",
+          path: "/admin/sku",
+        },
       ],
     },
 

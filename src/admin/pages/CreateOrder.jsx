@@ -476,10 +476,24 @@ const CreateOrder = () => {
         items: items.map((item) => ({
           productId: item.productId,
           variantName: item.variantName || "",
+          variantCode: item.variantCode || "",
+
+          // Giá vốn variant
+          unitCost: getNumber(item.unitCost),
+
           qty: Number(item.qty),
-          batchAllocations: (item.batchAllocations || []).filter(
-            (allocation) => getNumber(allocation.qty) > 0,
-          ),
+
+          // Giá vốn từng lô FIFO
+          batchAllocations: (item.batchAllocations || [])
+            .filter((allocation) => getNumber(allocation.qty) > 0)
+            .map((allocation) => ({
+              batchId: allocation.batchId,
+              batchCode: allocation.batchCode || "",
+              variantCode: allocation.variantCode || item.variantCode || "",
+              variantName: allocation.variantName || item.variantName || "",
+              qty: getNumber(allocation.qty),
+              unitCost: getNumber(allocation.unitCost),
+            })),
         })),
 
         discount: getNumber(discount),
@@ -1041,7 +1055,6 @@ const CreateOrder = () => {
                 </Box>
 
                 <Divider />
-
                 {items.length === 0 ? (
                   <Box
                     sx={{

@@ -658,21 +658,24 @@ const Orders = () => {
   };
 
   // =====================================================
-  // DEFAULT PRICE - GIÁ GỐC VARIANT
+  // UNIT COST - GIÁ VỐN VARIANT
   // =====================================================
 
-  const getVariantDefaultPrice = (item) => {
-    if (item?.defaultPrice !== undefined && item?.defaultPrice !== null) {
-      return Number(item.defaultPrice) || 0;
+  const getVariantUnitCost = (item) => {
+    // Lấy trực tiếp từ item
+    if (item?.unitCost !== undefined && item?.unitCost !== null) {
+      return Number(item.unitCost) || 0;
     }
 
+    // Lấy từ variant được gắn trong item
     if (
-      item?.variant?.defaultPrice !== undefined &&
-      item?.variant?.defaultPrice !== null
+      item?.variant?.unitCost !== undefined &&
+      item?.variant?.unitCost !== null
     ) {
-      return Number(item.variant.defaultPrice) || 0;
+      return Number(item.variant.unitCost) || 0;
     }
 
+    // Tìm variant trong product theo tên
     const variants = item?.product?.variants;
 
     if (Array.isArray(variants)) {
@@ -691,22 +694,21 @@ const Orders = () => {
       });
 
       if (
-        matchedVariant?.defaultPrice !== undefined &&
-        matchedVariant?.defaultPrice !== null
+        matchedVariant?.unitCost !== undefined &&
+        matchedVariant?.unitCost !== null
       ) {
-        return Number(matchedVariant.defaultPrice) || 0;
+        return Number(matchedVariant.unitCost) || 0;
       }
     }
 
     return 0;
   };
-
   // =====================================================
   // COST PRICE VND
   // =====================================================
 
   const getCostPriceVND = (item) => {
-    const defaultPrice = getVariantDefaultPrice(item);
+    const defaultPrice = getVariantUnitCost(item);
 
     const rate = Number(exchangeRate);
 
@@ -1347,7 +1349,7 @@ const Orders = () => {
 
     const currentPrice = getCurrentProductPrice(item);
 
-    const defaultPrice = getVariantDefaultPrice(item);
+    const defaultPrice = getVariantUnitCost(item);
 
     const costPriceVND = getCostPriceVND(item);
 
@@ -2767,7 +2769,7 @@ const Orders = () => {
               {(() => {
                 const item = selectedProfitItem.item;
 
-                const defaultPrice = getVariantDefaultPrice(item);
+                const defaultPrice = getVariantUnitCost(item);
 
                 const costPriceVND = getCostPriceVND(item);
 

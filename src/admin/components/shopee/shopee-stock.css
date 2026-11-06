@@ -1179,3 +1179,236 @@
     font-size: 10px;
   }
 }
+/* =====================================================
+   ORDER DETAIL MODAL
+===================================================== */
+
+.ss-order-code-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--primary, #ee4d2d);
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  text-align: left;
+  transition: opacity 0.2s ease;
+}
+
+.ss-order-code-button:hover {
+  opacity: 0.75;
+  text-decoration: underline;
+}
+
+.ss-order-detail-modal {
+  width: min(950px, calc(100vw - 32px));
+  max-width: 950px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.ss-order-detail-modal .ss-modal-body {
+  overflow-y: auto;
+}
+
+.ss-order-detail-status {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.ss-order-detail-status > div,
+.ss-order-detail-section {
+  padding: 15px;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 12px;
+  background: var(--card-bg, #fff);
+}
+
+.ss-order-detail-status > div {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.ss-order-detail-status > div > span,
+.ss-order-detail-grid > div > span,
+.ss-order-detail-total span {
+  color: var(--text-secondary, #777);
+  font-size: 12px;
+}
+
+.ss-order-detail-status .ss-order-status {
+  width: fit-content;
+}
+
+.ss-order-detail-section {
+  margin-bottom: 16px;
+}
+
+.ss-order-detail-section h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 15px;
+  font-size: 15px;
+}
+
+.ss-order-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 15px;
+}
+
+.ss-order-detail-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.ss-order-detail-grid strong {
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.ss-order-detail-grid .ss-detail-full {
+  grid-column: 1 / -1;
+}
+
+.ss-detail-full > span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.ss-order-items-table td strong {
+  font-size: 13px;
+}
+
+.ss-order-detail-total {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 17px;
+  margin-bottom: 16px;
+  border-radius: 12px;
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--border-color, #e5e7eb);
+}
+
+.ss-order-detail-total > div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ss-order-detail-grand-total {
+  margin-left: auto;
+  text-align: right;
+}
+
+.ss-order-detail-grand-total strong {
+  color: #ee4d2d;
+  font-size: 21px;
+  font-weight: 800;
+}
+
+@media (max-width: 650px) {
+  .ss-order-detail-status {
+    grid-template-columns: 1fr;
+  }
+
+  .ss-order-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ss-order-detail-grid .ss-detail-full {
+    grid-column: auto;
+  }
+
+  .ss-order-detail-total {
+    gap: 14px;
+  }
+
+  .ss-order-detail-grand-total {
+    width: 100%;
+    margin-left: 0;
+    text-align: left;
+  }
+
+  .ss-order-detail-modal {
+    max-height: 94vh;
+  }
+} /* =====================================================
+   FIELD - FILTER
+===================================================== */
+
+.ss-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 180px;
+}
+
+.ss-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.ss-field select {
+  width: 100%;
+  height: 42px;
+  padding: 0 36px 0 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background-color: #fff;
+  color: #1f2937;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.ss-field select:hover {
+  border-color: #9ca3af;
+}
+
+.ss-field select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.ss-field select:disabled {
+  background: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .ss-field {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .ss-field select {
+    height: 40px;
+  }
+}
+.ss-filters {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 14px;
+}

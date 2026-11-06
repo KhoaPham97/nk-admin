@@ -15,6 +15,12 @@ import {
   ChevronLeft,
   ChevronRight,
   Filter,
+  Eye,
+  UserRound,
+  MapPin,
+  Phone,
+  CreditCard,
+  Truck,
 } from "lucide-react";
 
 import { shopeeApi } from "../../services/shopeeApi";
@@ -120,7 +126,22 @@ function getTransactionClass(kind) {
 
   return "default";
 }
+const getStockStatusLabel = (status) => {
+  const statusMap = {
+    ready: "Sẵn sàng xử lý",
+    deducted: "Đã trừ kho",
+    reserved: "Đã giữ hàng",
+    released: "Đã hoàn giữ kho",
+    pending: "Chờ xử lý",
+    cancelled: "Đã hủy",
+  };
 
+  const normalized = String(status || "")
+    .trim()
+    .toLowerCase();
+
+  return statusMap[normalized] || status || "Không xác định";
+};
 function getHistoryQty(item) {
   return Number(item?.qty ?? item?.quantity ?? 0);
 }
@@ -132,7 +153,38 @@ function getErrorMessage(error) {
     "Không thể tải lịch sử kho Shopee."
   );
 }
+function formatMoney(value) {
+  return `${Number(value || 0).toLocaleString("vi-VN")} đ`;
+}
 
+const getOrderStatusLabel = (status) => {
+  const normalizedStatus = String(status || "")
+    .trim()
+    .toUpperCase();
+
+  const statusMap = {
+    READY: "Chờ giao hàng",
+    PROCESSED: "Đang chuẩn bị hàng",
+    SHIPPED: "Đang vận chuyển",
+    COMPLETED: "Đã hoàn thành",
+    CANCELLED: "Đã hủy",
+    IN_CANCEL: "Đang yêu cầu hủy",
+    TO_RETURN: "Đang hoàn trả",
+    UNPAID: "Chưa thanh toán",
+  };
+
+  return statusMap[normalizedStatus] || status || "Không xác định";
+};
+
+function getMappingLabel(status) {
+  const labels = {
+    mapped: "Đã ánh xạ",
+    unmapped: "Chưa ánh xạ",
+    ambiguous: "Ánh xạ không rõ",
+  };
+
+  return labels[status] || status || "--";
+}
 // =====================================================
 // COMPONENT
 // =====================================================
@@ -140,7 +192,7 @@ function getErrorMessage(error) {
 export default function ShopeeStockHistory() {
   const [shops, setShops] = useState([]);
   const [shopId, setShopId] = useState("");
-
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
   // Bộ lọc
   const [orderSn, setOrderSn] = useState("");
   const [kind, setKind] = useState("");
@@ -616,83 +668,163 @@ export default function ShopeeStockHistory() {
             <thead>
               <tr>
                 <th>Thời gian</th>
+                <th>Mã đơn / Khách hàng</th>
+                <th>Sản phẩm</th>
                 <th>Loại giao dịch</th>
-                <th>Mã đơn</th>
-                <th>Số lượng</th>
-                <th>Trạng thái</th>
-                <th>Ghi chú</th>
+                <th>Số lượng kho</th>
+                <th>Trạng thái đơn</th>
+                <th>Trạng thái giao dịch</th>
+                <th>Chi tiết</th>
               </tr>
             </thead>
 
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="6" className="sc-table-empty">
+                  <td colSpan="8" className="sc-table-empty">
                     Đang tải lịch sử...
                   </td>
                 </tr>
               ) : transactions.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="sc-table-empty">
+                  <td colSpan="8" className="sc-table-empty">
                     {searched
                       ? "Không tìm thấy giao dịch phù hợp."
                       : "Chọn gian hàng để tải toàn bộ lịch sử."}
                   </td>
                 </tr>
               ) : (
-                transactions.map((item, index) => (
-                  <tr key={item._id || index}>
-                    <td className="sh-date-cell">
-                      <Clock3 size={14} />
-                      {formatDate(item.createdAt || item.created_at)}
-                    </td>
+                transactions.map((item, index) => {
+                  const order = item.orderInfo;
+                  const orderItems = order?.items || [];
 
-                    <td>
-                      <span
-                        className={`sh-transaction-type ${getTransactionClass(
-                          item.kind || item.type,
-                        )}`}
-                      >
-                        {getTransactionLabel(item.kind || item.type)}
-                      </span>
-                    </td>
+                  return (
+                    <tr key={item._id || index}>
+                      <td className="sh-date-cell">
+                        <Clock3 size={14} />
+                        {formatDate(item.createdAt || item.created_at)}
+                      </td>
 
-                    <td>
-                      <strong>{item.orderSn || "--"}</strong>
-                      {item.returnSn && (
-                        <small className="sh-cell-sub">
-                          Mã hoàn: {item.returnSn}
-                        </small>
-                      )}
-                    </td>
+                      <td>
+                        <button
+                          type="button"
+                          className="sh-order-link"
+                          onClick={() => setSelectedTransaction(item)}
+                        >
+                          {item.orderSn || item.returnSn || "Không có mã đơn"}
+                          <Eye size={14} />
+                        </button>
 
-                    <td>
-                      <strong className="sh-qty-value">
-                        {formatNumber(item.totalQty ?? item.quantity)}
-                      </strong>
-                    </td>
+                        {order && (
+                          <>
+                            <small className="sh-cell-sub">
+                              {order.recipientName ||
+                                order.buyerUsername ||
+                                "Chưa có tên khách"}
+                            </small>
+                            {order.recipientPhone && (
+                              <small className="sh-cell-sub">
+                                {order.recipientPhone}
+                              </small>
+                            )}
+                          </>
+                        )}
+                      </td>
 
-                    <td>
-                      <span
-                        className={`sh-transaction-status ${
-                          item.status === "completed"
-                            ? "success"
+                      <td className="sh-product-summary-cell">
+                        {orderItems.length ? (
+                          <>
+                            {orderItems
+                              .slice(0, 2)
+                              .map((product, productIndex) => (
+                                <div
+                                  key={productIndex}
+                                  className="sh-product-summary"
+                                >
+                                  <strong>
+                                    {product.productTitle ||
+                                      product.itemName ||
+                                      "Sản phẩm"}
+                                  </strong>
+                                  <small>
+                                    {product.variantName ||
+                                      product.modelName ||
+                                      "Mặc định"}
+                                    {" · "}
+                                    SL: {formatNumber(product.quantity)}
+                                  </small>
+                                </div>
+                              ))}
+
+                            {orderItems.length > 2 && (
+                              <small className="sh-cell-sub">
+                                +{orderItems.length - 2} sản phẩm khác
+                              </small>
+                            )}
+                          </>
+                        ) : (
+                          "--"
+                        )}
+                      </td>
+
+                      <td>
+                        <span
+                          className={`sh-transaction-type ${getTransactionClass(
+                            item.kind || item.type,
+                          )}`}
+                        >
+                          {getTransactionLabel(item.kind || item.type)}
+                        </span>
+                      </td>
+
+                      <td>
+                        <strong className="sh-qty-value">
+                          {formatNumber(item.totalQty ?? item.quantity)}
+                        </strong>
+                      </td>
+
+                      <td>
+                        {order ? (
+                          <span className="sh-order-status">
+                            {getOrderStatusLabel(order?.orderStatus)}
+                          </span>
+                        ) : (
+                          "--"
+                        )}
+                      </td>
+
+                      <td>
+                        <span
+                          className={`sh-transaction-status ${
+                            item.status === "completed"
+                              ? "success"
+                              : item.status === "failed"
+                                ? "failed"
+                                : "pending"
+                          }`}
+                        >
+                          {item.status === "completed"
+                            ? "Hoàn tất"
                             : item.status === "failed"
-                              ? "failed"
-                              : "pending"
-                        }`}
-                      >
-                        {item.status === "completed"
-                          ? "Hoàn tất"
-                          : item.status === "failed"
-                            ? "Thất bại"
-                            : item.status || "Không rõ"}
-                      </span>
-                    </td>
+                              ? "Thất bại"
+                              : item.status || "Không rõ"}
+                        </span>
+                      </td>
 
-                    <td className="sh-note-cell">{item.note || "--"}</td>
-                  </tr>
-                ))
+                      <td>
+                        <button
+                          type="button"
+                          className="sh-detail-button"
+                          onClick={() => setSelectedTransaction(item)}
+                          title="Xem chi tiết đơn hàng"
+                        >
+                          <Eye size={16} />
+                          Xem đơn
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -829,6 +961,263 @@ export default function ShopeeStockHistory() {
           </table>
         </div>
       </div>
+      {selectedTransaction && (
+        <div
+          className="sh-order-modal-backdrop"
+          onClick={() => setSelectedTransaction(null)}
+        >
+          <div
+            className="sh-order-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            {(() => {
+              const transaction = selectedTransaction;
+              const order = transaction.orderInfo || null;
+              const items = order?.items || [];
+
+              return (
+                <>
+                  <div className="sh-order-modal-header">
+                    <div>
+                      <h3>Chi tiết đơn Shopee</h3>
+                      <strong>
+                        {order?.orderSn ||
+                          transaction.orderSn ||
+                          transaction.returnSn ||
+                          "--"}
+                      </strong>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setSelectedTransaction(null)}
+                    >
+                      <X size={21} />
+                    </button>
+                  </div>
+
+                  <div className="sh-order-modal-body">
+                    {!order && (
+                      <div className="sc-alert sc-alert-error">
+                        <AlertCircle size={17} />
+                        Không tìm thấy thông tin đơn hàng trong ShopeeOrder.
+                        <br />
+                        Mã đơn: {transaction.orderSn || "--"}
+                        <br />
+                        Mã hoàn: {transaction.returnSn || "--"}
+                        <br />
+                        Giao dịch kho vẫn được ghi nhận bên dưới.
+                      </div>
+                    )}
+                    <div className="sh-order-info-grid">
+                      <div className="sh-order-info-card">
+                        <span>Trạng thái đơn</span>
+                        <strong>
+                          {getOrderStatusLabel(order?.orderStatus)}
+                        </strong>
+                      </div>
+
+                      <div className="sh-order-info-card">
+                        <span>Ngày đặt</span>
+                        <strong>{formatDate(order?.createTime)}</strong>
+                      </div>
+
+                      <div className="sh-order-info-card">
+                        <span>Tổng tiền</span>
+                        <strong className="sh-order-total">
+                          {formatMoney(order?.totalAmount)}
+                        </strong>
+                      </div>
+
+                      <div className="sh-order-info-card">
+                        <span>Trạng thái kho</span>
+                        <strong>
+                          {getStockStatusLabel(order?.stockStatus) || "pending"}
+                        </strong>
+                      </div>
+                    </div>
+
+                    <div className="sh-order-modal-section">
+                      <h4>
+                        <UserRound size={17} />
+                        Thông tin người mua / nhận hàng
+                      </h4>
+
+                      <div className="sh-order-customer">
+                        <p>
+                          <strong>Tài khoản:</strong>
+                          {order?.buyerUsername || "--"}
+                        </p>
+
+                        <p>
+                          <strong>Người nhận:</strong>
+                          {order?.recipientName || "--"}
+                        </p>
+
+                        <p>
+                          <Phone size={15} />
+                          {order?.recipientPhone || "--"}
+                        </p>
+
+                        <p>
+                          <MapPin size={15} />
+                          {order?.recipientAddress || "--"}
+                        </p>
+
+                        <p>
+                          <CreditCard size={15} />
+                          <strong>Thanh toán:</strong>
+                          {order?.paymentMethod || "--"}
+                        </p>
+
+                        <p>
+                          <Truck size={15} />
+                          <strong>Vận chuyển:</strong>
+                          {order?.shippingCarrier || "--"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="sh-order-modal-section">
+                      <h4>
+                        <Package size={17} />
+                        Sản phẩm trong đơn ({items.length})
+                      </h4>
+
+                      <div className="sh-order-items">
+                        {items.map((product, index) => (
+                          <div className="sh-order-item" key={index}>
+                            <div className="sh-order-item-main">
+                              <strong>
+                                {product.productTitle ||
+                                  product.itemName ||
+                                  "Sản phẩm"}
+                              </strong>
+
+                              <span>
+                                {product.variantName ||
+                                  product.modelName ||
+                                  "Mặc định"}
+                              </span>
+
+                              <small>
+                                SKU Shopee:{" "}
+                                {product.variationSku ||
+                                  product.itemSku ||
+                                  "--"}
+                                {" · "}
+                                SKU kho: {product.variantCode || "--"}
+                              </small>
+
+                              <small>
+                                Ánh xạ: {getMappingLabel(product.mappingStatus)}
+                              </small>
+                            </div>
+
+                            <div className="sh-order-item-price">
+                              <strong>{formatMoney(product.totalPrice)}</strong>
+
+                              <span>
+                                {formatMoney(product.unitPrice)} ×{" "}
+                                {formatNumber(product.quantity)}
+                              </span>
+
+                              <small>
+                                Giữ: {formatNumber(product.reservedQty)}
+                                {" · "}
+                                Xuất: {formatNumber(product.deductedQty)}
+                                {" · "}
+                                Hoàn: {formatNumber(product.returnedQty)}
+                              </small>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="sh-order-modal-section">
+                      <h4>
+                        <History size={17} />
+                        Giao dịch kho đang xem
+                      </h4>
+
+                      <div className="sh-order-transaction-info">
+                        <p>
+                          <strong>Loại:</strong>{" "}
+                          {getTransactionLabel(transaction.kind)}
+                        </p>
+
+                        <p>
+                          <strong>Số lượng:</strong>{" "}
+                          {formatNumber(transaction.totalQty)}
+                        </p>
+
+                        <p>
+                          <strong>Trạng thái:</strong>{" "}
+                          {getOrderStatusLabel(transaction.status) || "--"}
+                        </p>
+
+                        <p>
+                          <strong>Thời gian:</strong>{" "}
+                          {formatDate(transaction.createdAt)}
+                        </p>
+
+                        <p>
+                          <strong>Ghi chú:</strong> {transaction.note || "--"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="sh-order-modal-section">
+                      <h4>
+                        <Boxes size={17} />
+                        Chi tiết lô FIFO ({transaction.allocations?.length || 0}
+                        )
+                      </h4>
+
+                      {(transaction.allocations || []).length ? (
+                        <div className="sh-order-fifo-list">
+                          {transaction.allocations.map((allocation, index) => (
+                            <div key={index} className="sh-order-fifo-item">
+                              <div>
+                                <strong>
+                                  {allocation.productTitle || "Sản phẩm"}
+                                </strong>
+                                <small>
+                                  {allocation.variantName || "--"}
+                                  {" · "}
+                                  {allocation.variantCode || "--"}
+                                </small>
+                                <small>
+                                  Mã lô: {allocation.batchCode || "--"}
+                                </small>
+                              </div>
+
+                              <strong>{formatNumber(allocation.qty)}</strong>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p>Giao dịch này chưa có chi tiết phân bổ lô.</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="sh-order-modal-footer">
+                    <button
+                      type="button"
+                      className="sc-btn sc-btn-light"
+                      onClick={() => setSelectedTransaction(null)}
+                    >
+                      Đóng
+                    </button>
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+        </div>
+      )}
     </section>
   );
 }

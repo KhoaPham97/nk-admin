@@ -651,3 +651,347 @@
     flex: 1;
   }
 }
+
+/* =====================================================
+   ORDER DETAIL IN TRANSACTION HISTORY
+===================================================== */
+
+.sh-order-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #2563eb;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.sh-order-link:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+.sh-order-link:disabled {
+  color: #9ca3af;
+  cursor: default;
+  text-decoration: none;
+}
+
+.sh-product-summary-cell {
+  min-width: 190px;
+}
+
+.sh-product-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 7px;
+}
+
+.sh-product-summary strong {
+  color: #1f2937;
+  font-size: 13px;
+}
+
+.sh-product-summary small,
+.sh-cell-sub {
+  display: block;
+  color: #6b7280;
+  font-size: 11px;
+  margin-top: 3px;
+}
+
+.sh-order-status {
+  display: inline-block;
+  padding: 5px 9px;
+  border-radius: 6px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.sh-detail-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 10px;
+  border: 1px solid #bfdbfe;
+  border-radius: 7px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.sh-detail-button:hover {
+  background: #dbeafe;
+}
+
+.sh-detail-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* MODAL */
+
+.sh-order-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.62);
+  backdrop-filter: blur(3px);
+}
+
+.sh-order-modal {
+  display: flex;
+  flex-direction: column;
+  width: min(900px, 100%);
+  max-height: 92vh;
+  overflow: hidden;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 20px 70px rgba(0, 0, 0, 0.25);
+}
+
+.sh-order-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 18px 22px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.sh-order-modal-header h3 {
+  margin: 0 0 5px;
+  font-size: 18px;
+  color: #111827;
+}
+
+.sh-order-modal-header strong {
+  color: #2563eb;
+  font-size: 13px;
+}
+
+.sh-order-modal-header button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 8px;
+  background: #f3f4f6;
+  color: #374151;
+  cursor: pointer;
+}
+
+.sh-order-modal-body {
+  padding: 20px 22px;
+  overflow-y: auto;
+}
+
+.sh-order-info-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+.sh-order-info-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 13px;
+  border: 1px solid #e5e7eb;
+  border-radius: 9px;
+  background: #f9fafb;
+}
+
+.sh-order-info-card span {
+  color: #6b7280;
+  font-size: 11px;
+}
+
+.sh-order-info-card strong {
+  color: #111827;
+  font-size: 13px;
+}
+
+.sh-order-info-card .sh-order-total {
+  color: #dc2626;
+  font-size: 16px;
+}
+
+.sh-order-modal-section {
+  margin-top: 20px;
+}
+
+.sh-order-modal-section h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  color: #111827;
+  font-size: 14px;
+}
+
+.sh-order-customer,
+.sh-order-transaction-info {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 9px;
+}
+
+.sh-order-customer p,
+.sh-order-transaction-info p {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin: 0;
+  color: #4b5563;
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.sh-order-customer p strong,
+.sh-order-transaction-info p strong {
+  color: #111827;
+  white-space: nowrap;
+}
+
+.sh-order-items {
+  border: 1px solid #e5e7eb;
+  border-radius: 9px;
+  overflow: hidden;
+}
+
+.sh-order-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 14px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.sh-order-item:last-child {
+  border-bottom: 0;
+}
+
+.sh-order-item-main,
+.sh-order-item-price {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.sh-order-item-main {
+  min-width: 0;
+}
+
+.sh-order-item-main strong {
+  color: #111827;
+  font-size: 13px;
+}
+
+.sh-order-item-main span,
+.sh-order-item-main small,
+.sh-order-item-price span,
+.sh-order-item-price small {
+  color: #6b7280;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+.sh-order-item-price {
+  min-width: 145px;
+  text-align: right;
+}
+
+.sh-order-item-price strong {
+  color: #dc2626;
+  font-size: 13px;
+}
+
+.sh-order-fifo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sh-order-fifo-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.sh-order-fifo-item > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sh-order-fifo-item strong {
+  color: #111827;
+  font-size: 13px;
+}
+
+.sh-order-fifo-item small {
+  color: #6b7280;
+  font-size: 11px;
+}
+
+.sh-order-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 14px 22px;
+  border-top: 1px solid #e5e7eb;
+  background: #fff;
+}
+
+@media (max-width: 700px) {
+  .sh-order-modal-backdrop {
+    padding: 8px;
+  }
+
+  .sh-order-modal {
+    max-height: 96vh;
+  }
+
+  .sh-order-modal-header,
+  .sh-order-modal-body {
+    padding: 14px;
+  }
+
+  .sh-order-info-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sh-order-item {
+    flex-direction: column;
+  }
+
+  .sh-order-item-price {
+    text-align: left;
+  }
+}

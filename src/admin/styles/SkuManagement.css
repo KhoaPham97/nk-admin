@@ -1,0 +1,279 @@
+.sku-management {
+  width: 100%;
+  padding: 20px;
+  min-height: 100%;
+  box-sizing: border-box;
+}
+
+.sku-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 22px;
+}
+
+.sku-page-header h5 {
+  margin-bottom: 5px;
+}
+
+.sku-page-header .MuiStack-root {
+  flex-wrap: wrap;
+}
+
+.sku-stats {
+  margin-bottom: 20px;
+}
+
+.sku-stat-card {
+  height: 100%;
+  border-radius: 12px !important;
+  border: 1px solid var(--mui-palette-divider, #e5e7eb);
+  box-shadow: none !important;
+}
+
+.sku-stat-card .MuiCardContent-root {
+  padding: 18px;
+}
+
+.sku-stat-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e8efff;
+  color: #2563eb;
+  margin-bottom: 12px;
+}
+
+.sku-stat-icon.success {
+  background: #e7f8ed;
+  color: #16a34a;
+}
+
+.sku-stat-icon.warning {
+  background: #fff5df;
+  color: #d97706;
+}
+
+.sku-stat-icon.danger {
+  background: #feecec;
+  color: #dc2626;
+}
+
+.sku-stat-card h4 {
+  margin-top: 5px;
+}
+
+.sku-filter-card,
+.sku-table-card {
+  border-radius: 12px !important;
+  border: 1px solid var(--mui-palette-divider, #e5e7eb);
+  box-shadow: none !important;
+  margin-bottom: 20px;
+}
+
+.sku-filter-card .MuiCardContent-root {
+  padding: 18px;
+}
+
+.sku-table-heading {
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.sku-table-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.sku-table {
+  width: 100%;
+  min-width: 1050px;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.sku-table thead {
+  background: #f8fafc;
+}
+
+.sku-table th {
+  padding: 14px 12px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #64748b;
+  white-space: nowrap;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.sku-table td {
+  padding: 12px;
+  border-bottom: 1px solid #edf0f3;
+  vertical-align: middle;
+}
+
+.sku-table tbody tr:hover {
+  background: rgba(37, 99, 235, 0.035);
+}
+
+.sku-index {
+  color: #94a3b8;
+  font-size: 13px;
+  text-align: center;
+}
+
+.sku-code-cell {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 150px;
+}
+
+.sku-code-text {
+  font-family: "Roboto Mono", Consolas, monospace !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #1d4ed8;
+  overflow-wrap: anywhere;
+}
+
+.sku-code-text.empty {
+  color: #dc2626;
+  font-weight: 500 !important;
+  font-family: inherit !important;
+}
+
+.sku-code-cell .MuiIconButton-root {
+  flex-shrink: 0;
+  color: #64748b;
+}
+
+.sku-code-cell .MuiIconButton-root:hover {
+  color: #2563eb;
+  background: #eff6ff;
+}
+
+.sku-loading,
+.sku-empty {
+  min-height: 240px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: #94a3b8;
+}
+
+.sku-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 16px 20px;
+}
+
+.sku-management .MuiButton-root {
+  text-transform: none;
+  font-weight: 700;
+  border-radius: 8px;
+}
+
+.sku-management .MuiChip-root {
+  font-weight: 600;
+}
+
+/* Dark mode */
+
+[data-theme="dark"] .sku-stat-card,
+[data-theme="dark"] .sku-filter-card,
+[data-theme="dark"] .sku-table-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .sku-table thead {
+  background: #0f172a;
+}
+
+[data-theme="dark"] .sku-table th {
+  color: #cbd5e1;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .sku-table td {
+  border-color: #334155;
+}
+
+[data-theme="dark"] .sku-table tbody tr:hover {
+  background: rgba(148, 163, 184, 0.06);
+}
+
+[data-theme="dark"] .sku-code-text {
+  color: #93c5fd;
+}
+
+/* Mobile */
+
+@media (max-width: 768px) {
+  .sku-management {
+    padding: 12px;
+  }
+
+  .sku-page-header {
+    align-items: flex-start;
+  }
+
+  .sku-page-header h5 {
+    font-size: 20px;
+  }
+
+  .sku-page-header .MuiStack-root {
+    width: 100%;
+  }
+
+  .sku-page-header .MuiButton-root {
+    flex: 1;
+    min-width: 120px;
+  }
+
+  .sku-table-heading {
+    padding: 14px;
+  }
+
+  .sku-pagination {
+    padding: 14px;
+    justify-content: center;
+  }
+
+  .sku-pagination > p {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .sku-management {
+    padding: 8px;
+  }
+
+  .sku-page-header .MuiButton-root {
+    font-size: 12px;
+    padding: 7px 9px;
+  }
+
+  .sku-stat-card .MuiCardContent-root {
+    padding: 13px;
+  }
+
+  .sku-stat-card h4 {
+    font-size: 24px;
+  }
+}

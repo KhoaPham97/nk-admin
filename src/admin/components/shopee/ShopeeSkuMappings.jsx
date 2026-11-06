@@ -98,7 +98,7 @@ async function searchProducts(keyword) {
 const initialForm = {
   shopId: "",
   itemId: "",
-  modelSku: "",
+  variationSku: "",
   productId: "",
   variantCode: "",
   variantName: "",
@@ -284,7 +284,7 @@ export default function ShopeeSkuMappings({ onRefresh }) {
     setForm({
       shopId: String(mapping.shopId || ""),
       itemId: String(mapping.itemId || ""),
-      modelSku: mapping.modelSku || "",
+      variationSku: mapping.variationSku || "",
       productId: mappingProduct?._id || mapping.productId || "",
       variantCode: mapping.variantCode || "",
       variantName: mapping.variantName || "",
@@ -333,7 +333,7 @@ export default function ShopeeSkuMappings({ onRefresh }) {
       ...form,
       shopId: String(form.shopId),
       itemId: String(form.itemId).trim(),
-      modelSku: String(form.modelSku || "").trim(),
+      variationSku: String(form.variationSku || "").trim(),
       variantCode: String(form.variantCode || "").trim(),
       variantName: String(form.variantName || "").trim(),
       quantityMultiplier: Number(form.quantityMultiplier),
@@ -571,7 +571,9 @@ export default function ShopeeSkuMappings({ onRefresh }) {
                 return (
                   <tr key={item._id}>
                     <td>
-                      <strong>{item.modelSku || item.itemId || "--"}</strong>
+                      <strong>
+                        {item.variationSku || item.itemId || "--"}
+                      </strong>
                       <small>{item.itemId}</small>
                     </td>
 
@@ -691,10 +693,10 @@ export default function ShopeeSkuMappings({ onRefresh }) {
                 </label>
 
                 <label>
-                  Model SKU
+                  SKU
                   <input
-                    value={form.modelSku}
-                    onChange={(e) => update("modelSku", e.target.value)}
+                    value={form.variationSku}
+                    onChange={(e) => update("variationSku", e.target.value)}
                   />
                 </label>
 
