@@ -23,34 +23,64 @@ const getOrderTime = (order) => {
 
   return parsed.toLocaleString("vi-VN");
 };
+const normalizeStatus = (status) =>
+  String(status || "")
+    .trim()
+    .toUpperCase()
+    .replace(/[\s-]+/g, "_");
 
 const getStatusLabel = (status) => {
   const statuses = {
     UNPAID: "Chưa thanh toán",
     READY_TO_SHIP: "Chờ lấy hàng",
-    PROCESSED: "Đang xử lý",
-    SHIPPED: "Đang giao",
+    PROCESSED: "Đã chuẩn bị hàng",
+    SHIPPED: "Đang vận chuyển",
+    TO_CONFIRM_RECEIVE: "Chờ khách xác nhận nhận hàng",
     COMPLETED: "Hoàn thành",
     CANCELLED: "Đã hủy",
     IN_CANCEL: "Đang yêu cầu hủy",
     TO_RETURN: "Yêu cầu trả hàng",
+    RETRY_SHIP: "Đang giao lại",
+    TO_SHIP: "Chờ bàn giao vận chuyển",
+    INVOICE_PENDING: "Chờ xử lý hóa đơn",
   };
+  const normalized = normalizeStatus(status);
 
-  return statuses[status] || status || "Không xác định";
+  return (
+    statuses[normalized] ||
+    (status ? `Trạng thái khác (${status})` : "Không xác định")
+  );
 };
 
 const getStockLabel = (status) => {
   const statuses = {
-    pending: "Chưa xử lý kho",
-    reserved: "Đã giữ hàng",
-    deducted: "Đã xuất kho",
-    released: "Đã hoàn giữ",
-    partial: "Xuất kho một phần",
-    returned: "Đã nhận hàng hoàn",
-    failed: "Lỗi xuất kho",
+    PENDING: "Chưa xử lý kho",
+    RESERVED: "Đã giữ hàng",
+    DEDUCTED: "Đã xuất kho",
+    RELEASED: "Đã hoàn giữ hàng",
+    PARTIAL: "Đã xuất kho một phần",
+    RETURNED: "Đã nhận hàng hoàn",
+    FAILED: "Lỗi xuất kho",
+    READY: "Sẵn sàng xuất kho",
+    UNMAPPED: "Chưa ánh xạ sản phẩm",
+    PROCESSING: "Đang xử lý xuất kho",
+    WAITING: "Chờ xử lý xuất kho",
+    CANCELLED: "Đã hủy xử lý kho",
+    SKIPPED: "Đã bỏ qua xuất kho",
+    NOT_PROCESSED: "Chưa xử lý kho",
+    NOT_DEDUCTED: "Chưa xuất kho",
+    PARTIALLY_DEDUCTED: "Đã xuất kho một phần",
+    DEDUCTION_FAILED: "Xuất kho thất bại",
+    STOCK_DEDUCTED: "Đã xuất kho",
+    STOCK_RESERVED: "Đã giữ hàng",
+    STOCK_RELEASED: "Đã hoàn giữ hàng",
   };
+  const normalized = normalizeStatus(status);
 
-  return statuses[status] || status || "Chưa xử lý";
+  return (
+    statuses[normalized] ||
+    (status ? `Trạng thái kho khác (${status})` : "Chưa xử lý")
+  );
 };
 
 const getMappingLabel = (item) => {

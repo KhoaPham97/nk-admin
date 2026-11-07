@@ -12,11 +12,7 @@ import {
   Settings2,
   History,
   Boxes,
-  ChevronDown,
-  ChevronRight,
   CalendarClock,
-  Timer,
-  Store,
 } from "lucide-react";
 
 import shopeeApi from "../../services/shopeeApi";
@@ -36,12 +32,13 @@ export default function ShopeeAutoStockPage() {
 
   const [selected, setSelected] = useState([]);
   const [keyword, setKeyword] = useState("");
-  const [filter, setFilter] = useState("all");
+  const [filter, setFilter] = useState("eligible");
   const [activeTab, setActiveTab] = useState("orders");
 
-  const [expandedHistoryId, setExpandedHistoryId] = useState(null);
   const [historyKeyword, setHistoryKeyword] = useState("");
-  const [historyStatusFilter, setHistoryStatusFilter] = useState("all");
+  const [historyResultFilter, setHistoryResultFilter] = useState("success");
+  const [historyView, setHistoryView] = useState("orders");
+  const [expandedHistoryId, setExpandedHistoryId] = useState(null);
 
   const [autoSettings, setAutoSettings] = useState({
     enabled: false,
@@ -58,6 +55,11 @@ export default function ShopeeAutoStockPage() {
   // HELPERS
   // =====================================================
 
+  const normalizeStatus = (value) =>
+    String(value || "")
+      .trim()
+      .toLowerCase();
+
   const formatDate = (value) => {
     if (!value) return "—";
 
@@ -71,16 +73,10 @@ export default function ShopeeAutoStockPage() {
     });
   };
 
-  const normalizeStatus = (value) =>
-    String(value || "")
-      .trim()
-      .toLowerCase();
-
   const formatDuration = (value) => {
     const ms = Number(value);
 
     if (!Number.isFinite(ms) || ms < 0) return "—";
-
     if (ms < 1000) return `${ms} ms`;
 
     const seconds = Math.floor(ms / 1000);
@@ -106,6 +102,19 @@ export default function ShopeeAutoStockPage() {
     };
 
     return map[normalizeStatus(status)] || [status || "Chưa rõ", "muted"];
+  };
+
+  const getResultStatus = (status) => {
+    const map = {
+      success: ["Thành công", "green"],
+      skipped: ["Bỏ qua", "amber"],
+      failed: ["Thất bại", "red"],
+      partial: ["Một phần", "blue"],
+    };
+
+    return (
+      map[normalizeStatus(status)] || [status || "Không xác định", "muted"]
+    );
   };
 
   const getHistoryStatus = (item) => {
@@ -151,19 +160,6 @@ export default function ShopeeAutoStockPage() {
       label: item.status || "Không xác định",
       tone: "muted",
     };
-  };
-
-  const getResultStatus = (status) => {
-    const map = {
-      success: ["Thành công", "green"],
-      skipped: ["Bỏ qua", "amber"],
-      failed: ["Thất bại", "red"],
-      partial: ["Một phần", "blue"],
-    };
-
-    return (
-      map[normalizeStatus(status)] || [status || "Không xác định", "muted"]
-    );
   };
 
   const showMessage = (type, text) => {
@@ -244,9 +240,7 @@ export default function ShopeeAutoStockPage() {
 
       const eligible = status === "completed" && stockStatus === "ready";
 
-      if (filter === "eligible" && !eligible) {
-        return false;
-      }
+      if (filter === "eligible" && !eligible) return false;
 
       if (
         filter === "failed" &&
@@ -277,12 +271,11 @@ export default function ShopeeAutoStockPage() {
     eligibleOrders.some((order) => order.orderSn === orderSn),
   );
 
-  const selectableVisibleOrders = visibleOrders.filter((order) => {
-    return (
+  const selectableVisibleOrders = visibleOrders.filter(
+    (order) =>
       normalizeStatus(order.status) === "completed" &&
-      normalizeStatus(order.stockStatus) === "ready"
-    );
-  });
+      normalizeStatus(order.stockStatus) === "ready",
+  );
 
   const allSelected =
     selectableVisibleOrders.length > 0 &&
@@ -348,11 +341,9 @@ export default function ShopeeAutoStockPage() {
       );
 
       setSelected([]);
-
       await loadAutoStockData();
     } catch (error) {
       console.error("[Shopee Auto Stock] Process error:", error);
-
       showMessage("error", error.message || "Xử lý đơn hàng thất bại.");
     } finally {
       setProcessing(false);
@@ -388,7 +379,6 @@ export default function ShopeeAutoStockPage() {
       showMessage("success", "Đã lưu cấu hình tự động.");
     } catch (error) {
       console.error("[Shopee Auto Stock] Save settings:", error);
-
       showMessage("error", error.message || "Không thể lưu cấu hình.");
     } finally {
       setSaving(false);
@@ -428,7 +418,6 @@ export default function ShopeeAutoStockPage() {
       await loadAutoStockData();
     } catch (error) {
       console.error("[Shopee Auto Stock] Run error:", error);
-
       showMessage("error", error.message || "Không thể chạy xử lý tự động.");
     } finally {
       setProcessing(false);
@@ -450,40 +439,75 @@ export default function ShopeeAutoStockPage() {
   ).length;
 
   // =====================================================
-  // HISTORY FILTER
+  // HISTORY DATA
   // =====================================================
 
-  const visibleHistory = useMemo(() => {
+  const historyOrders = useMemo(() => {
+    return history.flatMap((item) => {
+      const results = Array.isArray(item.results) ? item.results : [];
+      const historyId = item._id || item.id || "history";
+      const historyDate = item.startedAt || item.processedAt || item.createdAt;
+
+      return results.map((result, index) => ({
+        ...result,
+        historyId,
+        historyTrigger: item.trigger,
+        historyStartedAt: historyDate,
+        uniqueKey: `${historyId}-${result.orderSn || index}`,
+      }));
+    });
+  }, [history]);
+
+  const visibleHistoryOrders = useMemo(() => {
+    const q = historyKeyword.trim().toLowerCase();
+
+    return historyOrders
+      .filter((result) => {
+        const status = normalizeStatus(result.status);
+
+        if (historyResultFilter !== "all" && status !== historyResultFilter) {
+          return false;
+        }
+
+        if (!q) return true;
+
+        return (
+          String(result.orderSn || "")
+            .toLowerCase()
+            .includes(q) ||
+          String(result.shopName || "")
+            .toLowerCase()
+            .includes(q) ||
+          String(result.shopId || "")
+            .toLowerCase()
+            .includes(q) ||
+          String(result.message || "")
+            .toLowerCase()
+            .includes(q)
+        );
+      })
+      .sort((a, b) => {
+        const dateA = new Date(
+          a.processedAt || a.historyStartedAt || 0,
+        ).getTime();
+
+        const dateB = new Date(
+          b.processedAt || b.historyStartedAt || 0,
+        ).getTime();
+
+        return dateB - dateA;
+      });
+  }, [historyOrders, historyKeyword, historyResultFilter]);
+
+  const successfulHistoryCount = historyOrders.filter(
+    (result) => normalizeStatus(result.status) === "success",
+  ).length;
+
+  const historyRunList = useMemo(() => {
     const q = historyKeyword.trim().toLowerCase();
 
     return history.filter((item) => {
       const results = Array.isArray(item.results) ? item.results : [];
-
-      const status = getHistoryStatus(item);
-      const rawStatus = normalizeStatus(item.status);
-
-      if (historyStatusFilter === "partial" && status.label !== "Một phần") {
-        return false;
-      }
-
-      if (
-        historyStatusFilter === "failed" &&
-        !["failed", "Thất bại"].includes(rawStatus) &&
-        Number(item.failedCount || 0) === 0
-      ) {
-        return false;
-      }
-
-      if (
-        historyStatusFilter === "skipped" &&
-        Number(item.skippedCount || 0) === 0
-      ) {
-        return false;
-      }
-
-      if (historyStatusFilter === "completed" && status.label !== "Hoàn tất") {
-        return false;
-      }
 
       if (!q) return true;
 
@@ -501,11 +525,7 @@ export default function ShopeeAutoStockPage() {
         )
       );
     });
-  }, [history, historyKeyword, historyStatusFilter]);
-
-  const toggleHistory = (id) => {
-    setExpandedHistoryId((current) => (current === id ? null : id));
-  };
+  }, [history, historyKeyword]);
 
   // =====================================================
   // RENDER
@@ -774,7 +794,8 @@ export default function ShopeeAutoStockPage() {
                         </td>
 
                         <td>
-                          {order.itemCount ?? order.items?.length ?? "—"} SP /{" "}
+                          {order.itemCount ?? order.items?.length ?? "—"} SP
+                          {" / "}
                           {order.totalQty ?? "—"} SL
                         </td>
 
@@ -804,11 +825,19 @@ export default function ShopeeAutoStockPage() {
         ) : (
           /* HISTORY TAB */
           <div className="sa-history">
+            {/* HISTORY HEADER */}
             <div className="sa-history-toolbar">
               <div>
-                <h2>Lịch sử chạy Auto Stock</h2>
+                <h2>
+                  {historyView === "orders"
+                    ? "Tra cứu đơn hàng đã xử lý"
+                    : "Các lần chạy Auto Stock"}
+                </h2>
+
                 <p>
-                  {visibleHistory.length} / {history.length} lần chạy
+                  {historyView === "orders"
+                    ? `${visibleHistoryOrders.length} đơn phù hợp`
+                    : `${historyRunList.length} / ${history.length} lần chạy`}
                 </p>
               </div>
 
@@ -819,269 +848,388 @@ export default function ShopeeAutoStockPage() {
                   <input
                     value={historyKeyword}
                     onChange={(e) => setHistoryKeyword(e.target.value)}
-                    placeholder="Tìm mã đơn trong lịch sử..."
+                    placeholder="Tìm mã đơn hoặc gian hàng..."
                   />
                 </div>
-
-                <select
-                  value={historyStatusFilter}
-                  onChange={(e) => setHistoryStatusFilter(e.target.value)}
-                >
-                  <option value="all">Tất cả kết quả</option>
-                  <option value="completed">Hoàn tất</option>
-                  <option value="partial">Một phần</option>
-                  <option value="failed">Thất bại</option>
-                  <option value="skipped">Có đơn bỏ qua</option>
-                </select>
               </div>
             </div>
 
-            <div className="sa-history-list">
-              {visibleHistory.map((item) => {
-                const id = item._id || item.id;
-                const isExpanded = expandedHistoryId === id;
-                const results = Array.isArray(item.results) ? item.results : [];
+            {/* HISTORY VIEW SWITCH */}
+            <div className="sa-history-view-tabs">
+              <button
+                type="button"
+                className={historyView === "orders" ? "active" : ""}
+                onClick={() => setHistoryView("orders")}
+              >
+                <CheckCircle2 size={16} />
+                Đơn đã xử lý
+              </button>
 
-                const status = getHistoryStatus(item);
-                const isManual = item.trigger === "manual";
+              <button
+                type="button"
+                className={historyView === "runs" ? "active" : ""}
+                onClick={() => setHistoryView("runs")}
+              >
+                <CalendarClock size={16} />
+                Các lần chạy
+              </button>
+            </div>
 
-                const scanned = Number(item.scannedOrders || 0);
-                const success = Number(item.successCount || 0);
-                const failed = Number(item.failedCount || 0);
-                const skipped = Number(item.skippedCount || 0);
-                const partial = Number(item.partialCount || 0);
+            {/* ORDER HISTORY */}
+            {historyView === "orders" && (
+              <>
+                <div className="sa-history-summary">
+                  <div className="sa-history-summary-card">
+                    <span>Tổng đơn thành công</span>
+                    <strong>{successfulHistoryCount}</strong>
+                  </div>
 
-                const successRate =
-                  scanned > 0 ? Math.min(100, (success / scanned) * 100) : 0;
+                  <div className="sa-history-summary-card">
+                    <span>Đơn đang hiển thị</span>
+                    <strong>{visibleHistoryOrders.length}</strong>
+                  </div>
+                </div>
 
-                const filteredResults = results.filter((result) => {
-                  const q = historyKeyword.trim().toLowerCase();
+                <div className="sa-history-result-filters">
+                  {[
+                    { value: "success", label: "Thành công" },
+                    { value: "all", label: "Tất cả" },
+                    { value: "failed", label: "Thất bại" },
+                    { value: "skipped", label: "Bỏ qua" },
+                    { value: "partial", label: "Một phần" },
+                  ].map((item) => (
+                    <button
+                      type="button"
+                      key={item.value}
+                      className={
+                        historyResultFilter === item.value ? "active" : ""
+                      }
+                      onClick={() => setHistoryResultFilter(item.value)}
+                    >
+                      {item.label}
+                      {item.value === "success" && (
+                        <b>{successfulHistoryCount}</b>
+                      )}
+                    </button>
+                  ))}
+                </div>
 
-                  if (!q) return true;
+                <div className="sa-table-wrap">
+                  <table className="sa-table sa-result-table">
+                    <thead>
+                      <tr>
+                        <th>STT</th>
+                        <th>Mã đơn Shopee</th>
+                        <th>Gian hàng</th>
+                        <th>Kết quả</th>
+                        <th>Trạng thái kho</th>
+                        <th>Thời gian xử lý</th>
+                        <th>Hình thức</th>
+                        <th>Thông tin</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {visibleHistoryOrders.map((result, index) => {
+                        const [resultLabel, resultTone] = getResultStatus(
+                          result.status,
+                        );
+
+                        const [stockLabel, stockTone] = getStockStatus(
+                          result.stockStatus,
+                        );
+
+                        return (
+                          <tr key={result.uniqueKey}>
+                            <td>{index + 1}</td>
+
+                            <td className="sa-order-sn">
+                              {result.orderSn || "—"}
+                            </td>
+
+                            <td>{result.shopName || result.shopId || "—"}</td>
+
+                            <td>
+                              <span className={`sa-status ${resultTone}`}>
+                                {resultLabel}
+                              </span>
+                            </td>
+
+                            <td>
+                              <span className={`sa-status ${stockTone}`}>
+                                {stockLabel}
+                              </span>
+                            </td>
+
+                            <td>
+                              {formatDate(
+                                result.processedAt || result.historyStartedAt,
+                              )}
+                            </td>
+
+                            <td>
+                              <span
+                                className={`sa-status ${
+                                  result.historyTrigger === "manual"
+                                    ? "blue"
+                                    : "neutral"
+                                }`}
+                              >
+                                {result.historyTrigger === "manual"
+                                  ? "Thủ công"
+                                  : "Cron tự động"}
+                              </span>
+                            </td>
+
+                            <td className="sa-result-message">
+                              {result.message || "—"}
+                            </td>
+                          </tr>
+                        );
+                      })}
+
+                      {!visibleHistoryOrders.length && (
+                        <tr>
+                          <td colSpan="8" className="sa-empty">
+                            {loading
+                              ? "Đang tải lịch sử..."
+                              : historyKeyword
+                                ? "Không tìm thấy đơn phù hợp."
+                                : "Không có đơn trong nhóm trạng thái này."}
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
+
+            {/* RUN HISTORY */}
+            {historyView === "runs" && (
+              <div className="sa-history-list">
+                {historyRunList.map((item) => {
+                  const id = item._id || item.id;
+                  const isExpanded = expandedHistoryId === id;
+                  const results = Array.isArray(item.results)
+                    ? item.results
+                    : [];
+
+                  const status = getHistoryStatus(item);
+                  const isManual = item.trigger === "manual";
+
+                  const scanned = Number(item.scannedOrders || 0);
+                  const success = Number(item.successCount || 0);
+                  const failed = Number(item.failedCount || 0);
+                  const skipped = Number(item.skippedCount || 0);
+                  const partial = Number(item.partialCount || 0);
+
+                  const successRate =
+                    scanned > 0 ? Math.min(100, (success / scanned) * 100) : 0;
 
                   return (
-                    String(result.orderSn || "")
-                      .toLowerCase()
-                      .includes(q) ||
-                    String(result.message || "")
-                      .toLowerCase()
-                      .includes(q)
-                  );
-                });
-
-                return (
-                  <article
-                    className={`sa-history-card ${isExpanded ? "expanded" : ""}`}
-                    key={id}
-                  >
-                    <div className="sa-history-card-main">
-                      <button
-                        type="button"
-                        className="sa-history-toggle"
-                        onClick={() => toggleHistory(id)}
-                        aria-expanded={isExpanded}
-                      >
-                        <span className="sa-history-chevron">
-                          {isExpanded ? (
-                            <ChevronDown size={19} />
-                          ) : (
-                            <ChevronRight size={19} />
-                          )}
-                        </span>
-
-                        <span className="sa-history-main-info">
-                          <span className="sa-history-date">
-                            <CalendarClock size={15} />
-                            {formatDate(
-                              item.startedAt ||
-                                item.processedAt ||
-                                item.createdAt,
-                            )}
+                    <article
+                      className={`sa-history-card ${
+                        isExpanded ? "expanded" : ""
+                      }`}
+                      key={id}
+                    >
+                      <div className="sa-history-card-main">
+                        <button
+                          type="button"
+                          className="sa-history-toggle"
+                          onClick={() =>
+                            setExpandedHistoryId((current) =>
+                              current === id ? null : id,
+                            )
+                          }
+                          aria-expanded={isExpanded}
+                        >
+                          <span className="sa-history-chevron">
+                            {isExpanded ? "−" : "+"}
                           </span>
 
-                          <span className="sa-history-meta">
-                            <span
-                              className={`sa-status ${isManual ? "blue" : "neutral"}`}
-                            >
-                              {isManual ? "Thủ công" : "Cron tự động"}
+                          <span className="sa-history-main-info">
+                            <span className="sa-history-date">
+                              <CalendarClock size={15} />
+                              {formatDate(
+                                item.startedAt ||
+                                  item.processedAt ||
+                                  item.createdAt,
+                              )}
                             </span>
 
-                            <span className={`sa-status ${status.tone}`}>
-                              {status.label}
-                            </span>
+                            <span className="sa-history-meta">
+                              <span
+                                className={`sa-status ${
+                                  isManual ? "blue" : "neutral"
+                                }`}
+                              >
+                                {isManual ? "Thủ công" : "Cron tự động"}
+                              </span>
 
-                            <span className="sa-history-duration">
-                              <Timer size={13} />
-                              {formatDuration(item.durationMs)}
+                              <span className={`sa-status ${status.tone}`}>
+                                {status.label}
+                              </span>
+
+                              <span className="sa-history-duration">
+                                {formatDuration(item.durationMs)}
+                              </span>
                             </span>
                           </span>
-                        </span>
-                      </button>
+                        </button>
 
-                      <div className="sa-history-counts">
-                        <div>
-                          <strong>{scanned}</strong>
-                          <span>Đã quét</span>
-                        </div>
-
-                        <div className="success">
-                          <strong>{success}</strong>
-                          <span>Thành công</span>
-                        </div>
-
-                        <div className="failed">
-                          <strong>{failed}</strong>
-                          <span>Thất bại</span>
-                        </div>
-
-                        <div className="skipped">
-                          <strong>{skipped}</strong>
-                          <span>Bỏ qua</span>
-                        </div>
-
-                        {partial > 0 && (
-                          <div className="partial">
-                            <strong>{partial}</strong>
-                            <span>Một phần</span>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="sa-history-rate">
-                        <div className="sa-history-rate-text">
-                          <span>Tỷ lệ thành công</span>
-                          <b>{successRate.toFixed(1)}%</b>
-                        </div>
-
-                        <div className="sa-progress">
-                          <span style={{ width: `${successRate}%` }} />
-                        </div>
-                      </div>
-                    </div>
-
-                    {item.error && (
-                      <div className="sa-history-error">
-                        <AlertTriangle size={15} />
-                        {item.error}
-                      </div>
-                    )}
-
-                    {isExpanded && (
-                      <div className="sa-history-detail">
-                        <div className="sa-detail-heading">
+                        <div className="sa-history-counts">
                           <div>
-                            <h3>Chi tiết đơn hàng trong lần chạy</h3>
-                            <p>
-                              {filteredResults.length} / {results.length} đơn
-                            </p>
+                            <strong>{scanned}</strong>
+                            <span>Đã quét</span>
                           </div>
 
-                          <div className="sa-detail-time">
-                            <span>Bắt đầu: {formatDate(item.startedAt)}</span>
-                            <span>Kết thúc: {formatDate(item.finishedAt)}</span>
+                          <div className="success">
+                            <strong>{success}</strong>
+                            <span>Thành công</span>
+                          </div>
+
+                          <div className="failed">
+                            <strong>{failed}</strong>
+                            <span>Thất bại</span>
+                          </div>
+
+                          <div className="skipped">
+                            <strong>{skipped}</strong>
+                            <span>Bỏ qua</span>
+                          </div>
+
+                          {partial > 0 && (
+                            <div className="partial">
+                              <strong>{partial}</strong>
+                              <span>Một phần</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="sa-history-rate">
+                          <div className="sa-history-rate-text">
+                            <span>Tỷ lệ thành công</span>
+                            <b>{successRate.toFixed(1)}%</b>
+                          </div>
+
+                          <div className="sa-progress">
+                            <span style={{ width: `${successRate}%` }} />
                           </div>
                         </div>
+                      </div>
 
-                        <div className="sa-detail-summary">
-                          <span>
-                            <CheckCircle2 size={14} />
-                            {success} thành công
-                          </span>
-
-                          <span>
-                            <AlertTriangle size={14} />
-                            {skipped} bỏ qua
-                          </span>
-
-                          <span>
-                            <XCircle size={14} />
-                            {failed} thất bại
-                          </span>
+                      {item.error && (
+                        <div className="sa-history-error">
+                          <AlertTriangle size={15} />
+                          {item.error}
                         </div>
+                      )}
 
-                        <div className="sa-table-wrap">
-                          <table className="sa-table sa-result-table">
-                            <thead>
-                              <tr>
-                                <th>Mã đơn Shopee</th>
-                                <th>Gian hàng</th>
-                                <th>Kết quả</th>
-                                <th>Trạng thái kho</th>
-                                <th>Thời gian xử lý</th>
-                                <th>Lý do / Thông tin</th>
-                              </tr>
-                            </thead>
+                      {isExpanded && (
+                        <div className="sa-history-detail">
+                          <div className="sa-detail-heading">
+                            <div>
+                              <h3>Chi tiết đơn hàng trong lần chạy</h3>
+                              <p>{results.length} đơn</p>
+                            </div>
 
-                            <tbody>
-                              {filteredResults.map((result, index) => {
-                                const [resultLabel, resultTone] =
-                                  getResultStatus(result.status);
+                            <div className="sa-detail-time">
+                              <span>Bắt đầu: {formatDate(item.startedAt)}</span>
+                              <span>
+                                Kết thúc: {formatDate(item.finishedAt)}
+                              </span>
+                            </div>
+                          </div>
 
-                                const [stockLabel, stockTone] = getStockStatus(
-                                  result.stockStatus,
-                                );
+                          <div className="sa-table-wrap">
+                            <table className="sa-table sa-result-table">
+                              <thead>
+                                <tr>
+                                  <th>Mã đơn Shopee</th>
+                                  <th>Gian hàng</th>
+                                  <th>Kết quả</th>
+                                  <th>Trạng thái kho</th>
+                                  <th>Thời gian xử lý</th>
+                                  <th>Thông tin</th>
+                                </tr>
+                              </thead>
 
-                                return (
-                                  <tr
-                                    key={`${result.orderSn || "order"}-${index}`}
-                                  >
-                                    <td className="sa-order-sn">
-                                      {result.orderSn || "—"}
-                                    </td>
+                              <tbody>
+                                {results.map((result, index) => {
+                                  const [resultLabel, resultTone] =
+                                    getResultStatus(result.status);
 
-                                    <td>
-                                      {result.shopName || result.shopId || "—"}
-                                    </td>
+                                  const [stockLabel, stockTone] =
+                                    getStockStatus(result.stockStatus);
 
-                                    <td>
-                                      <span
-                                        className={`sa-status ${resultTone}`}
-                                      >
-                                        {resultLabel}
-                                      </span>
-                                    </td>
+                                  return (
+                                    <tr
+                                      key={`${
+                                        result.orderSn || "order"
+                                      }-${index}`}
+                                    >
+                                      <td className="sa-order-sn">
+                                        {result.orderSn || "—"}
+                                      </td>
 
-                                    <td>
-                                      <span
-                                        className={`sa-status ${stockTone}`}
-                                      >
-                                        {stockLabel}
-                                      </span>
-                                    </td>
+                                      <td>
+                                        {result.shopName ||
+                                          result.shopId ||
+                                          "—"}
+                                      </td>
 
-                                    <td>{formatDate(result.processedAt)}</td>
+                                      <td>
+                                        <span
+                                          className={`sa-status ${resultTone}`}
+                                        >
+                                          {resultLabel}
+                                        </span>
+                                      </td>
 
-                                    <td className="sa-result-message">
-                                      {result.message || "—"}
+                                      <td>
+                                        <span
+                                          className={`sa-status ${stockTone}`}
+                                        >
+                                          {stockLabel}
+                                        </span>
+                                      </td>
+
+                                      <td>{formatDate(result.processedAt)}</td>
+
+                                      <td className="sa-result-message">
+                                        {result.message || "—"}
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+
+                                {!results.length && (
+                                  <tr>
+                                    <td colSpan="6" className="sa-empty">
+                                      Lần chạy này không có chi tiết đơn.
                                     </td>
                                   </tr>
-                                );
-                              })}
-
-                              {!filteredResults.length && (
-                                <tr>
-                                  <td colSpan="6" className="sa-empty">
-                                    Không tìm thấy đơn hàng trong lần chạy này.
-                                  </td>
-                                </tr>
-                              )}
-                            </tbody>
-                          </table>
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </article>
-                );
-              })}
+                      )}
+                    </article>
+                  );
+                })}
 
-              {!visibleHistory.length && (
-                <div className="sa-empty sa-history-empty">
-                  {loading
-                    ? "Đang tải lịch sử..."
-                    : "Không có lịch sử phù hợp."}
-                </div>
-              )}
-            </div>
+                {!historyRunList.length && (
+                  <div className="sa-empty sa-history-empty">
+                    {loading
+                      ? "Đang tải lịch sử..."
+                      : "Không có lần chạy phù hợp."}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </section>

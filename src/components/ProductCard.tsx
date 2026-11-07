@@ -33,8 +33,10 @@ interface Variant {
   qty?: number | string;
   stock?: number | string;
 
-  code?: string;
+  variantCode?: string;
   sku?: string;
+  unitCost?: number | string;
+  reservedQty?: number | string;
 
   image?: string;
   thumbnail?: string;
@@ -49,7 +51,7 @@ interface ProductCardProps extends Product {
   id?: string;
 
   variants?: Variant[];
-
+  reservedQty?: number | string;
   soldQty?: number | string;
   soldCount?: number | string;
 }
@@ -92,7 +94,15 @@ const ProductCard: FC<ProductCardProps> = (product) => {
   const variants = Array.isArray(product.variants) ? product.variants : [];
 
   const hasVariants = variants.length > 0;
+  const getAvailableQty = (
+    qty: number | string | undefined,
+    reservedQty: number | string | undefined,
+  ) => {
+    const total = Number(qty) || 0;
+    const reserved = Number(reservedQty) || 0;
 
+    return Math.max(0, total - reserved);
+  };
   /* =======================================================
      SOLD QTY
   ======================================================= */
@@ -112,9 +122,12 @@ const ProductCard: FC<ProductCardProps> = (product) => {
     }
 
     const firstAvailableIndex = variants.findIndex((variant) => {
-      const qty = Number(variant.qty ?? variant.stock ?? 0) || 0;
+      const availableQty = getAvailableQty(
+        variant.qty ?? variant.stock,
+        variant.reservedQty,
+      );
 
-      return qty > 0;
+      return availableQty > 0;
     });
 
     if (firstAvailableIndex >= 0) {
@@ -230,11 +243,14 @@ const ProductCard: FC<ProductCardProps> = (product) => {
 
   const stock = useMemo(() => {
     if (selectedVariant) {
-      return Number(selectedVariant.qty ?? selectedVariant.stock ?? 0) || 0;
+      return getAvailableQty(
+        selectedVariant.qty ?? selectedVariant.stock,
+        selectedVariant.reservedQty,
+      );
     }
 
-    return Number(product.qty) || 0;
-  }, [selectedVariant, product.qty]);
+    return getAvailableQty(product.qty, product.reservedQty);
+  }, [selectedVariant, product.qty, product.reservedQty]);
 
   const isInStock = stock > 0;
 
@@ -281,8 +297,10 @@ const ProductCard: FC<ProductCardProps> = (product) => {
       return;
     }
 
-    const variantQty = Number(variant.qty ?? variant.stock ?? 0) || 0;
-
+    const variantQty = getAvailableQty(
+      variant.qty ?? variant.stock,
+      variant.reservedQty,
+    );
     if (variantQty <= 0) {
       toast.info("Phân loại này hiện đã hết hàng");
 
@@ -311,8 +329,9 @@ const ProductCard: FC<ProductCardProps> = (product) => {
       return;
     }
 
-    const variantStock = Number(
-      selectedVariant.qty ?? selectedVariant.stock ?? 0,
+    const variantStock = getAvailableQty(
+      selectedVariant.qty ?? selectedVariant.stock,
+      selectedVariant.reservedQty,
     );
 
     if (variantStock <= 0) {
@@ -687,8 +706,10 @@ const ProductCard: FC<ProductCardProps> = (product) => {
                   "
                 >
                   {variants.map((variant, index) => {
-                    const variantQty =
-                      Number(variant.qty ?? variant.stock ?? 0) || 0;
+                    const variantQty = getAvailableQty(
+                      variant.qty ?? variant.stock,
+                      variant.reservedQty,
+                    );
 
                     const isSelected = index === selectedVariantIndex;
 

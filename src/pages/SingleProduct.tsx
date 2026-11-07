@@ -48,7 +48,7 @@ interface ProductVariant {
 
   code?: string;
   sku?: string;
-
+  reservedQty?: number | string;
   thumbnail?: string;
   image?: string;
 }
@@ -64,7 +64,15 @@ const getToken = () => {
     ""
   );
 };
+const getAvailableQty = (
+  qty: number | string | undefined,
+  reservedQty: number | string | undefined,
+) => {
+  const total = Math.max(0, Number(qty) || 0);
+  const reserved = Math.max(0, Number(reservedQty) || 0);
 
+  return Math.max(0, total - reserved);
+};
 /* =====================================================
    COMPONENT
 ===================================================== */
@@ -309,8 +317,8 @@ const SingleProduct: FC = () => {
   =================================================== */
 
   const currentQty = selectedVariant
-    ? Number(selectedVariant.qty) || 0
-    : Number(product?.qty) || 0;
+    ? getAvailableQty(selectedVariant.qty, selectedVariant.reservedQty)
+    : getAvailableQty(product?.qty, product?.reservedQty);
 
   const isInStock = currentQty > 0;
 
@@ -323,8 +331,7 @@ const SingleProduct: FC = () => {
 
     if (!variant) return;
 
-    const qty = Number(variant.qty) || 0;
-
+    const qty = getAvailableQty(variant.qty, variant.reservedQty);
     if (qty <= 0) {
       toast.error(`Phân loại "${getVariantName(variant)}" hiện đã hết hàng`);
 
@@ -717,8 +724,10 @@ const SingleProduct: FC = () => {
 
                   <div className="flex flex-wrap gap-2.5">
                     {variants.map((variant, index) => {
-                      const variantQty = Number(variant.qty) || 0;
-
+                      const variantQty = getAvailableQty(
+                        variant.qty,
+                        variant.reservedQty,
+                      );
                       const isSelected = index === selectedVariantIndex;
 
                       const variantName = getVariantName(variant);

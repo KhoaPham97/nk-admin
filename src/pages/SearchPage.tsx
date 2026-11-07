@@ -285,10 +285,10 @@ const SearchPage: FC = () => {
               </p>
             )}
           </div>
-
+          {/* 
           {products.length > 0 && (
             <SortProducts products={products} onChange={setProducts} />
-          )}
+          )} */}
         </div>
 
         {/* =====================================================
