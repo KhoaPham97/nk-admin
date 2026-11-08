@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { PackageCheck, Search, RotateCcw } from "lucide-react";
 import { shopeeApi } from "../../services/shopeeApi";
-import "./shopee-components.css";
+import "./style/shopee-components.css";
 
 export default function ShopeeReturns() {
   const [orderSn, setOrderSn] = useState("");

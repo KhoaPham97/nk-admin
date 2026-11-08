@@ -1177,3 +1177,266 @@
     white-space: nowrap;
   }
 }
+/* Mã đơn có thể bấm */
+.sa-order-link {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #2563eb;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: left;
+}
+
+.sa-order-link:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+/* Popup chi tiết đơn */
+.sa-detail-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(15, 23, 42, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.sa-detail-modal {
+  width: min(900px, 100%);
+  max-height: 90vh;
+  background: #fff;
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+}
+
+.sa-detail-modal-header {
+  padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.sa-detail-modal-header span {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 1px;
+}
+
+.sa-detail-modal-header h2 {
+  margin: 5px 0 0;
+  font-size: 20px;
+  color: #1d4ed8;
+}
+
+.sa-detail-modal-header button {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 8px;
+  background: #f1f5f9;
+  font-size: 25px;
+  cursor: pointer;
+}
+
+.sa-detail-modal-body {
+  padding: 22px 24px;
+  overflow-y: auto;
+}
+
+.sa-detail-section {
+  margin-bottom: 25px;
+}
+
+.sa-detail-section h3 {
+  font-size: 16px;
+  margin: 0 0 15px;
+  color: #0f172a;
+}
+
+.sa-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.sa-detail-field {
+  padding: 12px;
+  border-radius: 9px;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.sa-detail-field span {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.sa-detail-field b {
+  color: #1e293b;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.sa-detail-address {
+  margin-top: 12px;
+  padding: 13px;
+  border-radius: 9px;
+  background: #f8fafc;
+}
+
+.sa-detail-address b {
+  font-size: 13px;
+}
+
+.sa-detail-address p {
+  margin: 7px 0 0;
+  color: #475569;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.sa-detail-items {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sa-detail-product {
+  padding: 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.sa-detail-product-main {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.sa-detail-product-main b {
+  font-size: 14px;
+  color: #1e293b;
+}
+
+.sa-detail-product-main span {
+  font-size: 12px;
+  color: #64748b;
+  overflow-wrap: anywhere;
+}
+
+.sa-detail-product-price {
+  min-width: 125px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+  font-size: 13px;
+}
+
+.sa-detail-product-price b {
+  color: #64748b;
+}
+
+.sa-detail-product-price span {
+  color: #64748b;
+}
+
+.sa-detail-product-price strong {
+  color: #dc2626;
+}
+
+.sa-detail-total {
+  padding: 17px;
+  background: #eff6ff;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.sa-detail-total span {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.sa-detail-total strong {
+  font-size: 21px;
+  color: #dc2626;
+}
+
+.sa-detail-loading,
+.sa-detail-error {
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.sa-detail-error {
+  color: #dc2626;
+}
+
+.sa-detail-error button {
+  padding: 9px 20px;
+  border: 0;
+  border-radius: 8px;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+}
+
+@media (max-width: 600px) {
+  .sa-detail-overlay {
+    padding: 8px;
+  }
+
+  .sa-detail-modal {
+    max-height: 95vh;
+  }
+
+  .sa-detail-modal-header,
+  .sa-detail-modal-body {
+    padding: 16px;
+  }
+
+  .sa-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sa-detail-product {
+    flex-direction: column;
+  }
+
+  .sa-detail-product-price {
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .sa-detail-total strong {
+    font-size: 17px;
+  }
+}

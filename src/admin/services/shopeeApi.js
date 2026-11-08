@@ -10,7 +10,7 @@ function normalizeApiUrl(url) {
     .replace(/\/+$/, "");
 
   if (!base) {
-    base = "http://localhost:3001/api";
+    base = BASE_URL;
   }
 
   if (/\/api\/shopee$/i.test(base)) {

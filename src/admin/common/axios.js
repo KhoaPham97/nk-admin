@@ -1,11 +1,9 @@
 import Axios from "axios";
 import toast from "react-hot-toast";
-
+import { BASE_URL } from "../../api";
 const axios = Axios.create({});
 
-const serverUrl = window.location.href.includes("localhost")
-  ? "http://localhost:3001/api/"
-  : "https://nkbike.onrender.com/api/";
+const serverUrl = BASE_URL;
 
 export const baseURL = serverUrl;
 

@@ -24,8 +24,8 @@ import {
 } from "lucide-react";
 
 import { shopeeApi } from "../../services/shopeeApi";
-import "./shopee-components.css";
-import "./ShopeeStockHistory.css";
+import "./style/shopee-components.css";
+import "./style/ShopeeStockHistory.css";
 
 // =====================================================
 // HELPERS

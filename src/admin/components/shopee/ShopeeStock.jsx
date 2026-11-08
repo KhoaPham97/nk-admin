@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 
 import { shopeeApi } from "../../services/shopeeApi";
-import "./shopee-stock.css";
+import "./style/shopee-stock.css";
 
 // =====================================================
 // HELPERS
@@ -504,7 +504,7 @@ export default function ShopeeStock() {
 
             <small>
               <CalendarDays size={12} />
-              Tạo lúc: {formatDate(order?.createdAt)}
+              Tạo lúc: {formatDate(order?.createTime)}
             </small>
           </div>
 

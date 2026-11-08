@@ -83,7 +83,22 @@ api.interceptors.request.use((config) => {
 
   return config;
 });
+const getStockStatusLabel = (status) => {
+  const statusMap = {
+    ready: "Sẵn sàng xử lý",
+    deducted: "Đã trừ kho",
+    reserved: "Đã giữ hàng",
+    released: "Đã hoàn giữ kho",
+    pending: "Chờ xử lý",
+    cancelled: "Đã hủy",
+  };
 
+  const normalized = String(status || "")
+    .trim()
+    .toLowerCase();
+
+  return statusMap[normalized] || status || "Không xác định";
+};
 const formatNumber = (value) =>
   new Intl.NumberFormat("vi-VN").format(Number(value) || 0);
 
@@ -370,9 +385,9 @@ const OrderDetailDialog = ({ open, onClose, loading, error, detail }) => {
       : order?.status;
 
   const customerName = pick(
+    order?.buyerUsername,
     order?.customerName,
     order?.recipientName,
-    order?.buyerUsername,
     order?.receiverName,
     order?.customer?.name,
   );
@@ -556,11 +571,7 @@ const OrderDetailDialog = ({ open, onClose, loading, error, detail }) => {
                         ? "success"
                         : "default"
                     }
-                    label={
-                      order.stockDeducted || order.stockStatus === "deducted"
-                        ? "Đã trừ kho"
-                        : order.stockStatus || "Chưa trừ kho"
-                    }
+                    label={getStockStatusLabel(order.stockStatus)}
                   />
                 </Box>
               </Box>
@@ -630,7 +641,7 @@ const OrderDetailDialog = ({ open, onClose, loading, error, detail }) => {
                   <OrderInfoItem
                     icon={<CalendarDays size={17} />}
                     label="Ngày tạo đơn"
-                    value={formatDate(createdAt)}
+                    value={formatDate(order.createTime)}
                   />
                 </Grid>
               </Grid>
@@ -798,7 +809,7 @@ const OrderDetailDialog = ({ open, onClose, loading, error, detail }) => {
                 <OrderInfoItem
                   icon={<CalendarDays size={17} />}
                   label="Ngày tạo"
-                  value={formatDate(createdAt)}
+                  value={formatDate(order.createTime)}
                 />
               </Grid>
 

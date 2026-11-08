@@ -16,7 +16,8 @@ import {
 } from "lucide-react";
 
 import shopeeApi from "../../services/shopeeApi";
-import "./ShopeeAutoStockPage.css";
+import "./style/ShopeeAutoStockPage.css";
+import { getStatusLabel, getStockLabel } from "../../common/CommonFunc";
 
 export default function ShopeeAutoStockPage() {
   // =====================================================
@@ -50,7 +51,9 @@ export default function ShopeeAutoStockPage() {
   const [intervalMinutes, setIntervalMinutes] = useState(5);
 
   const [message, setMessage] = useState(null);
-
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState("");
   // =====================================================
   // HELPERS
   // =====================================================
@@ -526,13 +529,54 @@ export default function ShopeeAutoStockPage() {
       );
     });
   }, [history, historyKeyword]);
+  const handleOpenOrderDetail = async (orderSn) => {
+    if (!orderSn || detailLoading) return;
 
+    setDetailLoading(true);
+    setDetailError("");
+    setSelectedOrder({ orderSn, loading: true });
+
+    try {
+      const result = await shopeeApi.getOrderDetail(orderSn);
+
+      const order =
+        result?.order || result?.data?.order || result?.data || result;
+
+      if (!order || typeof order !== "object") {
+        throw new Error("Không tìm thấy thông tin đơn hàng.");
+      }
+
+      setSelectedOrder({
+        ...order,
+        orderSn: order.orderSn || orderSn,
+      });
+    } catch (error) {
+      console.error("[Shopee Order Detail]", error);
+
+      setDetailError(error.message || "Không thể tải chi tiết đơn hàng.");
+    } finally {
+      setDetailLoading(false);
+    }
+  };
   // =====================================================
   // RENDER
   // =====================================================
 
   return (
     <div className="sa-page">
+      {selectedOrder && (
+        <ShopeeOrderDetailModal
+          order={selectedOrder}
+          loading={detailLoading}
+          error={detailError}
+          onClose={() => {
+            if (!detailLoading) {
+              setSelectedOrder(null);
+              setDetailError("");
+            }
+          }}
+        />
+      )}
       {/* HEADER */}
       <div className="sa-header">
         <div>
@@ -779,8 +823,15 @@ export default function ShopeeAutoStockPage() {
                           />
                         </td>
 
-                        <td className="sa-order-sn">{order.orderSn}</td>
-
+                        <td>
+                          <button
+                            type="button"
+                            className="sa-order-link"
+                            onClick={() => handleOpenOrderDetail(order.orderSn)}
+                          >
+                            {order.orderSn}
+                          </button>
+                        </td>
                         <td>{order.shopName || "—"}</td>
 
                         <td>
@@ -943,8 +994,20 @@ export default function ShopeeAutoStockPage() {
                           <tr key={result.uniqueKey}>
                             <td>{index + 1}</td>
 
-                            <td className="sa-order-sn">
-                              {result.orderSn || "—"}
+                            <td>
+                              {result.orderSn ? (
+                                <button
+                                  type="button"
+                                  className="sa-order-link"
+                                  onClick={() =>
+                                    handleOpenOrderDetail(result.orderSn)
+                                  }
+                                >
+                                  {result.orderSn}
+                                </button>
+                              ) : (
+                                "—"
+                              )}
                             </td>
 
                             <td>{result.shopName || result.shopId || "—"}</td>
@@ -1170,8 +1233,22 @@ export default function ShopeeAutoStockPage() {
                                         result.orderSn || "order"
                                       }-${index}`}
                                     >
-                                      <td className="sa-order-sn">
-                                        {result.orderSn || "—"}
+                                      <td>
+                                        {result.orderSn ? (
+                                          <button
+                                            type="button"
+                                            className="sa-order-link"
+                                            onClick={() =>
+                                              handleOpenOrderDetail(
+                                                result.orderSn,
+                                              )
+                                            }
+                                          >
+                                            {result.orderSn}
+                                          </button>
+                                        ) : (
+                                          "—"
+                                        )}
                                       </td>
 
                                       <td>
@@ -1250,6 +1327,269 @@ function Stat({ icon, label, value, color = "" }) {
         <strong>{value}</strong>
         <span>{label}</span>
       </div>
+    </div>
+  );
+}
+function ShopeeOrderDetailModal({ order, loading, error, onClose }) {
+  const items = Array.isArray(order?.items) ? order.items : [];
+
+  const formatMoney = (value) => {
+    const number = Number(value);
+
+    if (!Number.isFinite(number)) return "—";
+
+    return number.toLocaleString("vi-VN") + " đ";
+  };
+
+  const formatDate = (value) => {
+    if (!value) return "—";
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) return "—";
+
+    return date.toLocaleString("vi-VN", {
+      timeZone: "Asia/Ho_Chi_Minh",
+      hour12: false,
+    });
+  };
+
+  const getStatus = (status) => {
+    const map = {
+      COMPLETED: "Hoàn thành",
+      SHIPPED: "Đã giao vận chuyển",
+      READY_TO_SHIP: "Chờ giao vận chuyển",
+      PROCESSED: "Đang xử lý",
+      TO_CONFIRM_RECEIVE: "Chờ xác nhận nhận hàng",
+      CANCELLED: "Đã hủy",
+      UNPAID: "Chưa thanh toán",
+      IN_CANCEL: "Đang yêu cầu hủy",
+    };
+
+    return map[String(status || "").toUpperCase()] || status || "—";
+  };
+
+  const getMappingStatus = (item) => {
+    if (item.mappingStatus === "mapped" || item.productId) {
+      return "Đã ánh xạ SKU";
+    }
+
+    if (item.mappingStatus === "unmapped") {
+      return "Chưa ánh xạ SKU";
+    }
+
+    return item.mappingStatus || "Chưa xác định";
+  };
+
+  return (
+    <div
+      className="sa-detail-overlay"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget && !loading) {
+          onClose();
+        }
+      }}
+    >
+      <div className="sa-detail-modal">
+        <div className="sa-detail-modal-header">
+          <div>
+            <span>CHI TIẾT ĐƠN SHOPEE</span>
+            <h2>{order.orderSn}</h2>
+          </div>
+
+          <button type="button" onClick={onClose} disabled={loading}>
+            ×
+          </button>
+        </div>
+
+        <div className="sa-detail-modal-body">
+          {loading ? (
+            <div className="sa-detail-loading">
+              <RefreshCw className="sa-spin" size={24} />
+              <p>Đang tải thông tin đơn hàng...</p>
+            </div>
+          ) : error ? (
+            <div className="sa-detail-error">
+              <AlertTriangle size={22} />
+              <p>{error}</p>
+              <button type="button" onClick={onClose}>
+                Đóng
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="sa-detail-section">
+                <h3>Thông tin chung</h3>
+
+                <div className="sa-detail-grid">
+                  <DetailField label="Mã đơn" value={order.orderSn} />
+
+                  <DetailField
+                    label="Gian hàng"
+                    value={order.shopName || order.shopId}
+                  />
+
+                  <DetailField
+                    label="Trạng thái đơn"
+                    value={getStatus(order.orderStatus || order.status)}
+                  />
+
+                  <DetailField
+                    label="Ngày tạo"
+                    value={formatDate(
+                      order.createdAt ||
+                        order.createTime ||
+                        order.rawData?.create_time,
+                    )}
+                  />
+
+                  <DetailField
+                    label="Người mua"
+                    value={
+                      order.buyerUsername ||
+                      order.recipientName ||
+                      order.buyerName
+                    }
+                  />
+
+                  <DetailField label="Người nhận" value={order.recipientName} />
+
+                  <DetailField
+                    label="Số điện thoại"
+                    value={order.phone || order.recipientPhone}
+                  />
+
+                  <DetailField
+                    label="Đơn vị vận chuyển"
+                    value={order.shippingCarrier}
+                  />
+
+                  <DetailField label="Thanh toán" value={order.paymentMethod} />
+
+                  <DetailField
+                    label="Trạng thái kho"
+                    value={getStockLabel(order.stockStatus)}
+                  />
+                </div>
+
+                {(order.address || order.shippingAddress) && (
+                  <div className="sa-detail-address">
+                    <b>Địa chỉ giao hàng</b>
+                    <p>
+                      {typeof (order.address || order.shippingAddress) ===
+                      "string"
+                        ? order.address || order.shippingAddress
+                        : [
+                            order.shippingAddress?.fullAddress,
+                            order.shippingAddress?.address,
+                            order.shippingAddress?.district,
+                            order.shippingAddress?.city,
+                          ]
+                            .filter(Boolean)
+                            .join(", ")}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="sa-detail-section">
+                <h3>Sản phẩm ({items.length})</h3>
+
+                <div className="sa-detail-items">
+                  {items.map((item, index) => {
+                    const quantity = Number(item.quantity || item.qty || 0);
+
+                    const price = Number(
+                      item.unitPrice ||
+                        item.modelOriginalPrice ||
+                        item.price ||
+                        0,
+                    );
+
+                    return (
+                      <div
+                        className="sa-detail-product"
+                        key={item._id || item.itemId || index}
+                      >
+                        <div className="sa-detail-product-main">
+                          <b>
+                            {item.itemName ||
+                              item.productName ||
+                              item.title ||
+                              "Sản phẩm Shopee"}
+                          </b>
+
+                          <span>
+                            Phân loại:{" "}
+                            {item.variantName || item.modelName || "Mặc định"}
+                          </span>
+
+                          <span>
+                            SKU Shopee:{" "}
+                            {item.sku ||
+                              item.variationSku ||
+                              item.itemSku ||
+                              "—"}
+                          </span>
+
+                          <span>
+                            SKU nội bộ:{" "}
+                            {item.variantCode || item.productCode || "—"}
+                          </span>
+
+                          <span>Ánh xạ: {getMappingStatus(item)}</span>
+                        </div>
+
+                        <div className="sa-detail-product-price">
+                          <b>{formatMoney(price)}</b>
+                          <span>x {quantity}</span>
+                          <strong>{formatMoney(price * quantity)}</strong>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {!items.length && (
+                    <div className="sa-empty">Không có dữ liệu sản phẩm.</div>
+                  )}
+                </div>
+              </div>
+
+              <div className="sa-detail-total">
+                <span>Tổng tiền đơn hàng</span>
+                <strong>
+                  {formatMoney(
+                    order.totalAmount ||
+                      order.totalPrice ||
+                      order.orderAmount ||
+                      order.rawData?.total_amount,
+                  )}
+                </strong>
+              </div>
+
+              {order.note && (
+                <div className="sa-detail-address">
+                  <b>Ghi chú</b>
+                  <p>{order.note}</p>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DetailField({ label, value }) {
+  return (
+    <div className="sa-detail-field">
+      <span>{label}</span>
+      <b>
+        {value === null || value === undefined || value === ""
+          ? "—"
+          : String(value)}
+      </b>
     </div>
   );
 }

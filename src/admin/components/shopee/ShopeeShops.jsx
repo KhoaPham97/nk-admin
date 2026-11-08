@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { RefreshCw, Store, Plus, Trash2, ExternalLink } from "lucide-react";
 import { shopeeApi } from "../../services/shopeeApi";
-import "./shopee-components.css";
+import "./style/shopee-components.css";
 
 export default function ShopeeShops({ onRefresh }) {
   const [shops, setShops] = useState([]);
