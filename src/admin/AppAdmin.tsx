@@ -35,6 +35,7 @@ import CostManagement from "./pages/CostManagement";
 import ImportDrafts from "./pages/ImportDrafts";
 import ShopeeManagement from "./pages/admin/ShopeeManagement";
 import SkuManagement from "./pages/SkuManagement";
+import InventoryReservations from "./pages/InventoryReservations";
 
 export default function BasicExample() {
   return (
@@ -123,6 +124,10 @@ export default function BasicExample() {
           <Route path="/admin/product-quote" element={<ProductQuotePage />} />
           <Route path="/admin/shopee" element={<ShopeeManagement />} />
           <Route path="/admin/sku" element={<SkuManagement />} />
+          <Route
+            path="/admin/inventory/reservations"
+            element={<InventoryReservations />}
+          />
         </Route>
       </Route>
     </Routes>

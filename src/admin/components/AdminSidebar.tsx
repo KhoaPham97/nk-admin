@@ -23,7 +23,6 @@ import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import WarehouseIcon from "@mui/icons-material/Warehouse";
 import AddBoxIcon from "@mui/icons-material/AddBox";
 import InventoryIcon from "@mui/icons-material/Inventory";
-import HistoryIcon from "@mui/icons-material/History";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
@@ -36,7 +35,7 @@ import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import ShoppingBagIcon from "@mui/icons-material/ShoppingBag";
 import { useLocation, useNavigate } from "react-router-dom";
 import PriceChangeIcon from "@mui/icons-material/PriceChange";
-
+import { PackageSearch, Barcode } from "lucide-react";
 interface Props {
   drawerWidth: number;
   mobileOpen: boolean;
@@ -136,7 +135,7 @@ const AdminSidebar = ({
         },
         {
           label: "Quản lý SKU",
-          icon: "",
+          icon: <Barcode size={20} />,
           path: "/admin/sku",
         },
       ],
@@ -165,7 +164,11 @@ const AdminSidebar = ({
           icon: <InventoryIcon />,
           path: "/admin/inventory-batches",
         },
-
+        {
+          label: "Sản phẩm đang giữ",
+          path: "/admin/inventory/reservations",
+          icon: <PackageSearch />,
+        },
         {
           label: "Lịch sử nhập kho",
           icon: <AddBoxIcon />,

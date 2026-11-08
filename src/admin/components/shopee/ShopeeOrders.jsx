@@ -1,6 +1,19 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+
+import { io } from "socket.io-client";
+
 import { shopeeApi } from "../../services/shopeeApi";
 import "./ShopeeOrders.css";
+
+// =====================================================
+// HELPERS
+// =====================================================
 
 const money = (value) => Number(value || 0).toLocaleString("vi-VN") + "đ";
 
@@ -23,6 +36,7 @@ const getOrderTime = (order) => {
 
   return parsed.toLocaleString("vi-VN");
 };
+
 const normalizeStatus = (status) =>
   String(status || "")
     .trim()
@@ -44,6 +58,7 @@ const getStatusLabel = (status) => {
     TO_SHIP: "Chờ bàn giao vận chuyển",
     INVOICE_PENDING: "Chờ xử lý hóa đơn",
   };
+
   const normalized = normalizeStatus(status);
 
   return (
@@ -75,6 +90,7 @@ const getStockLabel = (status) => {
     STOCK_RESERVED: "Đã giữ hàng",
     STOCK_RELEASED: "Đã hoàn giữ hàng",
   };
+
   const normalized = normalizeStatus(status);
 
   return (
@@ -90,6 +106,7 @@ const getMappingLabel = (item) => {
 
   return "Chưa ánh xạ";
 };
+
 const normalizeList = (result, type = "orders") => {
   if (Array.isArray(result)) return result;
 
@@ -103,6 +120,33 @@ const normalizeList = (result, type = "orders") => {
 
   return data?.orders || data?.data?.orders || data?.results || [];
 };
+
+// =====================================================
+// SOCKET.IO CONFIG
+// =====================================================
+
+const getSocketUrl = () => {
+  const apiUrl =
+    import.meta.env.VITE_API_URL ||
+    import.meta.env.VITE_API_BASE_URL ||
+    (window.location.hostname === "localhost"
+      ? "http://localhost:3001/api"
+      : "https://nkbike.onrender.com/api");
+
+  return apiUrl.replace(/\/api\/?$/, "").replace(/\/+$/, "");
+};
+
+const getAdminToken = () => {
+  return (
+    localStorage.getItem("adminToken") ||
+    localStorage.getItem("accessToken") ||
+    ""
+  );
+};
+
+// =====================================================
+// MAIN COMPONENT
+// =====================================================
 
 export default function ShopeeOrders() {
   const [orders, setOrders] = useState([]);
@@ -119,11 +163,23 @@ export default function ShopeeOrders() {
 
   const [page, setPage] = useState(1);
   const [limit] = useState(20);
+
   const [selectedOrder, setSelectedOrder] = useState(null);
 
   const [preview, setPreview] = useState(null);
   const [previewing, setPreviewing] = useState(false);
   const [deducting, setDeducting] = useState(false);
+
+  // Realtime status
+  const [socketConnected, setSocketConnected] = useState(false);
+  const [lastSocketSync, setLastSocketSync] = useState(null);
+
+  // Luôn tham chiếu đến hàm loadOrders mới nhất
+  const loadOrdersRef = useRef(null);
+
+  // =====================================================
+  // LOAD SHOPS
+  // =====================================================
 
   const loadShops = useCallback(async () => {
     try {
@@ -136,7 +192,7 @@ export default function ShopeeOrders() {
       setShops(shopList);
 
       if (shopList.length === 1) {
-        setShopId(String(shopList[0].shopId || shopList[0].shop_id));
+        setShopId(String(shopList[0].shopId || shopList[0].shop_id || ""));
       }
     } catch (err) {
       console.error("Load Shopee shops:", err);
@@ -144,27 +200,48 @@ export default function ShopeeOrders() {
     }
   }, []);
 
-  const loadOrders = useCallback(async () => {
-    setLoading(true);
-    setError("");
+  // =====================================================
+  // LOAD ORDERS
+  // =====================================================
 
-    try {
-      const result = await shopeeApi.getOrders({
-        shopId,
-        orderStatus: status,
-        stockStatus,
-        search,
-        page,
-        limit,
-      });
+  const loadOrders = useCallback(
+    async ({ silent = false } = {}) => {
+      if (!silent) {
+        setLoading(true);
+        setError("");
+      }
 
-      setOrders(normalizeList(result));
-    } catch (err) {
-      setError(err.message || "Không tải được danh sách đơn hàng");
-    } finally {
-      setLoading(false);
-    }
-  }, [shopId, status, stockStatus, search, page, limit]);
+      try {
+        const result = await shopeeApi.getOrders({
+          shopId,
+          orderStatus: status,
+          stockStatus,
+          search,
+          page,
+          limit,
+        });
+
+        setOrders(normalizeList(result));
+      } catch (err) {
+        console.error("Load Shopee orders:", err);
+
+        if (!silent) {
+          setError(err.message || "Không tải được danh sách đơn hàng");
+        }
+      } finally {
+        if (!silent) {
+          setLoading(false);
+        }
+      }
+    },
+    [shopId, status, stockStatus, search, page, limit],
+  );
+
+  loadOrdersRef.current = loadOrders;
+
+  // =====================================================
+  // INITIAL LOAD
+  // =====================================================
 
   useEffect(() => {
     loadShops();
@@ -173,6 +250,89 @@ export default function ShopeeOrders() {
   useEffect(() => {
     loadOrders();
   }, [loadOrders]);
+
+  // =====================================================
+  // SHOPEE REALTIME SOCKET
+  // =====================================================
+
+  useEffect(() => {
+    const token = getAdminToken();
+
+    if (!token) {
+      console.warn("[Shopee Socket] Không tìm thấy admin token");
+      return;
+    }
+
+    const socket = io(`${getSocketUrl()}/shopee-orders`, {
+      auth: {
+        token,
+      },
+      transports: ["websocket", "polling"],
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 10000,
+    });
+
+    let refreshTimer = null;
+
+    socket.on("connect", () => {
+      console.log("[Shopee Socket] Đã kết nối:", socket.id);
+
+      setSocketConnected(true);
+
+      // Tải lại dữ liệu sau khi kết nối hoặc kết nối lại
+      loadOrdersRef.current?.({ silent: true });
+    });
+
+    socket.on("disconnect", (reason) => {
+      console.warn("[Shopee Socket] Mất kết nối:", reason);
+
+      setSocketConnected(false);
+    });
+
+    socket.on("connect_error", (err) => {
+      console.error("[Shopee Socket] Lỗi kết nối:", err.message);
+
+      setSocketConnected(false);
+    });
+
+    socket.on("shopee:orders:synced", (data) => {
+      console.log("[Shopee Socket] Đơn hàng vừa đồng bộ:", data);
+
+      setLastSocketSync(data?.syncedAt || new Date().toISOString());
+
+      // Gộp nhiều sự kiện từ nhiều gian hàng
+      // để tránh tải danh sách liên tục.
+      if (refreshTimer) {
+        clearTimeout(refreshTimer);
+      }
+
+      refreshTimer = setTimeout(() => {
+        loadOrdersRef.current?.({ silent: true });
+        refreshTimer = null;
+      }, 500);
+    });
+
+    return () => {
+      if (refreshTimer) {
+        clearTimeout(refreshTimer);
+      }
+
+      socket.off("connect");
+      socket.off("disconnect");
+      socket.off("connect_error");
+      socket.off("shopee:orders:synced");
+
+      socket.disconnect();
+
+      setSocketConnected(false);
+    };
+  }, []);
+
+  // =====================================================
+  // STATISTICS
+  // =====================================================
 
   const stats = useMemo(() => {
     const total = orders.length;
@@ -193,8 +353,17 @@ export default function ShopeeOrders() {
       (order) => order.stockStatus === "deducted" || order.stockDeductedAt,
     ).length;
 
-    return { total, unmapped, pending, deducted };
+    return {
+      total,
+      unmapped,
+      pending,
+      deducted,
+    };
   }, [orders]);
+
+  // =====================================================
+  // MANUAL SYNC
+  // =====================================================
 
   const handleSync = async () => {
     setSyncing(true);
@@ -213,6 +382,10 @@ export default function ShopeeOrders() {
     }
   };
 
+  // =====================================================
+  // ORDER DETAIL
+  // =====================================================
+
   const handleDetail = async (order) => {
     setSelectedOrder(order);
     setPreview(null);
@@ -228,6 +401,10 @@ export default function ShopeeOrders() {
       console.error("Order detail:", err);
     }
   };
+
+  // =====================================================
+  // FIFO PREVIEW
+  // =====================================================
 
   const handlePreview = async (order) => {
     setPreviewing(true);
@@ -246,6 +423,10 @@ export default function ShopeeOrders() {
       setPreviewing(false);
     }
   };
+
+  // =====================================================
+  // FIFO DEDUCT
+  // =====================================================
 
   const handleDeduct = async () => {
     if (!selectedOrder || !preview?.canDeduct) return;
@@ -266,6 +447,7 @@ export default function ShopeeOrders() {
       alert("Đã xác nhận xuất kho thành công.");
 
       setPreview(null);
+
       await loadOrders();
 
       const result = await shopeeApi.getOrderDetail(selectedOrder.orderSn);
@@ -280,12 +462,53 @@ export default function ShopeeOrders() {
     }
   };
 
+  // =====================================================
+  // RENDER
+  // =====================================================
+
   return (
     <div className="sho-orders">
+      {/* HEADER */}
       <div className="sho-orders-header">
         <div>
           <h2>Quản lý đơn hàng Shopee</h2>
+
           <p>Đồng bộ đơn hàng và quản lý xuất kho Nhật Khang Bike</p>
+
+          {/* SOCKET STATUS */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              marginTop: 6,
+              fontSize: 12,
+              flexWrap: "wrap",
+            }}
+          >
+            <span
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: "50%",
+                background: socketConnected ? "#16a34a" : "#dc2626",
+                display: "inline-block",
+              }}
+            />
+
+            <span>
+              {socketConnected
+                ? "Đang kết nối cập nhật realtime"
+                : "Đang mất kết nối realtime"}
+            </span>
+
+            {lastSocketSync && (
+              <span style={{ color: "#888" }}>
+                · Đồng bộ gần nhất:{" "}
+                {new Date(lastSocketSync).toLocaleTimeString("vi-VN")}
+              </span>
+            )}
+          </div>
         </div>
 
         <button
@@ -297,8 +520,10 @@ export default function ShopeeOrders() {
         </button>
       </div>
 
+      {/* ERROR */}
       {error && <div className="sho-alert sho-alert-error">{error}</div>}
 
+      {/* STATISTICS */}
       <div className="sho-order-stats">
         <div>
           <span>Đơn trong danh sách</span>
@@ -321,6 +546,7 @@ export default function ShopeeOrders() {
         </div>
       </div>
 
+      {/* FILTERS */}
       <div className="sho-order-filters">
         <input
           value={search}
@@ -339,11 +565,16 @@ export default function ShopeeOrders() {
           }}
         >
           <option value="">Tất cả gian hàng</option>
-          {shops.map((shop) => (
-            <option key={shop.shopId || shop._id} value={shop.shopId}>
-              {shop.shopName || shop.shopId}
-            </option>
-          ))}
+
+          {shops.map((shop) => {
+            const id = shop.shopId || shop.shop_id || shop._id;
+
+            return (
+              <option key={id} value={shop.shopId || shop.shop_id || ""}>
+                {shop.shopName || shop.shop_name || id}
+              </option>
+            );
+          })}
         </select>
 
         <select
@@ -354,6 +585,7 @@ export default function ShopeeOrders() {
           }}
         >
           <option value="">Tất cả trạng thái đơn</option>
+
           {[
             "UNPAID",
             "READY_TO_SHIP",
@@ -378,6 +610,7 @@ export default function ShopeeOrders() {
           }}
         >
           <option value="">Tất cả trạng thái kho</option>
+
           {[
             "pending",
             "reserved",
@@ -398,6 +631,7 @@ export default function ShopeeOrders() {
         </button>
       </div>
 
+      {/* ORDER TABLE */}
       <div className="sho-order-table-wrap">
         {loading ? (
           <div className="sho-empty">Đang tải đơn hàng...</div>
@@ -434,6 +668,7 @@ export default function ShopeeOrders() {
 
                     <td>
                       <strong>{order.buyerUsername || "Khách Shopee"}</strong>
+
                       <small>{order.recipientName || "Ẩn thông tin"}</small>
                     </td>
 
@@ -444,11 +679,13 @@ export default function ShopeeOrders() {
                             <strong>
                               {item.itemName || "Sản phẩm Shopee"}
                             </strong>
+
                             <small>
                               {item.variantName || item.modelName || "Mặc định"}
                               {" · "}
                               SL: {item.quantity || 0}
                             </small>
+
                             <small>
                               SKU:{" "}
                               {item.variationSku || item.itemSku || "Chưa có"}
@@ -524,6 +761,7 @@ export default function ShopeeOrders() {
         )}
       </div>
 
+      {/* PAGINATION */}
       <div className="sho-pagination">
         <button
           disabled={page <= 1}
@@ -542,6 +780,7 @@ export default function ShopeeOrders() {
         </button>
       </div>
 
+      {/* ORDER DETAIL / FIFO MODAL */}
       {(selectedOrder || preview) && (
         <div
           className="sho-modal-backdrop"
@@ -554,6 +793,7 @@ export default function ShopeeOrders() {
             <div className="sho-modal-header">
               <div>
                 <h3>Đơn hàng {selectedOrder?.orderSn}</h3>
+
                 <small>{getOrderTime(selectedOrder)}</small>
               </div>
 
@@ -598,13 +838,16 @@ export default function ShopeeOrders() {
                 <div className="sho-detail-item" key={index}>
                   <div>
                     <strong>{item.itemName}</strong>
+
                     <small>
                       Phân loại:{" "}
                       {item.variantName || item.modelName || "Mặc định"}
                     </small>
+
                     <small>
                       SKU: {item.variationSku || item.itemSku || "Chưa có"}
                     </small>
+
                     <small>Ánh xạ: {getMappingLabel(item)}</small>
                   </div>
 
@@ -615,10 +858,12 @@ export default function ShopeeOrders() {
                 </div>
               ))}
 
+              {/* FIFO LOADING */}
               {previewing && (
                 <div className="sho-alert">Đang kiểm tra phân bổ FIFO...</div>
               )}
 
+              {/* FIFO RESULT */}
               {preview && (
                 <div className="sho-fifo-preview">
                   <h4>Kết quả kiểm tra xuất kho FIFO</h4>
@@ -649,6 +894,7 @@ export default function ShopeeOrders() {
                     <div className="sho-detail-item" key={index}>
                       <div>
                         <strong>{item.itemName || item.variantName}</strong>
+
                         <small>
                           Cần: {item.requiredQty} · Có thể xuất:{" "}
                           {item.availableQty}

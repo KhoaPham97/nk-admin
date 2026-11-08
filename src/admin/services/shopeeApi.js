@@ -286,6 +286,15 @@ export const shopeeApi = {
   // Xử lý nhiều đơn
   processAutoStockSelected: (orderSns = []) =>
     post("/auto-stock/process-selected", { orderSns }),
+  // ---------------------------------------------------
+  // REVENUE & PROFIT MANAGEMENT
+  // ---------------------------------------------------
+
+  getRevenueOverview: (params = {}) => get("/revenue/overview", params),
+
+  getRevenueReport: (params = {}) => get("/revenue/report", withShopId(params)),
+
+  getRevenueOrders: (params = {}) => get("/revenue/orders", withShopId(params)),
 };
 
 export default shopeeApi;
