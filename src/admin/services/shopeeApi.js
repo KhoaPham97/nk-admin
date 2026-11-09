@@ -37,6 +37,7 @@ function getToken() {
     ""
   );
 }
+
 // =====================================================
 // SHOP QUERY HELPER
 // =====================================================
@@ -213,6 +214,7 @@ export const shopeeApi = {
 
   updateOrderStatus: (orderSn, data = {}) =>
     put(`/orders/${encode(orderSn)}/status`, data),
+
   // ---------------------------------------------------
   // SKU MAPPING
   // ---------------------------------------------------
@@ -229,6 +231,7 @@ export const shopeeApi = {
 
   autoMatchSkuMappings: (data = {}) =>
     post("/management/sku-mappings/auto-match", data),
+
   // ---------------------------------------------------
   // STOCK MANAGEMENT
   // ---------------------------------------------------
@@ -268,24 +271,19 @@ export const shopeeApi = {
   // AUTO STOCK MANAGEMENT
   // ---------------------------------------------------
 
-  // Danh sách đơn cần tự động trừ kho
   getAutoStockOrders: (params = {}) => get("/auto-stock/orders", params),
 
-  // Lịch sử chạy Job
   getAutoStockHistory: (params = {}) => get("/auto-stock/history", params),
 
-  // Lấy cấu hình tự động
   getAutoStockSettings: () => get("/auto-stock/settings"),
 
-  // Lưu cấu hình tự động
   saveAutoStockSettings: (data = {}) => put("/auto-stock/settings", data),
 
-  // Chạy Job ngay
   runAutoStockNow: () => post("/auto-stock/run"),
 
-  // Xử lý nhiều đơn
   processAutoStockSelected: (orderSns = []) =>
     post("/auto-stock/process-selected", { orderSns }),
+
   // ---------------------------------------------------
   // REVENUE & PROFIT MANAGEMENT
   // ---------------------------------------------------
@@ -295,6 +293,54 @@ export const shopeeApi = {
   getRevenueReport: (params = {}) => get("/revenue/report", withShopId(params)),
 
   getRevenueOrders: (params = {}) => get("/revenue/orders", withShopId(params)),
+
+  // =====================================================
+  // SHOPEE REVIEW MANAGEMENT
+  // =====================================================
+
+  // Lấy một trang đánh giá
+  getReviews: (params = {}) => get("/reviews", withShopId(params)),
+
+  // Quét đánh giá trên toàn bộ sản phẩm
+  getAllReviews: (params = {}) => get("/reviews/all", withShopId(params)),
+
+  // Tạo nội dung gợi ý
+  suggestReviewReply: (data = {}) => post("/reviews/suggest", data),
+
+  // Gửi phản hồi
+  replyReview: (data = {}) => post("/reviews/reply", data),
+
+  // =====================================================
+  // REVIEW TEMPLATES
+  // =====================================================
+
+  getReviewTemplates: (params = {}) =>
+    get("/reviews/templates", withShopId(params)),
+
+  createReviewTemplate: (data = {}) => post("/reviews/templates", data),
+
+  updateReviewTemplate: (id, data = {}) =>
+    put(`/reviews/templates/${encode(id)}`, data),
+
+  deleteReviewTemplate: (id, shopId) =>
+    request(`/reviews/templates/${encode(id)}${buildQuery({ shopId })}`, {
+      method: "DELETE",
+    }),
+  // =====================================================
+  // SHOPEE REVIEW AUTO REPLY HISTORY
+  // =====================================================
+
+  // Lấy lịch sử tự động trả lời
+  getReviewReplyLogs: (params = {}) =>
+    get("/reviews/reply-logs", withShopId(params)),
+
+  // Thống kê tự động trả lời
+  getReviewReplyStatistics: (params = {}) =>
+    get("/reviews/reply-logs/statistics", withShopId(params)),
+
+  // Chi tiết một lịch sử trả lời
+  getReviewReplyLogDetail: (commentId, params = {}) =>
+    get(`/reviews/reply-logs/${encode(commentId)}`, withShopId(params)),
 };
 
 export default shopeeApi;

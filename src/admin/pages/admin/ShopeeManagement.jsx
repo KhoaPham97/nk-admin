@@ -11,6 +11,7 @@ import {
   AlertCircle,
   Zap,
   DollarSign,
+  MessageSquare,
 } from "lucide-react";
 
 import { shopeeApi } from "../../services/shopeeApi";
@@ -23,6 +24,8 @@ import ShopeeReturns from "../../components/shopee/ShopeeReturns";
 import ShopeeStockHistory from "../../components/shopee/ShopeeStockHistory";
 import ShopeeAutoStockPage from "../../components/shopee/ShopeeAutoStockPage";
 import ShopeeRevenue from "../../components/shopee/ShopeeRevenue";
+import ShopeeReview from "../../components/shopee/ShopeeReviewsPage";
+
 import "../../styles/shopee-management.css";
 
 const MENU_ITEMS = [
@@ -73,6 +76,12 @@ const MENU_ITEMS = [
     label: "Doanh thu & Lợi nhuận",
     description: "Đối soát doanh thu, phí và giá vốn Shopee",
     icon: DollarSign,
+  },
+  {
+    id: "reviews",
+    label: "Đánh giá Shopee",
+    description: "Quản lý đánh giá, mẫu phản hồi và duyệt trả lời",
+    icon: MessageSquare,
   },
 ];
 
@@ -290,6 +299,9 @@ export default function ShopeeManagement() {
         return <ShopeeAutoStockPage {...commonProps} />;
       case "revenue":
         return <ShopeeRevenue {...commonProps} />;
+      case "reviews":
+        return <ShopeeReview {...commonProps} />;
+
       default:
         return <ShopeeShops {...commonProps} />;
     }
