@@ -1,6 +1,18 @@
 import { BASE_URL } from "../../api";
 
-const API_URL = `${String(BASE_URL || "").replace(/\/+$/, "")}/shopee/reviews/auto-reply`;
+// =====================================================
+// API URL
+// =====================================================
+
+const API_BASE = String(BASE_URL || "")
+  .trim()
+  .replace(/\/+$/, "");
+
+const API_URL = `${API_BASE}/shopee/reviews/auto-reply`;
+
+// =====================================================
+// AUTH
+// =====================================================
 
 function getToken() {
   return (
@@ -10,18 +22,35 @@ function getToken() {
   );
 }
 
+// =====================================================
+// REQUEST
+// =====================================================
+
 async function request(endpoint, options = {}) {
+  const token = getToken();
+
+  if (!token) {
+    throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+  }
+
   const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers: {
+      Accept: "application/json",
       "Content-Type": "application/json",
-      Authorization: `Bearer ${getToken()}`,
+      Authorization: `Bearer ${token}`,
       ...options.headers,
     },
     cache: "no-store",
   });
 
   const result = await response.json().catch(() => ({}));
+
+  if (response.status === 401 || response.status === 403) {
+    throw new Error(
+      result.message || "Bạn không có quyền truy cập chức năng này.",
+    );
+  }
 
   if (!response.ok || result.success === false) {
     throw new Error(result.message || `Yêu cầu thất bại (${response.status})`);
@@ -30,11 +59,17 @@ async function request(endpoint, options = {}) {
   return result;
 }
 
+// =====================================================
+// API
+// =====================================================
+
 const shopeeAutoReviewApi = {
+  // Lấy cấu hình và trạng thái cron
   getStatus() {
     return request("/status");
   },
 
+  // Cập nhật cấu hình
   updateSettings(data = {}) {
     return request("/settings", {
       method: "PUT",
@@ -42,6 +77,7 @@ const shopeeAutoReviewApi = {
     });
   },
 
+  // Bật tự động trả lời
   enable() {
     return request("/enable", {
       method: "POST",
@@ -49,6 +85,7 @@ const shopeeAutoReviewApi = {
     });
   },
 
+  // Tắt tự động trả lời
   disable() {
     return request("/disable", {
       method: "POST",
@@ -56,6 +93,7 @@ const shopeeAutoReviewApi = {
     });
   },
 
+  // Chạy thủ công
   runNow() {
     return request("/run", {
       method: "POST",
@@ -63,8 +101,13 @@ const shopeeAutoReviewApi = {
     });
   },
 
+  // Lịch sử tự động trả lời
   getHistory(params = {}) {
-    const query = new URLSearchParams(params).toString();
+    const query = new URLSearchParams(
+      Object.entries(params).filter(
+        ([, value]) => value !== undefined && value !== null && value !== "",
+      ),
+    ).toString();
 
     return request(`/history${query ? `?${query}` : ""}`);
   },
