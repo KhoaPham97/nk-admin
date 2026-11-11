@@ -341,6 +341,29 @@ export const shopeeApi = {
   // Chi tiết một lịch sử trả lời
   getReviewReplyLogDetail: (commentId, params = {}) =>
     get(`/reviews/reply-logs/${encode(commentId)}`, withShopId(params)),
+  // =====================================================
+  // SHOPEE LIVE PRODUCT MANAGEMENT
+  // =====================================================
+
+  // Danh sách sản phẩm Shopee
+  getManagedProducts: (params = {}) =>
+    get("/management/products", withShopId(params)),
+
+  // Chi tiết sản phẩm
+  getManagedProductDetail: (itemId, params = {}) =>
+    get(`/management/products/${encode(itemId)}`, withShopId(params)),
+
+  // Cập nhật thông tin cơ bản
+  updateManagedProduct: (itemId, data = {}) =>
+    put(`/management/products/${encode(itemId)}`, data),
+
+  // Cập nhật giá các phân loại
+  updateManagedProductPrices: (itemId, data = {}) =>
+    put(`/management/products/${encode(itemId)}/prices`, data),
+
+  // Cập nhật tồn kho các phân loại
+  updateManagedProductStock: (itemId, data = {}) =>
+    put(`/management/products/${encode(itemId)}/stock`, data),
 };
 
 export default shopeeApi;
