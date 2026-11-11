@@ -264,21 +264,40 @@ export const shopeeApi = {
   // SHOPEE RETURNS
   // ---------------------------------------------------
 
-  syncReturns: (data = {}) => post("/returns/sync", data),
+  // Đồng bộ cả khách trả hàng và giao hàng thất bại
+  syncReturns: (data = {}) =>
+    post("/returns/sync", {
+      ...data,
+      ...withShopId(data),
+    }),
 
+  // Danh sách hàng hoàn
   getReturns: (params = {}) => get("/returns", withShopId(params)),
 
+  // Chi tiết phiếu hàng hoàn
   getReturnDetail: (returnSn, params = {}) =>
-    get(`/returns/${encode(returnSn)}`, params),
+    get(`/returns/${encode(returnSn)}`, withShopId(params)),
 
+  // Xác nhận đã nhận kiện hàng
   receiveShopeeReturn: (returnSn, data = {}) =>
-    post(`/returns/${encode(returnSn)}/receive`, data),
+    post(`/returns/${encode(returnSn)}/receive`, {
+      ...data,
+      ...withShopId(data),
+    }),
 
+  // Lưu kết quả kiểm tra hàng
   inspectShopeeReturn: (returnSn, data = {}) =>
-    post(`/returns/${encode(returnSn)}/inspect`, data),
+    post(`/returns/${encode(returnSn)}/inspect`, {
+      ...data,
+      ...withShopId(data),
+    }),
 
+  // Quyết định nhập kho hoặc không nhập kho
   resolveShopeeReturn: (returnSn, data = {}) =>
-    post(`/returns/${encode(returnSn)}/resolve`, data),
+    post(`/returns/${encode(returnSn)}/resolve`, {
+      ...data,
+      ...withShopId(data),
+    }),
 
   // ---------------------------------------------------
   // AUTO STOCK MANAGEMENT
