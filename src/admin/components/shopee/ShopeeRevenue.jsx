@@ -485,7 +485,7 @@ export default function ShopeeRevenue({
                 key={shop._id || shop.shopId || shop.shop_id}
                 value={String(shop.shopId || shop.shop_id || shop._id)}
               >
-                {shop.shopName || shop.shop_name || shop.name || "Shopee Shop"}
+                {shop.shopId || shop.shop_name || shop.name || "Shopee Shop"}
               </MenuItem>
             ))}
           </TextField>

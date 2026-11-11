@@ -183,6 +183,8 @@ export default function InventoryBatchPage() {
           page,
           limit: 30,
           search,
+          sort: "created_at",
+          order: "desc",
         },
         ...authConfig,
       });

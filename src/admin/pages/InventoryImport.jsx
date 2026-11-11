@@ -407,7 +407,7 @@ export default function InventoryImport() {
       };
 
       const response = await axios.post(
-        `BASE_URL${INVENTORY_API}/batch-import-multiple`,
+        `${BASE_URL}${INVENTORY_API}/batch-import-multiple`,
         payload,
         { headers: getHeaders() },
       );

@@ -261,11 +261,24 @@ export const shopeeApi = {
     get(`/orders/${encode(orderSn)}/stock/history`, params),
 
   // ---------------------------------------------------
-  // RETURNS
+  // SHOPEE RETURNS
   // ---------------------------------------------------
 
-  receiveReturn: (orderSn, data = {}) =>
-    post(`/orders/${encode(orderSn)}/returns/receive`, data),
+  syncReturns: (data = {}) => post("/returns/sync", data),
+
+  getReturns: (params = {}) => get("/returns", withShopId(params)),
+
+  getReturnDetail: (returnSn, params = {}) =>
+    get(`/returns/${encode(returnSn)}`, params),
+
+  receiveShopeeReturn: (returnSn, data = {}) =>
+    post(`/returns/${encode(returnSn)}/receive`, data),
+
+  inspectShopeeReturn: (returnSn, data = {}) =>
+    post(`/returns/${encode(returnSn)}/inspect`, data),
+
+  resolveShopeeReturn: (returnSn, data = {}) =>
+    post(`/returns/${encode(returnSn)}/resolve`, data),
 
   // ---------------------------------------------------
   // AUTO STOCK MANAGEMENT
