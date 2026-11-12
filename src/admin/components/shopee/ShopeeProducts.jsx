@@ -212,6 +212,11 @@ export default function ShopeeProducts() {
 
   const [showStockSyncHistory, setShowStockSyncHistory] = useState(false);
 
+  useEffect(() => {
+    setSelectedItemIds([]);
+    setEditableResults([]);
+  }, [shopId]);
+
   const selectedShop = useMemo(
     () => shops.find((shop) => String(shop.shopId) === String(shopId)),
     [shops, shopId],
