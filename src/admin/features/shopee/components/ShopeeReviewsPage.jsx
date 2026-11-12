@@ -30,11 +30,11 @@ import {
   PauseCircle,
 } from "lucide-react";
 
-import shopeeApi from "../../services/shopeeApi";
-import shopeeAutoReviewApi from "../../services/shopeeAutoReviewApi";
-import ShopeeAutoReviewPanel from "../../components/shopee/ShopeeAutoReviewPanel";
+import shopeeApi from "../../../services/shopeeApi";
+import shopeeAutoReviewApi from "../../../services/shopeeAutoReviewApi";
+import ShopeeAutoReviewPanel from "./ShopeeAutoReviewPanel";
 
-import "./style/ShopeeReviewsPage.css";
+import "../styles/ShopeeReviewsPage.css";
 
 const EMPTY_TEMPLATE = {
   _id: "",

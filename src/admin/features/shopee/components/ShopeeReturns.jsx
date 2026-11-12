@@ -17,8 +17,8 @@ import {
   Video,
   ExternalLink,
 } from "lucide-react";
-import { shopeeApi } from "../../services/shopeeApi";
-import "./style/shopee-components.css";
+import { shopeeApi } from "../../../services/shopeeApi";
+import "../styles/shopee-components.css";
 
 const styles = `
 .sr-page{display:flex;flex-direction:column;gap:16px;color:var(--text-color,#222)}

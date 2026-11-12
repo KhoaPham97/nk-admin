@@ -8,10 +8,10 @@ import React, {
 
 import { io } from "socket.io-client";
 
-import { shopeeApi } from "../../services/shopeeApi";
-import { DEFAUL_URL } from "../../../api";
-import "./style/ShopeeOrders.css";
-import { getStatusLabel, getStockLabel } from "../../common/CommonFunc";
+import { shopeeApi } from "../../../services/shopeeApi";
+import { DEFAUL_URL } from "../../../../api";
+import "../styles/ShopeeOrders.css";
+import { getStatusLabel, getStockLabel } from "../../../common/CommonFunc";
 // =====================================================
 // HELPERS
 // =====================================================

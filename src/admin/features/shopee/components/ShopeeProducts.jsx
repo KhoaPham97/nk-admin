@@ -61,8 +61,8 @@ import {
 
 import toast from "react-hot-toast";
 
-import shopeeApi from "../../services/shopeeApi";
-import shopeeStockSyncApi from "../../services/shopeeStockSyncApi";
+import shopeeApi from "../../../services/shopeeApi";
+import shopeeStockSyncApi from "../../../services/shopeeStockSyncApi";
 
 // =====================================================
 // HELPERS

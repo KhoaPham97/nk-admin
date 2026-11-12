@@ -22,8 +22,8 @@ import {
   RotateCcw,
 } from "lucide-react";
 
-import { shopeeApi } from "../../services/shopeeApi";
-import "./style/shopee-stock.css";
+import { shopeeApi } from "../../../services/shopeeApi";
+import "../styles/shopee-stock.css";
 
 // =====================================================
 // HELPERS

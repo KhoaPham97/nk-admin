@@ -15,9 +15,9 @@ import {
   CalendarClock,
 } from "lucide-react";
 
-import shopeeApi from "../../services/shopeeApi";
-import "./style/ShopeeAutoStockPage.css";
-import { getStatusLabel, getStockLabel } from "../../common/CommonFunc";
+import shopeeApi from "../../../services/shopeeApi";
+import "../styles/ShopeeAutoStockPage.css";
+import { getStatusLabel, getStockLabel } from "../../../common/CommonFunc";
 
 export default function ShopeeAutoStockPage() {
   // =====================================================

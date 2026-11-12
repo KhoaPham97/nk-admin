@@ -23,8 +23,8 @@ import {
   AlertCircle,
 } from "lucide-react";
 
-import { BASE_URL } from "../../../api";
-import shopeeAutoReviewApi from "../../services/shopeeAutoReviewApi";
+import { BASE_URL } from "../../../../api";
+import shopeeAutoReviewApi from "../../../services/shopeeAutoReviewApi";
 
 // =====================================================
 // HELPERS

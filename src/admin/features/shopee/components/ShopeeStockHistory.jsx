@@ -23,9 +23,9 @@ import {
   Truck,
 } from "lucide-react";
 
-import { shopeeApi } from "../../services/shopeeApi";
-import "./style/shopee-components.css";
-import "./style/ShopeeStockHistory.css";
+import { shopeeApi } from "../../../services/shopeeApi";
+import "../styles/shopee-components.css";
+import "../styles/ShopeeStockHistory.css";
 
 // =====================================================
 // HELPERS
