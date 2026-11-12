@@ -37,8 +37,8 @@ import CategoryOutlinedIcon from "@mui/icons-material/CategoryOutlined";
 
 import { useLocation } from "react-router-dom";
 
-import { getRequest, patchRequest, deleteRequest } from "../common/ApiMethod";
-import { getProductPriceRange } from "../common/CommonFunc";
+import { getRequest, patchRequest, deleteRequest } from "../../../common/ApiMethod";
+import { getProductPriceRange } from "../../../common/CommonFunc";
 
 // =====================================================
 // TYPES

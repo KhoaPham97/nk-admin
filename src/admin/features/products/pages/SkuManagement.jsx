@@ -32,8 +32,8 @@ import {
   ClipboardList,
 } from "lucide-react";
 
-import "../styles/SkuManagement.css";
-import { BASE_URL } from "../../api";
+import "../../../styles/SkuManagement.css";
+import { BASE_URL } from "../../../../api";
 
 const API_BASE = BASE_URL;
 

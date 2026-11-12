@@ -19,7 +19,7 @@ import {
   Typography,
   Paper,
 } from "@mui/material";
-import { API_ENDPOINTS } from "../../api";
+import { API_ENDPOINTS } from "../../../../api";
 
 interface Variant {
   name?: string;

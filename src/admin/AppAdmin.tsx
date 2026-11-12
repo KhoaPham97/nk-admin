@@ -7,9 +7,9 @@ import AdminProtectedRoute from "./AdminProtectedRoute";
 import AdminLogin from "./pages/AdminLogin";
 
 import Dashboard from "./pages/Dashboard";
-import Products from "./pages/Products";
+import Products from "./features/products/pages/Products";
 import Categories from "./pages/Categories";
-import CreateProduct from "./pages/CreateProduct";
+import CreateProduct from "./features/products/pages/CreateProduct";
 
 import Customers from "./pages/Customers";
 import CustomerDetail from "./pages/CustomerDetail";
@@ -23,18 +23,18 @@ import AdminSettings from "./pages/AdminSettings";
 import InventoryHistory from "./features/inventory/pages/InventoryHistory";
 import InventoryReceipts from "./features/inventory/pages/InventoryReceipts";
 import AdminChat from "./pages/AdminChat";
-import ProductPricing from "./pages/ProductPricing";
+import ProductPricing from "./features/products/pages/ProductPricing";
 
 import Images from "./pages/Images";
 import Vehicles from "./pages/Vehicles";
 import CustomerPurchaseStats from "./pages/CustomerPurchaseStats";
 import ProductQuotePage from "../quotes/QuoteImage";
-import BestSellingProducts from "./pages/BestSellingProducts";
+import BestSellingProducts from "./features/products/pages/BestSellingProducts";
 import InventoryBatchPage from "./features/inventory/pages/InventoryBatchPage";
 import CostManagement from "./features/inventory/pages/CostManagement";
 import ImportDrafts from "./features/inventory/pages/ImportDrafts";
 import ShopeeManagement from "./features/shopee/pages/ShopeeManagement";
-import SkuManagement from "./pages/SkuManagement";
+import SkuManagement from "./features/products/pages/SkuManagement";
 import InventoryReservations from "./features/inventory/pages/InventoryReservations";
 
 export default function BasicExample() {
