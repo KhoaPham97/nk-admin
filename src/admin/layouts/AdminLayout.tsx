@@ -25,7 +25,8 @@ const AdminLayout = () => {
       sx={{
         display: "flex",
         minHeight: "100vh",
-        backgroundColor: "#f5f6f8",
+        backgroundColor: "#f4f6fa",
+        color: "#172033",
       }}
     >
       {/* SIDEBAR */}
@@ -81,6 +82,7 @@ const AdminLayout = () => {
             },
 
             minHeight: `calc(100vh - ${HEADER_HEIGHT}px)`,
+            overflowX: "clip",
           }}
         >
           <Outlet />
