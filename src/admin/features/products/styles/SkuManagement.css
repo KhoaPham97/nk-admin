@@ -45,7 +45,7 @@
   align-items: center;
   justify-content: center;
   background: #e8efff;
-  color: #e84b25;
+  color: #2563eb;
   margin-bottom: 12px;
 }
 
@@ -56,7 +56,7 @@
 
 .sku-stat-icon.warning {
   background: #fff5df;
-  color: #d97706;
+  color: #2563eb;
 }
 
 .sku-stat-icon.danger {
@@ -140,7 +140,7 @@
   font-family: "Roboto Mono", Consolas, monospace !important;
   font-size: 12px !important;
   font-weight: 700 !important;
-  color: #cf3c1b;
+  color: #1d4ed8;
   overflow-wrap: anywhere;
 }
 
@@ -156,8 +156,8 @@
 }
 
 .sku-code-cell .MuiIconButton-root:hover {
-  color: #e84b25;
-  background: #fff0eb;
+  color: #2563eb;
+  background: #eff6ff;
 }
 
 .sku-loading,
