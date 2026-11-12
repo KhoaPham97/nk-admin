@@ -4,12 +4,6 @@ import { shopeeApi } from "../../services/shopeeApi";
 import { BASE_URL } from "../../../api";
 import "./style/shopee-components.css";
 
-const API_BASE = (
-  import.meta.env.VITE_API_URL ||
-  import.meta.env.VITE_API_BASE_URL ||
-  "http://localhost:3001/api"
-).replace(/\/+$/, "");
-
 function getToken() {
   return (
     localStorage.getItem("adminToken") ||
