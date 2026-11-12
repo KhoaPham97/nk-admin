@@ -3,9 +3,9 @@
 ===================================================== */
 
 .shopee-management {
-  --shopee-primary: #ee4d2d;
-  --shopee-primary-dark: #d93c20;
-  --shopee-bg: #f5f6f8;
+  --shopee-primary: #e84b25;
+  --shopee-primary-dark: #cf3c1b;
+  --shopee-bg: #f4f6fa;
   --shopee-card: #ffffff;
   --shopee-text: #202124;
   --shopee-muted: #747b86;
@@ -135,7 +135,7 @@
 }
 
 .shopee-stat-icon.orange {
-  color: #ee4d2d;
+  color: #e84b25;
   background: #fff0eb;
 }
 
@@ -275,7 +275,7 @@
   align-items: center;
   justify-content: center;
   border-radius: 9px;
-  background: #f5f6f8;
+  background: #f4f6fa;
 }
 
 .shopee-nav-item.active .shopee-nav-icon {
@@ -580,7 +580,7 @@
 }
 
 .shopee-shop-selector select:focus {
-  border-color: #ee4d2d;
+  border-color: #e84b25;
   box-shadow: 0 0 0 2px rgba(238, 77, 45, 0.12);
 }
 
