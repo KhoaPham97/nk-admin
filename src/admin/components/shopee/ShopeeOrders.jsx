@@ -9,6 +9,7 @@ import React, {
 import { io } from "socket.io-client";
 
 import { shopeeApi } from "../../services/shopeeApi";
+import { DEFAUL_URL } from "../../../api";
 import "./style/ShopeeOrders.css";
 import { getStatusLabel, getStockLabel } from "../../common/CommonFunc";
 // =====================================================
@@ -63,16 +64,7 @@ const normalizeList = (result, type = "orders") => {
 // SOCKET.IO CONFIG
 // =====================================================
 
-const getSocketUrl = () => {
-  const apiUrl =
-    import.meta.env.VITE_API_URL ||
-    import.meta.env.VITE_API_BASE_URL ||
-    (window.location.hostname === "localhost"
-      ? "http://localhost:3001/api"
-      : "https://nkbike.onrender.com/api");
-
-  return apiUrl.replace(/\/api\/?$/, "").replace(/\/+$/, "");
-};
+const getSocketUrl = () => DEFAUL_URL;
 
 const getAdminToken = () => {
   return (
