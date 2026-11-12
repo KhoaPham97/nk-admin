@@ -12,6 +12,7 @@ import {
   Zap,
   DollarSign,
   MessageSquare,
+  MessageCircle,
   Package,
   Printer,
 } from "lucide-react";
@@ -92,6 +93,12 @@ const MENU_ITEMS = [
     label: "Doanh thu & Lợi nhuận",
     description: "Đối soát doanh thu, phí và giá vốn Shopee",
     icon: DollarSign,
+  },
+  {
+    id: "chat",
+    label: "Shopee Chat",
+    description: "Đọc và trả lời tin nhắn người mua",
+    icon: MessageCircle,
   },
   {
     id: "reviews",
@@ -317,6 +324,9 @@ export default function ShopeeManagement() {
         return <ShopeeRevenue {...commonProps} />;
       case "reviews":
         return <ShopeeReview {...commonProps} />;
+
+      case "chat":
+        return <ShopeeChat {...commonProps} />;
       case "products":
         return <ShopeeProducts {...commonProps} />;
 
