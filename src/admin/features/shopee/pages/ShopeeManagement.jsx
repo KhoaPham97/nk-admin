@@ -16,20 +16,20 @@ import {
   Printer,
 } from "lucide-react";
 
-import { shopeeApi } from "../../services/shopeeApi";
+import { shopeeApi } from "../../../services/shopeeApi";
 
-import ShopeeShops from "../../components/shopee/ShopeeShops";
-import ShopeeOrders from "../../components/shopee/ShopeeOrders";
-import ShopeeSkuMappings from "../../components/shopee/ShopeeSkuMappings";
-import ShopeeStock from "../../components/shopee/ShopeeStock";
-import ShopeeReturns from "../../components/shopee/ShopeeReturns";
-import ShopeeStockHistory from "../../components/shopee/ShopeeStockHistory";
-import ShopeeAutoStockPage from "../../components/shopee/ShopeeAutoStockPage";
-import ShopeeRevenue from "../../components/shopee/ShopeeRevenue";
-import ShopeeReview from "../../components/shopee/ShopeeReviewsPage";
-import ShopeeProducts from "../../components/shopee/ShopeeProducts";
-import ShopeeCustomWaybill from "../../components/shopee/ShopeeCustomWaybill";
-import "../../styles/shopee-management.css";
+import ShopeeShops from "../../../components/shopee/ShopeeShops";
+import ShopeeOrders from "../../../components/shopee/ShopeeOrders";
+import ShopeeSkuMappings from "../../../components/shopee/ShopeeSkuMappings";
+import ShopeeStock from "../../../components/shopee/ShopeeStock";
+import ShopeeReturns from "../../../components/shopee/ShopeeReturns";
+import ShopeeStockHistory from "../../../components/shopee/ShopeeStockHistory";
+import ShopeeAutoStockPage from "../../../components/shopee/ShopeeAutoStockPage";
+import ShopeeRevenue from "../../../components/shopee/ShopeeRevenue";
+import ShopeeReview from "../../../components/shopee/ShopeeReviewsPage";
+import ShopeeProducts from "../../../components/shopee/ShopeeProducts";
+import ShopeeCustomWaybill from "../../../components/shopee/ShopeeCustomWaybill";
+import "../styles/shopee-management.css";
 
 const MENU_ITEMS = [
   {
