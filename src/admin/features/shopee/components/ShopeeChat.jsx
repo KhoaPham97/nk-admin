@@ -38,13 +38,13 @@ export default function ShopeeChat({ shops = [], selectedShopId = "", onShopChan
       const list = Array.isArray(result.conversations) ? result.conversations : [];
       setConversations(list);
       setLastSync(new Date());
-      setError("");
+      setError(result.warning || "");
       if (active) {
         const updated = list.find((item) => String(item.conversationId) === String(active.conversationId));
         if (updated) setActive(updated);
       }
     } catch (err) {
-      setError(err?.message || "Không thể tải hội thoại Shopee.");
+      setError(err?.status === 404 ? "Shopee Chat đang trả về 404. Hãy kiểm tra quyền Chat API và endpoint của ứng dụng Shopee Open Platform." : (err?.message || "Không thể tải hội thoại Shopee."));
     } finally {
       if (!quiet) setLoading(false);
     }
@@ -89,11 +89,20 @@ export default function ShopeeChat({ shops = [], selectedShopId = "", onShopChan
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages.length]);
 
-  const filtered = useMemo(() => conversations.filter((item) => {
-    const term = query.trim().toLowerCase();
-    if (!term) return true;
-    return [item.buyerName, item.buyerId, item.preview, item.conversationId].some((value) => String(value || "").toLowerCase().includes(term));
-  }), [conversations, query]);
+  const filtered = useMemo(() => [...conversations]
+    .sort((a, b) => {
+      // Ưu tiên hội thoại có tin nhắn mới nhất từ người mua, sau đó chưa đọc.
+      const buyerPriority = Number(Boolean(b.lastMessageFromBuyer)) - Number(Boolean(a.lastMessageFromBuyer));
+      if (buyerPriority) return buyerPriority;
+      const unreadPriority = Number(b.unreadCount || 0) - Number(a.unreadCount || 0);
+      if (unreadPriority) return unreadPriority;
+      return new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime();
+    })
+    .filter((item) => {
+      const term = query.trim().toLowerCase();
+      if (!term) return true;
+      return [item.buyerName, item.buyerId, item.preview, item.conversationId].some((value) => String(value || "").toLowerCase().includes(term));
+    }), [conversations, query]);
 
   const send = async (event) => {
     event.preventDefault();
@@ -154,7 +163,7 @@ export default function ShopeeChat({ shops = [], selectedShopId = "", onShopChan
                 <span className="sh-chat-avatar">{String(item.buyerName || "K").slice(0,1).toUpperCase()}</span>
                 <span className="sh-chat-conversation-main">
                   <span className="sh-chat-conversation-top"><strong>{item.buyerName || "Khách Shopee"}</strong><time>{getTime(item.lastMessageAt)}</time></span>
-                  <span className="sh-chat-preview">{getPreview(item)}</span>
+                  <span className="sh-chat-preview">{item.lastMessageFromBuyer ? "Khách: " : ""}{getPreview(item)}</span>
                 </span>
                 {Number(item.unreadCount) > 0 && <i className="sh-chat-unread">{item.unreadCount}</i>}
               </button>
