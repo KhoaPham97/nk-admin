@@ -381,6 +381,10 @@ export const shopeeApi = {
   // SHOPEE LIVE PRODUCT MANAGEMENT
   // =====================================================
 
+  // Kiểm tra quyền chỉnh sửa từng sản phẩm / SKU đã chọn.
+  checkManagedProductsEditable: (data = {}) =>
+    post("/management/products/check-editable", data),
+
   // Danh sách sản phẩm Shopee
   getManagedProducts: (params = {}) =>
     get("/management/products", withShopId(params)),
