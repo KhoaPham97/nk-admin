@@ -48,8 +48,8 @@
    Scoped to the admin shell so storefront styles remain intact.
 ========================================================= */
 .admin-shell {
-  --admin-primary: #e84b25;
-  --admin-primary-hover: #cf3c1b;
+  --admin-primary: #2563eb;
+  --admin-primary-hover: #1d4ed8;
   --admin-ink: #172033;
   --admin-muted: #697586;
   --admin-border: #e5eaf1;
@@ -80,7 +80,7 @@
 }
 .admin-shell button:focus-visible, .admin-shell a:focus-visible,
 .admin-shell input:focus-visible, .admin-shell textarea:focus-visible {
-  outline: 3px solid rgba(232,75,37,.2);
+  outline: 3px solid rgba(37,99,235,.18);
   outline-offset: 2px;
 }
 /* Native selects already define their own focused border/ring per component.
@@ -219,9 +219,9 @@
 
 /* NHAT KHANG BIKE - ADMIN PAGE-BY-PAGE THEME ALIGNMENT */
 .admin-shell {
-  --admin-primary: #e84b25;
-  --admin-primary-hover: #cf3c1b;
-  --admin-primary-soft: #fff0eb;
+  --admin-primary: #2563eb;
+  --admin-primary-hover: #1d4ed8;
+  --admin-primary-soft: #eff6ff;
   --admin-canvas: #f4f6fa;
   --admin-surface: #fff;
   --admin-ink: #172033;
@@ -234,7 +234,7 @@
 .admin-shell .MuiFab-primary:hover { background-color: var(--admin-primary-hover) !important; }
 .admin-shell .MuiButton-outlinedPrimary,
 .admin-shell .MuiButton-textPrimary { color: var(--admin-primary) !important; }
-.admin-shell .MuiButton-outlinedPrimary { border-color: rgba(232,75,37,.45) !important; }
+.admin-shell .MuiButton-outlinedPrimary { border-color: rgba(37,99,235,.45) !important; }
 .admin-shell .MuiCheckbox-root.Mui-checked,
 .admin-shell .MuiRadio-root.Mui-checked,
 .admin-shell .MuiSwitch-switchBase.Mui-checked { color: var(--admin-primary) !important; }
@@ -246,7 +246,7 @@
 .admin-shell .MuiFormLabel-root.Mui-focused { color: var(--admin-primary) !important; }
 .admin-shell .MuiLinearProgress-bar,
 .admin-shell .MuiCircularProgress-root { color: var(--admin-primary); }
-.admin-shell .MuiTableRow-root:hover { background-color: rgba(232,75,37,.035); }
+.admin-shell .MuiTableRow-root:hover { background-color: rgba(37,99,235,.045); }
 .admin-shell .MuiCard-root, .admin-shell .MuiPaper-elevation1,
 .admin-shell .MuiPaper-elevation2 { border-color: var(--admin-border); }
 
@@ -286,7 +286,7 @@
 .admin-shell .sa-primary:hover:not(:disabled) { background: var(--admin-primary-hover); border-color: var(--admin-primary-hover); }
 .admin-shell .sku-code-text { color: var(--admin-primary); }
 .admin-shell .sku-code-cell .MuiIconButton-root:hover { color: var(--admin-primary); background: var(--admin-primary-soft); }
-.admin-shell .sku-table tbody tr:hover { background: rgba(232,75,37,.035); }
+.admin-shell .sku-table tbody tr:hover { background: rgba(37,99,235,.045); }
 .admin-shell .scw-pdf-frame { max-width: 100%; }
 
 @media (max-width: 600px) {
