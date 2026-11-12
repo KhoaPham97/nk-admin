@@ -1,8 +1,8 @@
 .ir-page {
   min-height: 100%;
   padding: 24px;
-  background: #f6f7f9;
-  color: #20242b;
+  background: #f4f6fa;
+  color: #172033;
 }
 
 .ir-header {
@@ -36,7 +36,7 @@
 
 .ir-refresh-button {
   min-height: 40px !important;
-  border-color: #d7dce5 !important;
+  border-color: #e5eaf1 !important;
   color: #334155 !important;
   text-transform: none !important;
   font-weight: 700 !important;
