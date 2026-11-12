@@ -187,6 +187,18 @@ const encode = (value) => encodeURIComponent(String(value ?? ""));
 // =====================================================
 
 export const shopeeApi = {
+
+  // ---------------------------------------------------
+  // SHOPEE CHAT
+  // ---------------------------------------------------
+  getChatConversations: (params = {}) => get("/chat/conversations", withShopId(params)),
+  getChatMessages: (conversationId, params = {}) =>
+    get(`/chat/conversations/${encode(conversationId)}/messages`, withShopId(params)),
+  sendChatMessage: (conversationId, data = {}) =>
+    post(`/chat/conversations/${encode(conversationId)}/messages`, data),
+  markChatRead: (conversationId, data = {}) =>
+    post(`/chat/conversations/${encode(conversationId)}/read`, data),
+
   // ---------------------------------------------------
   // SHOP MANAGEMENT
   // ---------------------------------------------------
