@@ -56,7 +56,7 @@
   border-radius: 15px;
   background: var(--shopee-primary);
   color: white;
-  box-shadow: 0 5px 15px rgba(238, 77, 45, 0.2);
+  box-shadow: 0 5px 15px rgba(37, 99, 235, 0.18);
 }
 
 .shopee-header h1 {
@@ -581,7 +581,7 @@
 
 .shopee-shop-selector select:focus {
   border-color: #2563eb;
-  box-shadow: 0 0 0 2px rgba(238, 77, 45, 0.12);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
 }
 
 .shopee-shop-count {
