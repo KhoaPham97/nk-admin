@@ -321,7 +321,7 @@
 
 .ss-input-wrap:focus-within {
   border-color: var(--ss-primary);
-  box-shadow: 0 0 0 3px rgba(238, 77, 45, 0.08);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
 }
 
 .ss-input-wrap input,
