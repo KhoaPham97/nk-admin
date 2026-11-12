@@ -86,3 +86,31 @@
     flex: 1 1 100%;
   }
 }
+
+
+/* Danh sách vận đơn trực tiếp */
+.scw-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 16px}
+.scw-stats>div{padding:14px 16px;border:1px solid var(--border-color,#e5e7eb);border-radius:10px;background:var(--card-bg,#fff);display:flex;flex-direction:column;gap:5px}
+.scw-stats span{font-size:12px;color:#7b8492}.scw-stats b{font-size:22px}
+.scw-error{display:flex;align-items:flex-start;gap:8px}
+.scw-search{display:flex;align-items:center;gap:8px;min-height:38px;padding:0 10px;border:1px solid #d7dce3;border-radius:7px;min-width:260px}
+.scw-search input{border:0;outline:0;background:transparent;color:inherit;min-width:0;width:100%;font:inherit}
+.scw-type-select{display:flex;align-items:center;gap:8px;font-size:12px;color:#7b8492}
+.scw-type-select select{min-height:36px;padding:6px 9px;border:1px solid #d7dce3;border-radius:7px;background:var(--card-bg,#fff);color:inherit}
+.scw-order-list .scw-order-row{grid-template-columns:22px minmax(180px,1fr) auto minmax(100px,auto)}
+.scw-order-row em{font-style:normal;padding:5px 8px;border-radius:20px;background:#f3f4f6;color:#52525b;text-align:center}
+.scw-order-row em.is-ready{background:#dcfce7;color:#166534}
+.scw-order-row em.is-failed{background:#fee2e2;color:#991b1b}
+.scw-order-row em.is-pending{background:#fff7ed;color:#9a3412}
+.scw-bottom-actions{border-top:1px solid #edf0f2;margin-top:8px;padding-top:14px}
+.scw-preview-panel .scw-panel-heading h3{display:flex;align-items:center;gap:8px}
+.scw-pdf-frame{width:100%;height:min(78vh,1000px);border:1px solid #e5e7eb;border-radius:8px;background:#f3f4f6}
+@media(max-width:700px){
+ .scw-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .scw-search{min-width:100%;width:100%}
+ .scw-order-list .scw-order-row{grid-template-columns:20px minmax(0,1fr)}
+ .scw-order-row>strong,.scw-order-row>em{grid-column:2}
+ .scw-type-select{width:100%;justify-content:space-between}
+ .scw-type-select select{flex:1}
+ .scw-pdf-frame{height:65vh}
+}
