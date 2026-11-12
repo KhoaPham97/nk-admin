@@ -136,12 +136,9 @@ export default function ShopeeChat({ shops = [], selectedShopId = "", onShopChan
     try {
       await shopeeApi.sendChatMessage(active.conversationId, { shopId: selectedShopId, toId: active.buyerId, text: value });
       if (activeTaskId) {
-        try {
-          await shopeeApi.updateChatReviewTask(activeTaskId, { shopId: selectedShopId, status: "sent" });
-        } catch (taskError) {
-          console.error("Update Shopee chat task:", taskError);
-          setError("Tin nhắn đã gửi, nhưng chưa cập nhật được trạng thái nhiệm vụ. Hãy kiểm tra lịch sử trước khi gửi lại.");
-        }
+        shopeeApi.updateChatReviewTask(activeTaskId, { shopId: selectedShopId, status: "sent" })
+          .then(() => loadReviewTasks())
+          .catch(() => setError("Tin nhắn đã gửi nhưng trạng thái hàng chờ chưa cập nhật. Vui lòng tải lại danh sách để kiểm tra."));
       }
       setActiveTaskId("");
       setDraft("");
