@@ -1,5 +1,5 @@
 .shopee-stock-page {
-  --ss-primary: #e84b25;
+  --ss-primary: #2563eb;
   --ss-text: #202938;
   --ss-muted: #778195;
   --ss-border: #e8ebf0;
@@ -236,7 +236,7 @@
 }
 
 .ss-orange {
-  color: #d97706;
+  color: #2563eb;
   background: #fff2df;
 }
 
@@ -278,7 +278,7 @@
   padding: 6px 11px;
   border-radius: 20px;
   color: var(--ss-primary);
-  background: #fff0ec;
+  background: #eff6ff;
   font-size: 11px;
   font-weight: 700;
 }
@@ -454,8 +454,8 @@
   height: 39px;
   flex-shrink: 0;
   border-radius: 50%;
-  color: #e84b25;
-  background: #fff0ec;
+  color: #2563eb;
+  background: #eff6ff;
 }
 
 .ss-customer-info {
@@ -554,7 +554,7 @@
 }
 
 .ss-value-orange {
-  color: #d97706 !important;
+  color: #2563eb !important;
 }
 
 /* ORDER FOOTER */
@@ -1190,7 +1190,7 @@
   padding: 0;
   border: 0;
   background: transparent;
-  color: var(--primary, #e84b25);
+  color: var(--primary, #2563eb);
   font-size: 15px;
   font-weight: 800;
   cursor: pointer;
@@ -1315,7 +1315,7 @@
 }
 
 .ss-order-detail-grand-total strong {
-  color: #e84b25;
+  color: #2563eb;
   font-size: 21px;
   font-weight: 800;
 }
