@@ -17,7 +17,7 @@ import { Logout, Menu as MenuIcon, AccountCircle } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 
-const AdminHeader = ({ onMenuClick }) => {
+const AdminHeader = ({ onMenuClick, drawerWidth = 260, isMobile = false }) => {
   const navigate = useNavigate();
 
   const [anchorEl, setAnchorEl] = useState(null);
@@ -71,7 +71,7 @@ const AdminHeader = ({ onMenuClick }) => {
     >
       <Toolbar
         sx={{
-          minHeight: "64px !important",
+          minHeight: { xs: "56px !important", sm: "64px !important" },
           px: {
             xs: 1.5,
             sm: 2,
