@@ -1,0 +1,276 @@
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import JsBarcode from "jsbarcode";
+import { shopeeApi } from "../../services/shopeeApi";
+import "./style/ShopeeCustomWaybill.css";
+
+const DEFAULT_TEMPLATE = {
+  senderName: "NHẬT KHANG BIKE",
+  senderPhone: "",
+  senderAddress: "",
+  shopLabel: "ĐÃ CHẠY PHẢI CHẤT",
+  paper: "100x150",
+  showOrderCode: true,
+  showItems: true,
+  showCod: true,
+  showWeight: true,
+  showSortCode: true,
+  showCarrier: true,
+  logo: "",
+};
+
+const money = (value) => Number(value || 0).toLocaleString("vi-VN") + "đ";
+const unwrap = (result) => result?.data?.data || result?.data || result;
+
+function Barcode({ value }) {
+  const [svg, setSvg] = useState("");
+  useEffect(() => {
+    if (!value) return setSvg("");
+    try {
+      const node = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      JsBarcode(node, String(value), {
+        format: "CODE128",
+        displayValue: true,
+        font: "Arial",
+        fontSize: 13,
+        height: 54,
+        margin: 2,
+        width: 1.6,
+        background: "#fff",
+        lineColor: "#111",
+      });
+      setSvg(node.outerHTML);
+    } catch (error) {
+      console.error("Barcode:", error);
+      setSvg("");
+    }
+  }, [value]);
+  return <div className="scw-barcode" dangerouslySetInnerHTML={{ __html: svg }} />;
+}
+
+export default function ShopeeCustomWaybill({ shops = [], selectedShopId = "", onShopChange }) {
+  const [shopId, setShopId] = useState(selectedShopId || "");
+  const [orders, setOrders] = useState([]);
+  const [selected, setSelected] = useState([]);
+  const [waybills, setWaybills] = useState([]);
+  const [template, setTemplate] = useState(() => {
+    try {
+      return { ...DEFAULT_TEMPLATE, ...JSON.parse(localStorage.getItem("nkb_shopee_waybill_template") || "{}") };
+    } catch {
+      return DEFAULT_TEMPLATE;
+    }
+  });
+  const [loading, setLoading] = useState(false);
+  const [loadingLabels, setLoadingLabels] = useState(false);
+  const [error, setError] = useState("");
+  const [saved, setSaved] = useState(false);
+  const [showDesigner, setShowDesigner] = useState(true);
+
+  useEffect(() => {
+    if (selectedShopId) setShopId(String(selectedShopId));
+  }, [selectedShopId]);
+
+  const loadOrders = useCallback(async () => {
+    if (!shopId) {
+      setOrders([]);
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      const result = await shopeeApi.getOrders({ shopId, page: 1, limit: 100 });
+      const data = result?.data || result;
+      setOrders(Array.isArray(data?.orders) ? data.orders : []);
+      setSelected([]);
+      setWaybills([]);
+    } catch (err) {
+      setError(err.message || "Không tải được đơn Shopee");
+    } finally {
+      setLoading(false);
+    }
+  }, [shopId]);
+
+  useEffect(() => {
+    loadOrders();
+  }, [loadOrders]);
+
+  const readyOrders = useMemo(
+    () => orders.filter((order) => ["PROCESSED", "SHIPPED", "COMPLETED"].includes(String(order.orderStatus || "").toUpperCase())),
+    [orders],
+  );
+
+  const updateTemplate = (key, value) => {
+    setTemplate((current) => ({ ...current, [key]: value }));
+    setSaved(false);
+  };
+
+  const saveTemplate = () => {
+    localStorage.setItem("nkb_shopee_waybill_template", JSON.stringify(template));
+    setSaved(true);
+  };
+
+  const toggleOrder = (orderSn) => {
+    setSelected((current) => current.includes(orderSn)
+      ? current.filter((value) => value !== orderSn)
+      : [...current, orderSn]);
+  };
+
+  const loadSelectedWaybills = async () => {
+    if (!selected.length) return setError("Chọn ít nhất một đơn để lấy dữ liệu vận đơn.");
+    setLoadingLabels(true);
+    setError("");
+    const results = [];
+    const failures = [];
+    for (const orderSn of selected) {
+      try {
+        const result = await shopeeApi.getWaybillData(orderSn, { shopId });
+        const data = unwrap(result);
+        if (!data?.trackingNumber) throw new Error("Không có mã vận đơn");
+        results.push(data);
+      } catch (err) {
+        failures.push(orderSn + ": " + (err.message || "Không lấy được dữ liệu"));
+      }
+    }
+    setWaybills(results);
+    if (failures.length) setError("Một số đơn chưa lấy được vận đơn:\n" + failures.join("\n"));
+    setLoadingLabels(false);
+  };
+
+  const handleLogo = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setError("Logo phải là tệp hình ảnh.");
+      return;
+    }
+    if (file.size > 1024 * 1024) {
+      setError("Logo tối đa 1MB để tránh mẫu in quá nặng.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => updateTemplate("logo", String(reader.result || ""));
+    reader.readAsDataURL(file);
+  };
+
+  const paperStyle = template.paper === "100x150"
+    ? { width: "100mm", minHeight: "150mm" }
+    : { width: "100mm", minHeight: "100mm" };
+
+  return (
+    <div className="scw-page">
+      <div className="scw-header">
+        <div>
+          <h2>In vận đơn Shopee – mẫu riêng</h2>
+          <p>Lấy mã vận đơn chính thức từ Shopee, tự bố trí và xuất PDF theo mẫu Nhật Khang Bike.</p>
+        </div>
+        <button className="scw-primary" onClick={() => window.print()} disabled={!waybills.length}>Xuất PDF / In</button>
+      </div>
+
+      {error && <div className="scw-error">{error}</div>}
+
+      <section className="scw-panel">
+        <div className="scw-panel-title">
+          <div><h3>1. Chọn đơn hàng</h3><small>Chỉ hiện đơn đã xác nhận gửi hoặc đã giao; đơn chưa có vận đơn sẽ không thể in.</small></div>
+          <div className="scw-actions">
+            <select value={shopId} onChange={(event) => { setShopId(event.target.value); onShopChange?.(event.target.value); }}>
+              <option value="">Chọn gian hàng</option>
+              {shops.map((shop) => {
+                const id = String(shop.shopId || shop.shop_id || shop._id || "");
+                return <option key={id} value={id}>{shop.shopName || shop.shop_name || id}</option>;
+              })}
+            </select>
+            <button onClick={loadOrders} disabled={loading}>{loading ? "Đang tải..." : "Tải đơn"}</button>
+          </div>
+        </div>
+        <div className="scw-selection-bar">
+          <span>Đã chọn <b>{selected.length}</b> / {readyOrders.length} đơn đủ điều kiện</span>
+          <button onClick={() => setSelected(readyOrders.map((order) => order.orderSn))}>Chọn tất cả đủ điều kiện</button>
+          <button onClick={() => setSelected([])}>Bỏ chọn</button>
+          <button className="scw-primary" onClick={loadSelectedWaybills} disabled={loadingLabels || !selected.length}>
+            {loadingLabels ? "Đang lấy dữ liệu Shopee..." : "Lấy mã vận đơn"}
+          </button>
+        </div>
+        <div className="scw-order-list">
+          {orders.map((order) => {
+            const eligible = ["PROCESSED", "SHIPPED", "COMPLETED"].includes(String(order.orderStatus || "").toUpperCase());
+            return (
+              <label className={eligible ? "" : "scw-disabled"} key={order.orderSn}>
+                <input type="checkbox" checked={selected.includes(order.orderSn)} disabled={!eligible} onChange={() => toggleOrder(order.orderSn)} />
+                <span><b>{order.orderSn}</b><small>{order.recipientName || order.buyerUsername || "Người nhận"} · {order.shippingCarrier || "Chưa rõ ĐVVC"}</small></span>
+                <strong>{money(order.totalAmount)}</strong>
+                <em>{eligible ? "Có thể lấy vận đơn" : order.orderStatus || "Chưa sẵn sàng"}</em>
+              </label>
+            );
+          })}
+          {!orders.length && !loading && <div className="scw-empty">Chọn shop và tải đơn để bắt đầu.</div>}
+        </div>
+      </section>
+
+      <section className="scw-panel">
+        <div className="scw-panel-title">
+          <div><h3>2. Tùy chỉnh mẫu vận đơn</h3><small>Cấu hình được lưu trên trình duyệt đang sử dụng.</small></div>
+          <button onClick={() => setShowDesigner((value) => !value)}>{showDesigner ? "Thu gọn" : "Mở tùy chỉnh"}</button>
+        </div>
+        {showDesigner && <div className="scw-designer">
+          <label>Tên người gửi<input value={template.senderName} onChange={(e) => updateTemplate("senderName", e.target.value)} /></label>
+          <label>Số điện thoại gửi<input value={template.senderPhone} onChange={(e) => updateTemplate("senderPhone", e.target.value)} /></label>
+          <label className="scw-wide">Địa chỉ gửi<input value={template.senderAddress} onChange={(e) => updateTemplate("senderAddress", e.target.value)} /></label>
+          <label>Slogan / dòng phụ<input value={template.shopLabel} onChange={(e) => updateTemplate("shopLabel", e.target.value)} /></label>
+          <label>Khổ giấy<select value={template.paper} onChange={(e) => updateTemplate("paper", e.target.value)}><option value="100x150">100 × 150 mm</option><option value="100x100">100 × 100 mm</option></select></label>
+          <label>Logo cửa hàng<input type="file" accept="image/*" onChange={handleLogo} /></label>
+          {template.logo && <div className="scw-logo-preview"><img src={template.logo} alt="Logo cửa hàng" /><button onClick={() => updateTemplate("logo", "")}>Xóa logo</button></div>}
+          <div className="scw-toggles">
+            {[
+              ["showOrderCode", "Hiện mã đơn Shopee"],
+              ["showItems", "Hiện danh sách sản phẩm"],
+              ["showCod", "Hiện tiền thu hộ COD"],
+              ["showWeight", "Hiện khối lượng"],
+              ["showSortCode", "Hiện mã phân loại tuyến"],
+              ["showCarrier", "Hiện đơn vị vận chuyển"],
+            ].map(([key, label]) => <label key={key}><input type="checkbox" checked={Boolean(template[key])} onChange={(e) => updateTemplate(key, e.target.checked)} />{label}</label>)}
+          </div>
+          <div className="scw-save-row"><button className="scw-primary" onClick={saveTemplate}>Lưu mẫu này</button>{saved && <span>Đã lưu mẫu trên thiết bị này.</span>}</div>
+        </div>}
+      </section>
+
+      <section className="scw-panel">
+        <div className="scw-panel-title"><div><h3>3. Xem trước vận đơn</h3><small>{waybills.length} vận đơn đã lấy dữ liệu thành công.</small></div></div>
+        <div className="scw-preview-list">
+          {waybills.map((bill) => {
+            const order = bill.order || {};
+            const sort = bill.recipientSortCode || {};
+            return <article className="scw-label" style={paperStyle} key={bill.orderSn}>
+              <header className="scw-label-head">
+                {template.logo && <img className="scw-label-logo" src={template.logo} alt="Logo" />}
+                <div><b>{template.senderName || "NGƯỜI GỬI"}</b><small>{template.shopLabel}</small></div>
+                {template.showCarrier && <strong className="scw-carrier">{bill.shippingCarrier || order.shippingCarrier || "VẬN CHUYỂN"}</strong>}
+              </header>
+              <div className="scw-sender"><b>NGƯỜI GỬI</b><span>{template.senderName}</span><span>{template.senderPhone}</span><span>{template.senderAddress}</span></div>
+              <div className="scw-recipient">
+                <b>NGƯỜI NHẬN</b>
+                <strong>{order.recipientName || "Thông tin người nhận"}</strong>
+                <strong className="scw-phone">{order.recipientPhone || ""}</strong>
+                <span>{order.recipientAddress || ""}</span>
+              </div>
+              <div className="scw-tracking">
+                <div><small>MÃ VẬN ĐƠN</small><strong>{bill.trackingNumber}</strong></div>
+                <Barcode value={bill.trackingNumber} />
+              </div>
+              {template.showOrderCode && <div className="scw-order-code">Mã đơn Shopee: <b>{bill.orderSn}</b></div>}
+              {template.showSortCode && <div className="scw-sort"><small>MÃ PHÂN TUYẾN</small><strong>{[sort.first_recipient_sort_code, sort.second_recipient_sort_code, sort.third_recipient_sort_code, bill.deliverArea].filter(Boolean).join(" · ") || "—"}</strong></div>}
+              <div className="scw-label-meta">
+                {template.showCod && <span><small>THU HỘ COD</small><b>{bill.cod ? money(bill.codAmount) : "Không COD"}</b></span>}
+                {template.showWeight && <span><small>KHỐI LƯỢNG</small><b>{bill.orderWeight ? bill.orderWeight + " g" : "—"}</b></span>}
+              </div>
+              {template.showItems && <div className="scw-items">
+                <b>NỘI DUNG KIỆN HÀNG</b>
+                {(order.items || []).map((item, index) => <div key={index}><span>{item.itemName}{item.variantName ? " – " + item.variantName : ""}</span><b>x{item.quantity}</b></div>)}
+              </div>}
+              <footer>NHẬT KHANG BIKE · {bill.createDate || new Date().toLocaleDateString("vi-VN")}</footer>
+            </article>;
+          })}
+          {!waybills.length && <div className="scw-empty">Chọn đơn, lấy dữ liệu vận đơn rồi mẫu xem trước sẽ xuất hiện tại đây.</div>}
+        </div>
+      </section>
+    </div>
+  );
+}
