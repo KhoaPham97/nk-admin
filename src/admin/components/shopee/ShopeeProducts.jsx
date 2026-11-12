@@ -8,6 +8,7 @@ import {
   Card,
   CardContent,
   Chip,
+  Checkbox,
   CircularProgress,
   Collapse,
   Dialog,
@@ -163,6 +164,10 @@ export default function ShopeeProducts() {
   const [shopId, setShopId] = useState("");
 
   const [products, setProducts] = useState([]);
+  const [selectedItemIds, setSelectedItemIds] = useState([]);
+  const [checkingEditable, setCheckingEditable] = useState(false);
+  const [editableDialogOpen, setEditableDialogOpen] = useState(false);
+  const [editableResults, setEditableResults] = useState([]);
 
   const [pagination, setPagination] = useState({
     page: 1,
@@ -514,6 +519,59 @@ export default function ShopeeProducts() {
       loadProducts(1);
     }
   }, [shopId, status, keyword, loadProducts]);
+
+  // ===================================================
+  // CHỌN SẢN PHẨM & KIỂM TRA QUYỀN SỬA SKU
+  // ===================================================
+
+  const visibleItemIds = products.map((item) => String(item.itemId));
+  const allVisibleSelected =
+    visibleItemIds.length > 0 &&
+    visibleItemIds.every((id) => selectedItemIds.includes(id));
+
+  const handleToggleProduct = (itemId) => {
+    const id = String(itemId);
+    setSelectedItemIds((current) =>
+      current.includes(id)
+        ? current.filter((value) => value !== id)
+        : [...current, id],
+    );
+  };
+
+  const handleToggleVisibleProducts = () => {
+    setSelectedItemIds((current) =>
+      allVisibleSelected
+        ? current.filter((id) => !visibleItemIds.includes(id))
+        : [...new Set([...current, ...visibleItemIds])],
+    );
+  };
+
+  const handleCheckSelectedEditable = async () => {
+    if (!shopId || selectedItemIds.length === 0 || checkingEditable) return;
+    if (selectedItemIds.length > 50) {
+      toast.error("Mỗi lần chỉ kiểm tra tối đa 50 sản phẩm.");
+      return;
+    }
+    setCheckingEditable(true);
+    setEditableResults([]);
+    setEditableDialogOpen(true);
+    try {
+      const result = await shopeeApi.checkManagedProductsEditable({
+        shopId,
+        itemIds: selectedItemIds,
+      });
+      if (!result.success) {
+        throw new Error(result.message || "Không kiểm tra được quyền chỉnh sửa SKU.");
+      }
+      setEditableResults(result.data?.results || []);
+      if (result.note) toast(result.note, { icon: "ℹ️", duration: 6000 });
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+      setEditableDialogOpen(false);
+    } finally {
+      setCheckingEditable(false);
+    }
+  };
 
   // ===================================================
   // SEARCH
@@ -1375,6 +1433,22 @@ export default function ShopeeProducts() {
 
       {/* PRODUCT TABLE */}
 
+      <Card sx={{ mb: 2, borderRadius: 2 }}>
+        <CardContent>
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} alignItems={{ sm: "center" }} justifyContent="space-between">
+            <Box>
+              <Typography fontWeight={700}>Đã chọn {selectedItemIds.length} sản phẩm</Typography>
+              <Typography variant="caption" color="text.secondary">Chọn sản phẩm cần cập nhật. Mỗi lần kiểm tra tối đa 50 sản phẩm.</Typography>
+            </Box>
+            <Stack direction="row" spacing={1}>
+              <Button size="small" onClick={() => setSelectedItemIds([])} disabled={!selectedItemIds.length}>Bỏ chọn</Button>
+              <Button size="small" variant="contained" startIcon={checkingEditable ? <CircularProgress size={16} color="inherit" /> : <CheckCircle />} onClick={handleCheckSelectedEditable} disabled={!selectedItemIds.length || checkingEditable || !shopId || selectedItemIds.length > 50}>Kiểm tra quyền sửa SKU</Button>
+            </Stack>
+          </Stack>
+          {selectedItemIds.length > 50 && <Alert severity="warning" sx={{ mt: 1 }}>Đang chọn {selectedItemIds.length} sản phẩm. Vui lòng giảm xuống tối đa 50 sản phẩm mỗi lần kiểm tra.</Alert>}
+        </CardContent>
+      </Card>
+
       <Card sx={{ borderRadius: 2 }}>
         <Box
           px={2}
@@ -1418,6 +1492,14 @@ export default function ShopeeProducts() {
               <Table stickyHeader size="small" sx={{ minWidth: 1100 }}>
                 <TableHead>
                   <TableRow>
+                    <TableCell padding="checkbox">
+                      <Checkbox
+                        checked={allVisibleSelected}
+                        indeterminate={selectedItemIds.some((id) => visibleItemIds.includes(id)) && !allVisibleSelected}
+                        onChange={handleToggleVisibleProducts}
+                        inputProps={{ "aria-label": "Chọn tất cả sản phẩm trang này" }}
+                      />
+                    </TableCell>
                     <TableCell width={70}>Ảnh</TableCell>
                     <TableCell>Sản phẩm</TableCell>
                     <TableCell>SKU</TableCell>
@@ -1439,7 +1521,14 @@ export default function ShopeeProducts() {
                     };
 
                     return (
-                      <TableRow key={product.itemId} hover>
+                      <TableRow key={product.itemId} hover selected={selectedItemIds.includes(String(product.itemId))}>
+                        <TableCell padding="checkbox">
+                          <Checkbox
+                            checked={selectedItemIds.includes(String(product.itemId))}
+                            onChange={() => handleToggleProduct(product.itemId)}
+                            inputProps={{ "aria-label": "Chọn " + product.itemName }}
+                          />
+                        </TableCell>
                         <TableCell>
                           <Avatar
                             variant="rounded"
@@ -1559,6 +1648,51 @@ export default function ShopeeProducts() {
           </>
         )}
       </Card>
+
+      {/* KIỂM TRA QUYỀN CHỈNH SỬA SKU */}
+      <Dialog open={editableDialogOpen} onClose={() => setEditableDialogOpen(false)} fullWidth maxWidth="md">
+        <DialogTitle>Kiểm tra quyền chỉnh sửa sản phẩm / SKU</DialogTitle>
+        <DialogContent dividers>
+          {checkingEditable ? (
+            <Box py={5} display="flex" justifyContent="center"><CircularProgress /></Box>
+          ) : editableResults.length === 0 ? (
+            <Alert severity="info">Không có kết quả kiểm tra.</Alert>
+          ) : (
+            <Stack spacing={2}>
+              {editableResults.map((item) => (
+                <Paper key={item.itemId} variant="outlined" sx={{ p: 1.5 }}>
+                  <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1}>
+                    <Box>
+                      <Typography fontWeight={700}>{item.itemName || ("Sản phẩm " + item.itemId)}</Typography>
+                      <Typography variant="caption" color="text.secondary">Item ID: {item.itemId} · Trạng thái: {item.itemStatus}</Typography>
+                    </Box>
+                    <Chip size="small" color={item.editable ? "success" : "error"} label={item.editable ? "Có thể chỉnh sửa" : "Không thể chỉnh sửa"} />
+                  </Stack>
+                  {item.reason && <Alert severity="warning" sx={{ mt: 1 }}>{item.reason}</Alert>}
+                  <Table size="small" sx={{ mt: 1 }}>
+                    <TableHead><TableRow><TableCell>SKU</TableCell><TableCell>Phân loại</TableCell><TableCell>Trạng thái</TableCell><TableCell>Quyền sửa</TableCell></TableRow></TableHead>
+                    <TableBody>
+                      {(item.skus || []).map((sku) => (
+                        <TableRow key={sku.modelId}>
+                          <TableCell>{sku.sku || "Chưa có SKU"}</TableCell>
+                          <TableCell>{sku.name || sku.modelId}</TableCell>
+                          <TableCell>{sku.status}</TableCell>
+                          <TableCell>
+                            <Chip size="small" color={sku.editable ? "success" : "error"} label={sku.editable ? "Được phép" : "Bị khóa"} />
+                            {!sku.editable && sku.reason && <Typography variant="caption" display="block" color="error">{sku.reason}</Typography>}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </Paper>
+              ))}
+              <Alert severity="info">Kết quả này kiểm tra trạng thái sản phẩm và phân loại trước khi cập nhật. Shopee vẫn có thể từ chối SKU do khuyến mãi, giới hạn kho hoặc quyền riêng; lỗi thực tế khi ghi sẽ được giữ lại theo từng SKU.</Alert>
+            </Stack>
+          )}
+        </DialogContent>
+        <DialogActions><Button onClick={() => setEditableDialogOpen(false)}>Đóng</Button></DialogActions>
+      </Dialog>
 
       {/* DETAIL DIALOG */}
 
