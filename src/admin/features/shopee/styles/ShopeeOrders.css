@@ -80,7 +80,7 @@
 
 .sho-order-filters input:focus,
 .sho-order-filters select:focus {
-  border-color: #e84b25;
+  border-color: #2563eb;
 }
 
 .sho-btn {
@@ -98,8 +98,8 @@
 }
 
 .sho-btn:hover:not(:disabled) {
-  border-color: #e84b25;
-  color: #e84b25;
+  border-color: #2563eb;
+  color: #2563eb;
 }
 
 .sho-btn:disabled {
@@ -108,14 +108,14 @@
 }
 
 .sho-btn-primary {
-  background: #e84b25;
-  border-color: #e84b25;
+  background: #2563eb;
+  border-color: #2563eb;
   color: #fff;
 }
 
 .sho-btn-primary:hover:not(:disabled) {
-  background: #cf3c1b;
-  border-color: #cf3c1b;
+  background: #1d4ed8;
+  border-color: #1d4ed8;
   color: #fff;
 }
 
