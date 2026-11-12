@@ -214,6 +214,37 @@ export const shopeeApi = {
   getWaybillData: (orderSn, data = {}) =>
     post(`/orders/${encode(orderSn)}/waybill-data`, data),
 
+  // Vận đơn PDF gốc do Shopee tạo.
+  getOfficialWaybillParameters: (data = {}) => post("/waybills/parameters", data),
+  createOfficialWaybills: (data = {}) => post("/waybills/create", data),
+  getOfficialWaybillResult: (data = {}) => post("/waybills/result", data),
+  downloadOfficialWaybills: async (data = {}) => {
+    const token = getToken();
+    let response;
+    try {
+      response = await fetch(`${API_URL}/waybills/download`, {
+        method: "POST",
+        headers: {
+          Accept: "application/pdf, application/octet-stream, text/html, application/json",
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(data),
+      });
+    } catch (error) {
+      throw new Error(error?.message || "Không thể tải vận đơn Shopee.");
+    }
+    if (!response.ok) {
+      let payload = null;
+      try { payload = await response.json(); } catch {}
+      throw new Error(payload?.message || `Tải vận đơn thất bại (${response.status})`);
+    }
+    return {
+      blob: await response.blob(),
+      contentType: response.headers.get("content-type") || "application/pdf",
+    };
+  },
+
   getSyncStatus: () => get("/sync/status"),
 
   updateOrderStatus: (orderSn, data = {}) =>
