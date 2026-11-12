@@ -242,7 +242,10 @@ export default function ShopeeCustomWaybill({ shops = [], selectedShopId = "", o
           {waybills.map((bill) => {
             const order = bill.order || {};
             const sort = bill.recipientSortCode || {};
-            const routeCode = [sort.first_recipient_sort_code, sort.second_recipient_sort_code, sort.third_recipient_sort_code, bill.deliverArea].filter(Boolean).join(" · ");
+            const firstSortCode = sort.first_recipient_sort_code || "";
+            const secondSortCode = sort.second_recipient_sort_code || "";
+            const qrSortCode = sort.third_recipient_sort_code || bill.deliverArea || [firstSortCode, secondSortCode].filter(Boolean).join(" · ");
+            const routeCode = [firstSortCode, secondSortCode, sort.third_recipient_sort_code, bill.deliverArea].filter(Boolean).join(" · ");
             const itemCount = (order.items || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0);
             return <article className="scw-label" style={paperStyle} key={bill.orderSn}>
               <div className="scw-label-topline">
@@ -250,10 +253,10 @@ export default function ShopeeCustomWaybill({ shops = [], selectedShopId = "", o
                 <div className="scw-brand-copy"><b>{template.senderName || "NHẬT KHANG BIKE"}</b><small>{template.shopLabel || "ĐÃ CHẠY PHẢI CHẤT"}</small></div>
                 <strong className="scw-carrier">{bill.shippingCarrier || order.shippingCarrier || "ĐƠN VỊ VẬN CHUYỂN"}</strong>
               </div>
-              <div className="scw-route-block">
-                <div><small>MÃ PHÂN LOẠI / TUYẾN GIAO</small><strong>{routeCode || "—"}</strong></div>
-                <span>GIAO HÀNG</span>
-              </div>
+              {template.showSortCode && <div className="scw-route-block">
+                <div className="scw-sort-primary"><small>MÃ PHÂN LOẠI</small><strong>{firstSortCode || "—"}</strong></div>
+                <div className="scw-sort-secondary"><small>ĐIỂM GIAO</small><strong>{secondSortCode || "—"}</strong></div>
+              </div>}
               <div className="scw-address-block">
                 <div className="scw-address-title"><b>NGƯỜI GỬI</b><small>{template.senderName}</small></div>
                 <div className="scw-sender-detail">{template.senderPhone} {template.senderAddress && " · " + template.senderAddress}</div>
@@ -275,9 +278,9 @@ export default function ShopeeCustomWaybill({ shops = [], selectedShopId = "", o
                   <div className="scw-package-heading"><b>NỘI DUNG HÀNG</b><strong>Tổng SL: {itemCount}</strong></div>
                   {(order.items || []).map((item, index) => <div className="scw-package-item" key={index}><span>{index + 1}. {item.itemName}{item.variantName ? ", " + item.variantName : ""}</span><b>SL: {item.quantity}</b></div>)}
                 </div>}
-                {template.showQr && routeCode && <div className="scw-sort-qr">
-                  <img src={"https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=2&data=" + encodeURIComponent(routeCode)} alt={"QR mã phân loại " + routeCode} loading="eager" />
-                  <strong>{routeCode}</strong>
+                {template.showQr && qrSortCode && <div className="scw-sort-qr">
+                  <img src={"https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=2&data=" + encodeURIComponent(qrSortCode)} alt={"QR mã phân loại " + qrSortCode} loading="eager" />
+                  <strong>{qrSortCode}</strong>
                 </div>}
               </div>}
               <footer className="scw-label-footer">
