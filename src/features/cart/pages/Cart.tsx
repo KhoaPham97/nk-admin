@@ -8,7 +8,7 @@ import {
   AiOutlineShoppingCart,
 } from "react-icons/ai";
 
-import { useAppDispatch, useAppSelector } from "../redux/hooks";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 
 import {
   decreaseQuantity,
@@ -16,7 +16,7 @@ import {
   removeFromCart,
   updateQuantity,
   clearCart,
-} from "../redux/features/cartSlice";
+} from "../../../redux/features/cartSlice";
 
 const Cart: React.FC = () => {
   const dispatch = useAppDispatch();

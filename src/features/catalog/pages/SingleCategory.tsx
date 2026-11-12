@@ -1,12 +1,12 @@
 import { FC, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useAppDispatch } from "../redux/hooks";
-import { Product } from "../models/Product";
-import { useAppSelector } from "../redux/hooks";
-import { updateLoading } from "../redux/features/homeSlice";
-import SortProducts from "../components/SortProducts";
-import PaginatedProducts from "../components/PaginatedProducts";
-import { API_ENDPOINTS } from "../api";
+import { useAppDispatch } from "../../../redux/hooks";
+import { Product } from "../../../models/Product";
+import { useAppSelector } from "../../../redux/hooks";
+import { updateLoading } from "../../../redux/features/homeSlice";
+import SortProducts from "../../../components/SortProducts";
+import PaginatedProducts from "../../../components/PaginatedProducts";
+import { API_ENDPOINTS } from "../../../api";
 import { useLocation } from "react-router";
 
 const SingleCategory: FC = () => {

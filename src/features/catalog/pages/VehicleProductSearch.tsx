@@ -31,7 +31,7 @@ import {
 
 import { useSearchParams } from "react-router-dom";
 
-import { getRequest } from "../admin/common/ApiMethod";
+import { getRequest } from "../../../admin/common/ApiMethod";
 
 // ======================================================
 // TYPES

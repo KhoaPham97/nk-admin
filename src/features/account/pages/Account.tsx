@@ -2,7 +2,7 @@ import { FC, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import axios from "axios";
-import { useAppDispatch } from "../redux/hooks";
+import { useAppDispatch } from "../../../redux/hooks";
 
 import {
   AiOutlineArrowLeft,
@@ -25,8 +25,8 @@ import {
 } from "react-icons/ai";
 import { AiOutlineUserSwitch } from "react-icons/ai";
 import { FaUser } from "react-icons/fa";
-import { clearCart } from "../redux/features/cartSlice";
-import { API_ENDPOINTS } from "../api";
+import { clearCart } from "../../../redux/features/cartSlice";
+import { API_ENDPOINTS } from "../../../api";
 /* =========================================================
    API
 ========================================================= */

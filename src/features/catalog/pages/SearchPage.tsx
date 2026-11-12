@@ -1,14 +1,14 @@
 import { FC, useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 
-import { Product } from "../models/Product";
-import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import { updateLoading } from "../redux/features/homeSlice";
+import { Product } from "../../../models/Product";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
+import { updateLoading } from "../../../redux/features/homeSlice";
 
-import SortProducts from "../components/SortProducts";
-import PaginatedProducts from "../components/PaginatedProducts";
+import SortProducts from "../../../components/SortProducts";
+import PaginatedProducts from "../../../components/PaginatedProducts";
 
-import { API_ENDPOINTS } from "../api";
+import { API_ENDPOINTS } from "../../../api";
 
 interface Category {
   _id?: string;

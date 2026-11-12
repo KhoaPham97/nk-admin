@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import axios from "axios";
-import ProductCard from "../components/ProductCard";
-import { API_ENDPOINTS } from "../api";
+import ProductCard from "../../../components/ProductCard";
+import { API_ENDPOINTS } from "../../../api";
 import { useParams, useNavigate } from "react-router-dom";
 
 function LazyloadProducts() {

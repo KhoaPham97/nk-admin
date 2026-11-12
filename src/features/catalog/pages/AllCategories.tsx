@@ -1,10 +1,10 @@
 import { FC, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { useAppDispatch, useAppSelector } from "../redux/hooks";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 
-import { addCategories } from "../redux/features/productSlice";
-import { updateLoading } from "../redux/features/homeSlice";
-import { API_ENDPOINTS } from "../api";
+import { addCategories } from "../../../redux/features/productSlice";
+import { updateLoading } from "../../../redux/features/homeSlice";
+import { API_ENDPOINTS } from "../../../api";
 
 interface Category {
   _id: string;

@@ -9,14 +9,14 @@ import {
 } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 
-import { useAppDispatch, useAppSelector } from "../redux/hooks";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import {
   decreaseQuantity,
   increaseQuantity,
   removeFromCart,
   clearCart,
-} from "../redux/features/cartSlice";
-import { API_ENDPOINTS } from "../api";
+} from "../../../redux/features/cartSlice";
+import { API_ENDPOINTS } from "../../../api";
 
 interface CheckoutForm {
   name: string;

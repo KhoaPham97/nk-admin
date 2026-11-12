@@ -1,9 +1,9 @@
 import { FC, useCallback, useEffect, useRef, useState } from "react";
 import axios from "axios";
 
-import ProductCard from "../components/ProductCard";
-import { API_ENDPOINTS } from "../api";
-import { Product } from "../models/Product";
+import ProductCard from "../../../components/ProductCard";
+import { API_ENDPOINTS } from "../../../api";
+import { Product } from "../../../models/Product";
 
 const AllProducts: FC = () => {
   const [products, setProducts] = useState<Product[]>([]);

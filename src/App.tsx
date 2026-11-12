@@ -6,7 +6,7 @@ import { store } from "./redux/store";
 
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-import Cart from "./pages/Cart";
+import Cart from "./features/cart/pages/Cart";
 import LoginModal from "./components/LoginModal";
 import ScrollToTopButton from "./components/ScrollToTopButton";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -18,24 +18,24 @@ import { Toaster } from "react-hot-toast";
 // USER PAGES
 // ================================
 
-import Home from "./pages/Home";
-import SearchPage from "./pages/SearchPage";
-import LazyloadProducts from "./pages/LazyloadProducts";
-import AllProducts from "./pages/AllProducts";
-import AllCategories from "./pages/AllCategories";
-import SingleProduct from "./pages/SingleProduct";
-import SingleCategory from "./pages/SingleCategory";
-import Wishlist from "./pages/Wishlist";
-import Checkout from "./pages/Checkout";
-import AnalyticsTracker from "./pages/AnalyticsTracker";
+import Home from "./features/home/pages/Home";
+import SearchPage from "./features/catalog/pages/SearchPage";
+import LazyloadProducts from "./features/catalog/pages/LazyloadProducts";
+import AllProducts from "./features/catalog/pages/AllProducts";
+import AllCategories from "./features/catalog/pages/AllCategories";
+import SingleProduct from "./features/catalog/pages/SingleProduct";
+import SingleCategory from "./features/catalog/pages/SingleCategory";
+import Wishlist from "./features/account/pages/Wishlist";
+import Checkout from "./features/checkout/pages/Checkout";
+import AnalyticsTracker from "./features/analytics/pages/AnalyticsTracker";
 import { ToastContainer } from "react-toastify";
 import AuthModal from "./components/AuthModal";
 import LoginForm from "./components/LoginForm";
 import RegisterForm from "./components/RegisterForm";
-import Account from "./pages/Account";
-import OrderSuccess from "./pages/OrderSuccess";
+import Account from "./features/account/pages/Account";
+import OrderSuccess from "./features/checkout/pages/OrderSuccess";
 import ChatWidget from "./components/ChatWidget";
-import VehicleProductSearch from "./pages/VehicleProductSearch";
+import VehicleProductSearch from "./features/catalog/pages/VehicleProductSearch";
 import "react-toastify/dist/ReactToastify.css";
 // ================================
 // ADMIN

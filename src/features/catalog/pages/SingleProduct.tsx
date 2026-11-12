@@ -1,15 +1,15 @@
 import { FC, useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 
-import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import { addToCart, setCartState } from "../redux/features/cartSlice";
-import { addToWishlist } from "../redux/features/productSlice";
-import { updateLoading } from "../redux/features/homeSlice";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
+import { addToCart, setCartState } from "../../../redux/features/cartSlice";
+import { addToWishlist } from "../../../redux/features/productSlice";
+import { updateLoading } from "../../../redux/features/homeSlice";
 
-import { Product } from "../models/Product";
-import RatingStar from "../components/RatingStar";
-import PriceSection from "../components/PriceSection";
-import ProductList from "../components/ProductList";
+import { Product } from "../../../models/Product";
+import RatingStar from "../../../components/RatingStar";
+import PriceSection from "../../../components/PriceSection";
+import ProductList from "../../../components/ProductList";
 
 import toast from "react-hot-toast";
 
@@ -28,8 +28,8 @@ import {
   MdLocalShipping,
 } from "react-icons/md";
 
-import useAuth from "../hooks/useAuth";
-import { API_ENDPOINTS } from "../api";
+import useAuth from "../../../hooks/useAuth";
+import { API_ENDPOINTS } from "../../../api";
 
 /* =====================================================
    VARIANT

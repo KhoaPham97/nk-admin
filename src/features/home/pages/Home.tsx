@@ -1,8 +1,8 @@
 import { FC, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
-import ProductList from "../components/ProductList";
-import { API_ENDPOINTS } from "../api";
+import ProductList from "../../../components/ProductList";
+import { API_ENDPOINTS } from "../../../api";
 
 interface Product {
   _id: string;

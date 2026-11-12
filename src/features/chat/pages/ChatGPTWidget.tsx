@@ -1,6 +1,6 @@
 import { FC, useEffect, useRef, useState } from "react";
 import { FiMessageCircle, FiSend, FiX } from "react-icons/fi";
-import { API_ENDPOINTS } from "../api";
+import { API_ENDPOINTS } from "../../../api";
 
 interface Message {
   role: "user" | "assistant";

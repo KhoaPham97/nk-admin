@@ -1,5 +1,5 @@
 import { FC } from "react";
-import { useAppSelector } from "../redux/hooks";
+import { useAppSelector } from "../../../redux/hooks";
 
 const Profile: FC = () => {
   const info: any = useAppSelector((state) => state.authReducer.userInfo);
