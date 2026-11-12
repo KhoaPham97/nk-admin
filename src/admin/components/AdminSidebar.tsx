@@ -326,7 +326,7 @@ const AdminSidebar = ({
                       },
 
                       "&.Mui-selected:hover": {
-                        backgroundColor: "rgba(232, 75, 37, 0.16)",
+                        backgroundColor: "rgba(37, 99, 235, 0.16)",
                       },
                     }}
                   >
