@@ -67,6 +67,8 @@ const AdminHeader = ({ onMenuClick, drawerWidth = 260, isMobile = false }) => {
         color: "#111827",
 
         borderBottom: "1px solid #e5e7eb",
+        left: { xs: 0, md: `${drawerWidth}px` },
+        width: { xs: "100%", md: `calc(100% - ${drawerWidth}px)` },
       }}
     >
       <Toolbar
