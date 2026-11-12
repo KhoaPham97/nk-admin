@@ -628,10 +628,14 @@ export default function ShopeeReturns() {
         received < 0 ||
         good < 0 ||
         damaged < 0 ||
-        good + damaged > received
+        received > Number(selected.items?.find((row) =>
+          String(row.itemId) === String(item.itemId) &&
+          String(row.modelId || "0") === String(item.modelId || "0")
+        )?.requestedQty || 0) ||
+        good + damaged !== received
       ) {
         setError(
-          "Số lượng phải là số nguyên không âm. Hàng tốt + hàng lỗi không được vượt quá số lượng thực nhận.",
+          "Số lượng phải là số nguyên không âm, không vượt số lượng dự kiến. Phải phân loại đủ số thực nhận thành hàng tốt hoặc hàng hỏng.",
         );
         return;
       }
@@ -657,9 +661,14 @@ export default function ShopeeReturns() {
 
   const resolveStock = async () => {
     if (!selected) return;
-    const message =
-      resolution === "RESTOCK"
-        ? "Hệ thống sẽ nhập số lượng hàng tốt vào kho. Bạn xác nhận?"
+    const isFailedDelivery = selected.returnType === "DELIVERY_FAILED";
+    const message = isFailedDelivery
+      ? "Đơn giao thất bại: hệ thống sẽ giải phóng số lượng đang giữ; hàng hỏng thuộc phần đang giữ sẽ bị ghi giảm khỏi tồn kho. " +
+        (resolution === "RESTOCK"
+          ? "Chỉ phần hàng tốt đã thực sự xuất kho mới được tạo lô nhập hoàn. Bạn xác nhận?"
+          : "Không nhập thêm hàng vào kho. Bạn xác nhận?")
+      : resolution === "RESTOCK"
+        ? "Hệ thống chỉ nhập lại số lượng hàng tốt thuộc phần đơn đã thực sự xuất kho. Bạn xác nhận?"
         : "Hệ thống sẽ không nhập lại hàng vào kho. Bạn xác nhận?";
     if (!window.confirm(message)) return;
 
