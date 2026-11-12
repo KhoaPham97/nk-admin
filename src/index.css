@@ -211,3 +211,99 @@
     transition-duration: .01ms !important;
   }
 }
+
+
+/* NHAT KHANG BIKE - ADMIN PAGE-BY-PAGE THEME ALIGNMENT */
+.admin-shell {
+  --admin-primary: #e84b25;
+  --admin-primary-hover: #cf3c1b;
+  --admin-primary-soft: #fff0eb;
+  --admin-canvas: #f4f6fa;
+  --admin-surface: #fff;
+  --admin-ink: #172033;
+  --admin-muted: #697586;
+  --admin-border: #e5eaf1;
+}
+.admin-shell .MuiButton-containedPrimary,
+.admin-shell .MuiFab-primary { background-color: var(--admin-primary) !important; }
+.admin-shell .MuiButton-containedPrimary:hover,
+.admin-shell .MuiFab-primary:hover { background-color: var(--admin-primary-hover) !important; }
+.admin-shell .MuiButton-outlinedPrimary,
+.admin-shell .MuiButton-textPrimary { color: var(--admin-primary) !important; }
+.admin-shell .MuiButton-outlinedPrimary { border-color: rgba(232,75,37,.45) !important; }
+.admin-shell .MuiCheckbox-root.Mui-checked,
+.admin-shell .MuiRadio-root.Mui-checked,
+.admin-shell .MuiSwitch-switchBase.Mui-checked { color: var(--admin-primary) !important; }
+.admin-shell .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track { background-color: var(--admin-primary) !important; }
+.admin-shell .MuiTabs-indicator { background-color: var(--admin-primary) !important; }
+.admin-shell .MuiTab-root.Mui-selected,
+.admin-shell a:not([class*="button"]):hover { color: var(--admin-primary); }
+.admin-shell .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline { border-color: var(--admin-primary) !important; }
+.admin-shell .MuiFormLabel-root.Mui-focused { color: var(--admin-primary) !important; }
+.admin-shell .MuiLinearProgress-bar,
+.admin-shell .MuiCircularProgress-root { color: var(--admin-primary); }
+.admin-shell .MuiTableRow-root:hover { background-color: rgba(232,75,37,.035); }
+.admin-shell .MuiCard-root, .admin-shell .MuiPaper-elevation1,
+.admin-shell .MuiPaper-elevation2 { border-color: var(--admin-border); }
+
+/* Normalize independent page roots to the same canvas and surface palette. */
+.admin-shell .sho-orders, .admin-shell .scw-page,
+.admin-shell .sku-management, .admin-shell .ir-page,
+.admin-shell .sa-page, .admin-shell .shopee-management,
+.admin-shell .shopee-reviews-page, .admin-shell .shopee-stock-page,
+.admin-shell .shopee-stock-history-page {
+  --text-primary: var(--admin-ink);
+  --card-bg: var(--admin-surface);
+  --border-color: var(--admin-border);
+  --shopee-primary: var(--admin-primary);
+  --shopee-primary-dark: var(--admin-primary-hover);
+  color: var(--admin-ink);
+  background: transparent;
+  min-height: 0;
+}
+.admin-shell .sho-orders, .admin-shell .scw-page,
+.admin-shell .sku-management, .admin-shell .ir-page,
+.admin-shell .sa-page, .admin-shell .shopee-management { padding: 0; }
+.admin-shell .shopee-management { --shopee-bg: transparent; --shopee-card: #fff; --shopee-text: var(--admin-ink); --shopee-border: var(--admin-border); }
+.admin-shell .sa-page { background: transparent; color: var(--admin-ink); }
+.admin-shell .ir-page { background: transparent; color: var(--admin-ink); }
+.admin-shell .ir-title, .admin-shell .sa-header h1 { color: var(--admin-ink); }
+.admin-shell .ir-summary-card, .admin-shell .ir-filter-card,
+.admin-shell .sa-panel, .admin-shell .sa-stat,
+.admin-shell .sho-order-stats > div, .admin-shell .scw-panel,
+.admin-shell .sku-stat-card, .admin-shell .sku-filter-card,
+.admin-shell .sku-table-card { border-color: var(--admin-border); border-radius: 14px; }
+.admin-shell .scw-page .scw-primary,
+.admin-shell .sho-btn-primary,
+.admin-shell .sa-primary,
+.admin-shell .sku-management .MuiButton-containedPrimary { background: var(--admin-primary); border-color: var(--admin-primary); color: #fff; }
+.admin-shell .scw-page .scw-primary:hover,
+.admin-shell .sho-btn-primary:hover:not(:disabled),
+.admin-shell .sa-primary:hover:not(:disabled) { background: var(--admin-primary-hover); border-color: var(--admin-primary-hover); }
+.admin-shell .sku-code-text { color: var(--admin-primary); }
+.admin-shell .sku-code-cell .MuiIconButton-root:hover { color: var(--admin-primary); background: var(--admin-primary-soft); }
+.admin-shell .sku-table tbody tr:hover { background: rgba(232,75,37,.035); }
+.admin-shell .scw-pdf-frame { max-width: 100%; }
+
+@media (max-width: 600px) {
+  .admin-shell .sho-orders, .admin-shell .scw-page,
+  .admin-shell .sku-management, .admin-shell .ir-page,
+  .admin-shell .sa-page, .admin-shell .shopee-management { padding: 0; }
+  .admin-shell .sho-order-stats,
+  .admin-shell .shopee-dashboard-stats,
+  .admin-shell .sa-stats { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 9px; }
+  .admin-shell .sho-orders-header,
+  .admin-shell .shopee-header,
+  .admin-shell .sa-header,
+  .admin-shell .ir-header { align-items: stretch; flex-direction: column; gap: 10px; }
+  .admin-shell .sho-order-filters,
+  .admin-shell .ir-filter-row { grid-template-columns: minmax(0,1fr); }
+  .admin-shell .scw-order-list label { grid-template-columns: 20px minmax(0,1fr); }
+  .admin-shell .scw-order-list label > strong,
+  .admin-shell .scw-order-list label > em { grid-column: 2; }
+  .admin-shell .sku-table-heading,
+  .admin-shell .sku-pagination { padding: 12px; }
+  .admin-shell .sa-panel-head { align-items: stretch; flex-direction: column; padding: 14px; }
+  .admin-shell .sa-settings { align-items: stretch; flex-direction: column; gap: 12px; padding: 14px; }
+  .admin-shell .sa-setting-actions { margin-left: 0; flex-wrap: wrap; }
+}
