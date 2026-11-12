@@ -5,7 +5,7 @@
 .scw-panel-heading{margin-bottom:12px}.scw-panel-heading h3{font-size:16px;margin:0 0 4px}
 .scw-actions select{min-height:38px;padding:7px 10px;border:1px solid #d7dce3;border-radius:7px;background:var(--card-bg,#fff);color:inherit}
 .scw-page button{border:1px solid #d7dce3;background:var(--card-bg,#fff);color:inherit;border-radius:7px;padding:9px 12px;font-weight:650;cursor:pointer}
-.scw-page button:disabled{opacity:.5;cursor:not-allowed}.scw-page .scw-primary{background:#e84b25;border-color:#e84b25;color:#fff}
+.scw-page button:disabled{opacity:.5;cursor:not-allowed}.scw-page .scw-primary{background:#2563eb;border-color:#2563eb;color:#fff}
 .scw-selection-bar{justify-content:flex-start;padding:10px 0}.scw-order-list{max-height:430px;overflow:auto;border:1px solid #e5e7eb;border-radius:8px}
 .scw-order-list label{display:grid;grid-template-columns:22px minmax(180px,1fr) auto auto;gap:10px;align-items:center;padding:10px 12px;border-bottom:1px solid #edf0f2;font-size:12px}
 .scw-order-list label:last-child{border-bottom:0}.scw-order-info b,.scw-order-info small{display:block}.scw-order-info small{color:#858b98;margin-top:3px}.scw-order-list em{font-style:normal;color:#16834a;font-size:11px}.scw-order-list .scw-disabled{opacity:.55}
@@ -14,8 +14,8 @@
 .scw-print-list{display:flex;align-items:flex-start;gap:18px;flex-wrap:wrap}
 .scw-label{width:105mm;height:148mm;box-sizing:border-box;overflow:hidden;background:#fff;color:#111;border:1px solid #111;font-family:Arial,sans-serif;font-size:8pt;display:flex;flex-direction:column;break-after:page;page-break-after:always;box-shadow:0 2px 12px #00000012}
 .scw-top{height:23mm;flex:none;display:grid;grid-template-columns:1fr 1fr;gap:3mm;padding:2mm 3mm 1mm;box-sizing:border-box;border-bottom:1px dashed #111}
-.scw-brand{position:relative;color:#e84b25;padding:2mm 0 0 10mm}
-.scw-bag-mark{position:absolute;left:0;top:2mm;width:7mm;height:8mm;border:1.2mm solid #e84b25;border-radius:1.5mm 1.5mm 2mm 2mm;text-align:center;font-size:11pt;font-weight:900;line-height:7mm}
+.scw-brand{position:relative;color:#2563eb;padding:2mm 0 0 10mm}
+.scw-bag-mark{position:absolute;left:0;top:2mm;width:7mm;height:8mm;border:1.2mm solid #2563eb;border-radius:1.5mm 1.5mm 2mm 2mm;text-align:center;font-size:11pt;font-weight:900;line-height:7mm}
 .scw-brand-name{font-size:16pt;font-weight:500;line-height:8mm}
 .scw-spx-word{font-size:25pt;font-weight:1000;font-style:italic;line-height:9mm;letter-spacing:-1px}.scw-spx-word small{font-size:6pt;letter-spacing:0}
 .scw-top-right{min-width:0;text-align:left;font-size:7.5pt;padding-top:0}
@@ -101,7 +101,7 @@
 .scw-order-row em{font-style:normal;padding:5px 8px;border-radius:20px;background:#f3f4f6;color:#52525b;text-align:center}
 .scw-order-row em.is-ready{background:#dcfce7;color:#166534}
 .scw-order-row em.is-failed{background:#fee2e2;color:#991b1b}
-.scw-order-row em.is-pending{background:#fff7ed;color:#9a3412}
+.scw-order-row em.is-pending{background:#eff6ff;color:#9a3412}
 .scw-bottom-actions{border-top:1px solid #edf0f2;margin-top:8px;padding-top:14px}
 .scw-preview-panel .scw-panel-heading h3{display:flex;align-items:center;gap:8px}
 .scw-pdf-frame{width:100%;height:min(78vh,1000px);border:1px solid #e5e7eb;border-radius:8px;background:#f3f4f6}
