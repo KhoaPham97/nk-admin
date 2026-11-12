@@ -17,6 +17,7 @@ import { getStatusLabel, getStockLabel } from "../../../common/CommonFunc";
 // =====================================================
 
 const money = (value) => Number(value || 0).toLocaleString("vi-VN") + "đ";
+const moneyCny = (value) => "¥" + Number(value || 0).toLocaleString("vi-VN", { maximumFractionDigits: 2 });
 
 const getOrderTime = (order) => {
   const timestamp = order?.rawData?.create_time || order?.rawData?.update_time;
@@ -620,6 +621,10 @@ export default function ShopeeOrders() {
                               SKU:{" "}
                               {item.variationSku || item.itemSku || "Chưa có"}
                             </small>
+                            <small className={item.hasCost ? "sho-cost-line" : "sho-cost-line sho-cost-missing"}>
+                              Giá vốn: {item.hasCost ? moneyCny(item.unitCostCny) + " / SP · Tổng " + moneyCny(item.totalCostCny) : "Chưa có dữ liệu"}
+                              {item.costSource ? " · " + item.costSource : ""}
+                            </small>
                           </div>
                         ))}
 
@@ -762,6 +767,13 @@ export default function ShopeeOrders() {
                 </div>
               </div>
 
+              <div className="sho-detail-grid">
+                <div>
+                  <small>Tổng giá vốn sản phẩm</small>
+                  <strong>{selectedOrder?.hasCostData ? moneyCny(selectedOrder?.totalCostCny) : "Chưa đủ dữ liệu"}</strong>
+                </div>
+              </div>
+
               <h4>Sản phẩm trong đơn</h4>
 
               {(selectedOrder?.items || []).map((item, index) => (
@@ -779,6 +791,11 @@ export default function ShopeeOrders() {
                     </small>
 
                     <small>Ánh xạ: {getMappingLabel(item)}</small>
+                    <small className={item.hasCost ? "sho-cost-line" : "sho-cost-line sho-cost-missing"}>
+                      Giá vốn đơn vị: {item.hasCost ? moneyCny(item.unitCostCny) : "Chưa có"}
+                      {" · "}Tổng giá vốn: {item.hasCost ? moneyCny(item.totalCostCny) : "Chưa có"}
+                    </small>
+                    {item.costSource && <small>Nguồn giá vốn: {item.costSource}</small>}
                   </div>
 
                   <div className="sho-detail-price">
