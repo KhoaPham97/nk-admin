@@ -628,10 +628,14 @@ export default function ShopeeReturns() {
         received < 0 ||
         good < 0 ||
         damaged < 0 ||
-        good + damaged > received
+        received > Number(selected.items?.find((row) =>
+          String(row.itemId) === String(item.itemId) &&
+          String(row.modelId || "0") === String(item.modelId || "0")
+        )?.requestedQty || 0) ||
+        good + damaged !== received
       ) {
         setError(
-          "Số lượng phải là số nguyên không âm. Hàng tốt + hàng lỗi không được vượt quá số lượng thực nhận.",
+          "Số lượng phải là số nguyên không âm, không vượt số lượng dự kiến. Phải phân loại đủ số thực nhận thành hàng tốt hoặc hàng hỏng.",
         );
         return;
       }
