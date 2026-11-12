@@ -321,11 +321,12 @@ const AdminSidebar = ({
                       minHeight: 44,
 
                       "&.Mui-selected": {
-                        backgroundColor: "rgba(25, 118, 210, 0.10)",
+                        backgroundColor: "rgba(232, 75, 37, 0.10)",
+                        color: "#e84b25",
                       },
 
                       "&.Mui-selected:hover": {
-                        backgroundColor: "rgba(25, 118, 210, 0.16)",
+                        backgroundColor: "rgba(232, 75, 37, 0.16)",
                       },
                     }}
                   >
