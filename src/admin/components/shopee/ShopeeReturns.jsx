@@ -661,9 +661,14 @@ export default function ShopeeReturns() {
 
   const resolveStock = async () => {
     if (!selected) return;
-    const message =
-      resolution === "RESTOCK"
-        ? "Hệ thống sẽ nhập số lượng hàng tốt vào kho. Bạn xác nhận?"
+    const isFailedDelivery = selected.returnType === "DELIVERY_FAILED";
+    const message = isFailedDelivery
+      ? "Đơn giao thất bại: hệ thống sẽ giải phóng số lượng đang giữ; hàng hỏng thuộc phần đang giữ sẽ bị ghi giảm khỏi tồn kho. " +
+        (resolution === "RESTOCK"
+          ? "Chỉ phần hàng tốt đã thực sự xuất kho mới được tạo lô nhập hoàn. Bạn xác nhận?"
+          : "Không nhập thêm hàng vào kho. Bạn xác nhận?")
+      : resolution === "RESTOCK"
+        ? "Hệ thống chỉ nhập lại số lượng hàng tốt thuộc phần đơn đã thực sự xuất kho. Bạn xác nhận?"
         : "Hệ thống sẽ không nhập lại hàng vào kho. Bạn xác nhận?";
     if (!window.confirm(message)) return;
 
