@@ -22,6 +22,7 @@ const AdminLayout = () => {
 
   return (
     <Box
+      className="admin-shell"
       sx={{
         display: "flex",
         minHeight: "100vh",
@@ -70,6 +71,7 @@ const AdminLayout = () => {
 
         <Box
           component="main"
+          className="admin-main-content"
           sx={{
             width: "100%",
             minWidth: 0,
