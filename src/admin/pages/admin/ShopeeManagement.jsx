@@ -27,6 +27,7 @@ import ShopeeAutoStockPage from "../../components/shopee/ShopeeAutoStockPage";
 import ShopeeRevenue from "../../components/shopee/ShopeeRevenue";
 import ShopeeReview from "../../components/shopee/ShopeeReviewsPage";
 import ShopeeProducts from "../../components/shopee/ShopeeProducts";
+import ShopeeCustomWaybill from "../../components/shopee/ShopeeCustomWaybill";
 import "../../styles/shopee-management.css";
 
 const MENU_ITEMS = [
