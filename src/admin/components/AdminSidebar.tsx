@@ -383,7 +383,8 @@ const AdminSidebar = ({
           }}
           sx={{
             "& .MuiDrawer-paper": {
-              width: drawerWidth,
+              width: "min(88vw, 320px)",
+              maxWidth: drawerWidth,
               boxSizing: "border-box",
             },
           }}
