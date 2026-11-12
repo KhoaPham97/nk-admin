@@ -322,7 +322,7 @@ export default function ShopeeOrders() {
     setPreview(null);
 
     try {
-      const result = await shopeeApi.getOrderDetail(order.orderSn);
+      const result = await shopeeApi.getOrderDetail(order.orderSn, { shopId: order.shopId });
 
       const detail =
         result?.order || result?.data?.order || result?.data || result;
@@ -381,7 +381,7 @@ export default function ShopeeOrders() {
 
       await loadOrders();
 
-      const result = await shopeeApi.getOrderDetail(selectedOrder.orderSn);
+      const result = await shopeeApi.getOrderDetail(selectedOrder.orderSn, { shopId: selectedOrder.shopId });
 
       setSelectedOrder(
         result?.order || result?.data?.order || result?.data || result,
