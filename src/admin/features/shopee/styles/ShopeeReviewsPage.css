@@ -234,7 +234,7 @@
 .sr-tabs button.active {
   color: #fff;
   background: var(--sr-primary);
-  box-shadow: 0 3px 9px rgba(238, 77, 45, 0.18);
+  box-shadow: 0 3px 9px rgba(37, 99, 235, 0.18);
 }
 
 .sr-tabs button:disabled {
@@ -274,7 +274,7 @@
 }
 
 .sr-summary-item strong.pending {
-  color: #ea580c;
+  color: #2563eb;
 }
 
 .sr-filters {
