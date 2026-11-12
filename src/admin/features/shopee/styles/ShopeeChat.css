@@ -19,7 +19,7 @@
 .sh-chat-inbox-title strong{font-size:15px}
 .sh-chat-inbox-title span{min-width:25px;padding:3px 7px;text-align:center;border-radius:20px;background:#eff6ff;color:#2563eb;font-size:11px;font-weight:800}
 .sh-chat-search{display:flex;align-items:center;gap:8px;margin:12px 12px 8px;padding:0 10px;height:39px;border:1px solid #e5eaf1;border-radius:9px;color:#98a2b3}
-.sh-chat-search:focus-within{border-color:#2563eb;box-shadow:0 0 0 3px rgba(232,75,37,.08)}
+.sh-chat-search:focus-within{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37, 99, 235, 0.08)}
 .sh-chat-search input{width:100%;min-width:0;border:0;outline:0;color:#172033;background:transparent;font-size:12px}
 .sh-chat-filters{display:flex;gap:6px;padding:0 12px 10px;border-bottom:1px solid #edf0f4}
 .sh-chat-filters button{padding:7px 11px;border:0;border-radius:8px;background:#f4f6fa;color:#697586;font-size:12px;font-weight:700;cursor:pointer}
@@ -51,7 +51,7 @@
 .sh-chat-bubble time{display:block;margin-top:5px;color:#98a2b3;font-size:9px;text-align:right}
 .sh-chat-compose{display:flex;align-items:flex-end;gap:10px;padding:12px 14px;border-top:1px solid #e9edf2;background:#fff}
 .sh-chat-compose textarea{flex:1;min-width:0;resize:vertical;min-height:44px;max-height:130px;padding:11px 12px;border:1px solid #e5eaf1;border-radius:10px;outline:0;font:inherit;font-size:13px}
-.sh-chat-compose textarea:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(232,75,37,.08)}
+.sh-chat-compose textarea:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37, 99, 235, 0.08)}
 .sh-chat-compose button{height:42px;display:flex;align-items:center;justify-content:center;gap:7px;padding:0 17px;border:0;border-radius:10px;background:#2563eb;color:white;font-size:13px;font-weight:800;cursor:pointer}
 .sh-chat-compose button:hover{background:#1d4ed8}
 .sh-chat-compose button:disabled{opacity:.55;cursor:not-allowed}
