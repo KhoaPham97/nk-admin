@@ -117,7 +117,12 @@ const shopeeStockSyncApi = {
     });
   },
 
-  // Chạy đồng bộ thủ công
+  // Đồng bộ tồn kho thủ công cho các sản phẩm được chọn.
+  runSelected(data = {}) {
+    return request("/run-selected", { method: "POST", body: JSON.stringify(data) });
+  },
+
+  // Chạy đồng bộ thủ công toàn shop (tương thích cũ)
   runNow() {
     return request("/run", {
       method: "POST",
