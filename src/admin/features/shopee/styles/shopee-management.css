@@ -257,12 +257,12 @@
 }
 
 .shopee-nav-item:hover {
-  background: #fff5f1;
+  background: #eff6ff;
   color: var(--shopee-primary);
 }
 
 .shopee-nav-item.active {
-  border-color: #ffe0d7;
+  border-color: #dbeafe;
   background: #eff6ff;
   color: var(--shopee-primary);
 }
@@ -279,7 +279,7 @@
 }
 
 .shopee-nav-item.active .shopee-nav-icon {
-  background: #ffe0d7;
+  background: #dbeafe;
 }
 
 .shopee-nav-content {
