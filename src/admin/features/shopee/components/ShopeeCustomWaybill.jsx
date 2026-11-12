@@ -69,6 +69,10 @@ export default function ShopeeCustomWaybill({ shops = [], selectedShopId = "", o
       setError("Vui lòng chọn ít nhất một đơn hàng.");
       return;
     }
+    if (selectedOrders.length > 50) {
+      setError("Shopee chỉ hỗ trợ tối đa 50 kiện trong một lần xử lý. Hãy chọn ít hơn.");
+      return;
+    }
     setWorking("parameters");
     setError("");
     setNotice("");
