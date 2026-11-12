@@ -30,8 +30,8 @@ import {
   PauseCircle,
 } from "lucide-react";
 
-import shopeeApi from "../../../services/shopeeApi";
-import shopeeAutoReviewApi from "../../../services/shopeeAutoReviewApi";
+import shopeeApi from "../services/shopeeApi";
+import shopeeAutoReviewApi from "../services/shopeeAutoReviewApi";
 import ShopeeAutoReviewPanel from "./ShopeeAutoReviewPanel";
 
 import "../styles/ShopeeReviewsPage.css";

@@ -47,7 +47,7 @@ import {
   Store,
   X,
 } from "lucide-react";
-import shopeeApi from "../../../services/shopeeApi";
+import shopeeApi from "../services/shopeeApi";
 
 // =====================================================
 // HELPERS

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import JsBarcode from "jsbarcode";
-import { shopeeApi } from "../../../services/shopeeApi";
+import { shopeeApi } from "../services/shopeeApi";
 import "../styles/ShopeeCustomWaybill.css";
 
 const money = (value) => Number(value || 0).toLocaleString("vi-VN") + "đ";

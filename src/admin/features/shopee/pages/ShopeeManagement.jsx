@@ -16,7 +16,7 @@ import {
   Printer,
 } from "lucide-react";
 
-import { shopeeApi } from "../../../services/shopeeApi";
+import { shopeeApi } from "../services/shopeeApi";
 
 import ShopeeShops from "../components/ShopeeShops";
 import ShopeeOrders from "../components/ShopeeOrders";

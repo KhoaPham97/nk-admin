@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { RefreshCw, Store, Plus, Trash2, ExternalLink } from "lucide-react";
-import { shopeeApi } from "../../../services/shopeeApi";
+import { shopeeApi } from "../services/shopeeApi";
 import "../styles/shopee-components.css";
 
 export default function ShopeeShops({ onRefresh }) {

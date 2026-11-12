@@ -15,7 +15,7 @@ import {
   CalendarClock,
 } from "lucide-react";
 
-import shopeeApi from "../../../services/shopeeApi";
+import shopeeApi from "../services/shopeeApi";
 import "../styles/ShopeeAutoStockPage.css";
 import { getStatusLabel, getStockLabel } from "../../../common/CommonFunc";
 

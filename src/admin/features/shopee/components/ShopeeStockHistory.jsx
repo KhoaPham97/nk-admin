@@ -23,7 +23,7 @@ import {
   Truck,
 } from "lucide-react";
 
-import { shopeeApi } from "../../../services/shopeeApi";
+import { shopeeApi } from "../services/shopeeApi";
 import "../styles/shopee-components.css";
 import "../styles/ShopeeStockHistory.css";
 

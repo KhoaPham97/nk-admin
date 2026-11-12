@@ -22,7 +22,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 
-import { shopeeApi } from "../../../services/shopeeApi";
+import { shopeeApi } from "../services/shopeeApi";
 import "../styles/shopee-stock.css";
 
 // =====================================================
