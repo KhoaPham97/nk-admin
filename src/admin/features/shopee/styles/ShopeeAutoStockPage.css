@@ -68,7 +68,7 @@
   flex-shrink: 0;
   place-items: center;
   color: #536174;
-  background: #eef2f7;
+  background: #fff0eb;
   border-radius: 10px;
 }
 
@@ -268,11 +268,11 @@
 
 .sa-primary {
   color: white;
-  background: #1769d2;
+  background: #e84b25;
 }
 
 .sa-primary:hover:not(:disabled) {
-  background: #1058b8;
+  background: #cf3c1b;
 }
 
 /* =====================================================
@@ -345,8 +345,8 @@
 }
 
 .sa-tabs button.active {
-  color: #1769d2;
-  border-color: #1769d2;
+  color: #e84b25;
+  border-color: #e84b25;
 }
 
 /* =====================================================
@@ -421,7 +421,7 @@
 .sa-table input {
   width: 15px;
   height: 15px;
-  accent-color: #1769d2;
+  accent-color: #e84b25;
 }
 
 /* =====================================================
@@ -464,7 +464,7 @@
 }
 
 .sa-order-sn {
-  color: #1769d2;
+  color: #e84b25;
   font-weight: 700;
   white-space: nowrap;
 }
