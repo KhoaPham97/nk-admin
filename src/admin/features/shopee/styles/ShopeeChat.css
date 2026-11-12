@@ -81,3 +81,24 @@
  .sh-chat-compose button{padding:0 12px}
  .sh-chat-thread-header{padding:0 12px}
 }
+
+/* Staff-reviewed event message queue */
+.sh-chat-review-queue{margin:0 0 16px;padding:15px;border:1px solid #dbe5f2;border-radius:14px;background:#fff;box-shadow:0 2px 10px rgba(23,32,51,.035)}
+.sh-chat-review-queue-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.sh-chat-review-queue-head strong,.sh-chat-review-queue-head small{display:block}
+.sh-chat-review-queue-head strong{font-size:15px;color:#172033}
+.sh-chat-review-queue-head small{margin-top:3px;font-size:11px;color:#98a2b3}
+.sh-chat-review-queue-head button,.sh-chat-review-task-actions button{min-height:34px;padding:0 11px;border:0;border-radius:8px;background:#2563eb;color:#fff;font-size:11px;font-weight:800;cursor:pointer}
+.sh-chat-review-queue-head button:disabled{opacity:.5}
+.sh-chat-review-task-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.sh-chat-review-task{min-width:0;padding:12px;border:1px solid #e7edf5;border-radius:11px;background:#fbfcfe}
+.sh-chat-review-task-meta{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.sh-chat-review-task-meta strong{font-size:12px;color:#1d4ed8}
+.sh-chat-review-task-meta span{font-size:10px;color:#98a2b3;overflow-wrap:anywhere}
+.sh-chat-review-task p{margin:9px 0;color:#475467;font-size:12px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}
+.sh-chat-review-task-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.sh-chat-review-task-actions span{margin-right:auto;color:#98a2b3;font-size:10px}
+.sh-chat-review-task-actions button.subtle{background:#eef2f7;color:#475467}
+.sh-chat-review-empty{padding:14px;border-radius:9px;background:#f8fafc;color:#98a2b3;text-align:center;font-size:12px}
+.sh-chat-review-policy{margin:11px 0 0;color:#98a2b3;font-size:10px;line-height:1.5}
+@media(max-width:650px){.sh-chat-review-queue{padding:11px}.sh-chat-review-queue-head{align-items:flex-start;flex-direction:column}.sh-chat-review-task-list{grid-template-columns:1fr}.sh-chat-review-task-actions span{width:100%}}
