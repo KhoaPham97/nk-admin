@@ -82,7 +82,8 @@ export default function ShopeeChat({ shops = [], selectedShopId = "", onShopChan
     setActive(null);
     setMessages([]);
     loadConversations();
-  }, [selectedShopId, filter]);
+    loadReviewTasks();
+  }, [selectedShopId, filter, loadReviewTasks]);
 
   useEffect(() => {
     if (!selectedShopId) return undefined;
@@ -128,7 +129,17 @@ export default function ShopeeChat({ shops = [], selectedShopId = "", onShopChan
     setError("");
     try {
       await shopeeApi.sendChatMessage(active.conversationId, { shopId: selectedShopId, toId: active.buyerId, text: value });
+      if (activeTaskId) {
+        try {
+          await shopeeApi.updateChatReviewTask(activeTaskId, { shopId: selectedShopId, status: "sent" });
+        } catch (taskError) {
+          console.error("Update Shopee chat task:", taskError);
+          setError("Tin nhắn đã gửi, nhưng chưa cập nhật được trạng thái nhiệm vụ. Hãy kiểm tra lịch sử trước khi gửi lại.");
+        }
+      }
+      setActiveTaskId("");
       setDraft("");
+      await loadReviewTasks();
       await loadMessages(active, true);
       await loadConversations(true);
     } catch (err) {
