@@ -1,10 +1,22 @@
-export const BASE_URL = window.location.href.includes("localhost")
-  ? "http://localhost:3001/api"
-  : "https://nkbike.onrender.com/api";
+// API dùng chung cho tất cả môi trường: localhost, Render và Cloudflare.
+const LOCAL_API_URL = "http://localhost:3001/api";
+const PRODUCTION_API_URL = "https://nkbike.onrender.com/api";
 
-export const DEFAUL_URL = window.location.href.includes("localhost")
-  ? "http://localhost:3001"
-  : "https://nkbike.onrender.com";
+const hostname = window.location.hostname.toLowerCase();
+const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1";
+
+// Có thể ghi đè bằng VITE_API_URL hoặc VITE_API_BASE_URL khi build/deploy.
+const configuredApiUrl =
+  import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
+
+const normalizeApiUrl = (url) => String(url).trim().replace(/\\/+$/, "");
+
+export const BASE_URL = normalizeApiUrl(
+  configuredApiUrl || (isLocalhost ? LOCAL_API_URL : PRODUCTION_API_URL),
+);
+
+// URL gốc dùng cho Socket.IO và các kết nối không có /api.
+export const DEFAUL_URL = BASE_URL.replace(/\\/api$/i, "");
 
 export const API_ENDPOINTS = {
   // =========================
