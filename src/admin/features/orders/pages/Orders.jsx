@@ -662,48 +662,44 @@ const Orders = () => {
   // =====================================================
 
   const getVariantUnitCost = (item) => {
-    // Lấy trực tiếp từ item
-    if (item?.unitCost !== undefined && item?.unitCost !== null) {
-      return Number(item.unitCost) || 0;
+    // Ưu tiên giá vốn FIFO hoặc giá vốn đã lưu tại thời điểm tạo đơn.
+    const directCost = Number(item?.unitCost);
+    if (Number.isFinite(directCost) && directCost > 0) return directCost;
+
+    const nestedCost = Number(item?.variant?.unitCost);
+    if (Number.isFinite(nestedCost) && nestedCost > 0) return nestedCost;
+
+    // Tương thích đơn cũ chỉ lưu defaultPrice (CNY).
+    const savedDefaultPrice = Number(item?.defaultPrice);
+    if (Number.isFinite(savedDefaultPrice) && savedDefaultPrice > 0) {
+      return savedDefaultPrice;
     }
 
-    // Lấy từ variant được gắn trong item
-    if (
-      item?.variant?.unitCost !== undefined &&
-      item?.variant?.unitCost !== null
-    ) {
-      return Number(item.variant.unitCost) || 0;
-    }
-
-    // Tìm variant trong product theo tên
+    // Fallback khi product được populate.
     const variants = item?.product?.variants;
-
     if (Array.isArray(variants)) {
+      const variantCode = String(item?.variantCode || "").trim();
       const variantName = String(item?.variantName || "").trim();
 
       const matchedVariant = variants.find((variant) => {
+        const code = String(variant?.variantCode || "").trim();
         const name = String(
-          variant?.name ||
-            variant?.title ||
-            variant?.label ||
-            variant?.value ||
-            "",
+          variant?.name || variant?.title || variant?.label || variant?.value || "",
         ).trim();
 
-        return name === variantName;
+        return variantCode ? code === variantCode : name === variantName;
       });
 
-      if (
-        matchedVariant?.unitCost !== undefined &&
-        matchedVariant?.unitCost !== null
-      ) {
-        return Number(matchedVariant.unitCost) || 0;
+      const variantCost = Number(
+        matchedVariant?.unitCost ?? matchedVariant?.defaultPrice,
+      );
+      if (Number.isFinite(variantCost) && variantCost > 0) {
+        return variantCost;
       }
     }
 
     return 0;
   };
-  // =====================================================
   // COST PRICE VND
   // =====================================================
 
