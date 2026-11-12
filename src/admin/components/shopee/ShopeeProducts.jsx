@@ -166,6 +166,7 @@ export default function ShopeeProducts() {
   const [products, setProducts] = useState([]);
   const [selectedItemIds, setSelectedItemIds] = useState([]);
   const [checkingEditable, setCheckingEditable] = useState(false);
+  const [syncingSelected, setSyncingSelected] = useState(false);
   const [editableDialogOpen, setEditableDialogOpen] = useState(false);
   const [editableResults, setEditableResults] = useState([]);
 
@@ -574,6 +575,27 @@ export default function ShopeeProducts() {
   };
 
   // ===================================================
+  const handleSyncSelectedProducts = async () => {
+    if (!shopId || !selectedItemIds.length || syncingSelected) return;
+    if (selectedItemIds.length > 50) return toast.error("Mỗi lần chỉ đồng bộ tối đa 50 sản phẩm.");
+    if (!window.confirm("Chỉ đồng bộ tồn kho các sản phẩm đang chọn từ kho Nhật Khang Bike lên shop Shopee. Hệ thống sẽ kiểm tra quyền chỉnh sửa từng SKU trước khi gửi. Tiếp tục?")) return;
+    setSyncingSelected(true);
+    try {
+      const result = await shopeeStockSyncApi.runSelected({ shopId, itemIds: selectedItemIds });
+      const data = result.data || {};
+      const success = Number(data.successCount || 0), unchanged = Number(data.unchangedCount || 0), failed = Number(data.failedCount || 0);
+      if (failed) toast.error("Đã xử lý: " + success + " thành công, " + unchanged + " không đổi, " + failed + " SKU bị từ chối/không đủ quyền.");
+      else toast.success("Đồng bộ xong: " + success + " cập nhật, " + unchanged + " SKU đã khớp.");
+      setEditableResults((data.results || []).map((item) => ({
+        ...item, itemName: item.itemName || item.shopeeSku || ("Item " + item.itemId),
+        itemStatus: item.status, editable: item.status === "success" || item.status === "unchanged",
+        skus: [{ modelId: item.modelId, sku: item.shopeeSku, name: item.modelName, status: item.status, editable: item.status === "success" || item.status === "unchanged", reason: item.message || "" }],
+      })));
+      setEditableDialogOpen(true); await loadStockSyncData();
+    } catch (error) { toast.error(getErrorMessage(error)); }
+    finally { setSyncingSelected(false); }
+  };
+
   // SEARCH
   // ===================================================
 
@@ -1443,6 +1465,7 @@ export default function ShopeeProducts() {
             <Stack direction="row" spacing={1}>
               <Button size="small" onClick={() => setSelectedItemIds([])} disabled={!selectedItemIds.length}>Bỏ chọn</Button>
               <Button size="small" variant="contained" startIcon={checkingEditable ? <CircularProgress size={16} color="inherit" /> : <CheckCircle />} onClick={handleCheckSelectedEditable} disabled={!selectedItemIds.length || checkingEditable || !shopId || selectedItemIds.length > 50}>Kiểm tra quyền sửa SKU</Button>
+              <Button size="small" color="success" variant="contained" startIcon={syncingSelected ? <CircularProgress size={16} color="inherit" /> : <Sync />} onClick={handleSyncSelectedProducts} disabled={!selectedItemIds.length || syncingSelected || checkingEditable || !shopId || selectedItemIds.length > 50}>Đồng bộ tồn kho đã chọn</Button>
             </Stack>
           </Stack>
           {selectedItemIds.length > 50 && <Alert severity="warning" sx={{ mt: 1 }}>Đang chọn {selectedItemIds.length} sản phẩm. Vui lòng giảm xuống tối đa 50 sản phẩm mỗi lần kiểm tra.</Alert>}
