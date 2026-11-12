@@ -3,8 +3,8 @@
 ===================================================== */
 
 .shopee-management {
-  --shopee-primary: #e84b25;
-  --shopee-primary-dark: #cf3c1b;
+  --shopee-primary: #2563eb;
+  --shopee-primary-dark: #1d4ed8;
   --shopee-bg: #f4f6fa;
   --shopee-card: #ffffff;
   --shopee-text: #202124;
@@ -135,8 +135,8 @@
 }
 
 .shopee-stat-icon.orange {
-  color: #e84b25;
-  background: #fff0eb;
+  color: #2563eb;
+  background: #eff6ff;
 }
 
 .shopee-stat-icon.blue {
@@ -263,7 +263,7 @@
 
 .shopee-nav-item.active {
   border-color: #ffe0d7;
-  background: #fff0eb;
+  background: #eff6ff;
   color: var(--shopee-primary);
 }
 
@@ -580,7 +580,7 @@
 }
 
 .shopee-shop-selector select:focus {
-  border-color: #e84b25;
+  border-color: #2563eb;
   box-shadow: 0 0 0 2px rgba(238, 77, 45, 0.12);
 }
 
