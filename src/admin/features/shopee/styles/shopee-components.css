@@ -61,11 +61,11 @@
 
 .sc-btn-primary {
   color: white;
-  background: #ee4d2d !important;
+  background: #e84b25 !important;
 }
 
 .sc-btn-primary:hover:not(:disabled) {
-  background: #d93c20;
+  background: #cf3c1b;
 }
 
 .sc-btn-light {
@@ -75,8 +75,8 @@
 }
 
 .sc-btn-light:hover:not(:disabled) {
-  border-color: #ee4d2d;
-  color: #ee4d2d;
+  border-color: #e84b25;
+  color: #e84b25;
 }
 
 .sc-btn-dark {
@@ -108,8 +108,8 @@
 }
 
 .sc-icon-btn:hover {
-  border-color: #ee4d2d;
-  color: #ee4d2d;
+  border-color: #e84b25;
+  color: #e84b25;
 }
 
 .sc-icon-btn.danger:hover {
@@ -218,7 +218,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ee4d2d;
+  color: #e84b25;
   background: #fff0eb;
   border-radius: 11px;
 }
@@ -298,7 +298,7 @@
 .sc-return-form input:focus,
 .sc-return-form select:focus,
 .sc-product-search input:focus {
-  border-color: #ee4d2d;
+  border-color: #e84b25;
 }
 
 .sc-input-icon {
@@ -331,7 +331,7 @@
   border: 0;
   border-radius: 5px;
   background: #fff0eb;
-  color: #ee4d2d;
+  color: #e84b25;
   font-size: 11px;
   font-weight: 700;
   cursor: pointer;
@@ -600,7 +600,7 @@
 }
 
 .sc-checkbox input {
-  accent-color: #ee4d2d;
+  accent-color: #e84b25;
 }
 
 .sc-info-banner {
@@ -744,7 +744,7 @@
   justify-content: center;
   border-radius: 10px;
   background: #fff0eb;
-  color: #ee4d2d;
+  color: #e84b25;
 }
 
 .sc-sub-toolbar {
