@@ -1,6 +1,6 @@
 .shopee-reviews-page {
-  --sr-primary: #e84b25;
-  --sr-primary-dark: #cf3c1b;
+  --sr-primary: #2563eb;
+  --sr-primary-dark: #1d4ed8;
   --sr-text: #172033;
   --sr-muted: #64748b;
   --sr-border: #e7eaf0;
@@ -197,7 +197,7 @@
 .sr-modal textarea:focus,
 .sr-search input:focus {
   border-color: var(--sr-primary);
-  box-shadow: 0 0 0 3px rgba(238, 77, 45, 0.09);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.09);
 }
 
 .sr-tabs {
@@ -531,7 +531,7 @@
   padding: 12px;
   border: 1px dashed #fdba74;
   border-radius: 9px;
-  background: #fff7ed;
+  background: #eff6ff;
   font-size: 12px;
 }
 
@@ -662,7 +662,7 @@
   padding: 15px;
   border: 1px solid #fed7aa;
   border-radius: 11px;
-  background: #fff7ed;
+  background: #eff6ff;
 }
 
 .sr-auto-progress-header strong {
@@ -814,7 +814,7 @@
   padding: 12px;
   border: 1px solid #fed7aa;
   border-radius: 9px;
-  background: #fff7ed;
+  background: #eff6ff;
 }
 
 .sr-preview strong {
