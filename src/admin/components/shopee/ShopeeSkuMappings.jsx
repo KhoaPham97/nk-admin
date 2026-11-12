@@ -75,7 +75,7 @@ async function searchProducts(keyword) {
     limit: "50",
   });
 
-  const response = await fetch(`${API_BASE}/products?${query}`, {
+  const response = await fetch(`${BASE_URL}/products?${query}`, {
     headers: {
       Authorization: `Bearer ${getToken()}`,
     },
