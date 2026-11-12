@@ -40,7 +40,7 @@ import {
 } from "@mui/icons-material";
 
 import SyncBatchCostsButton from "./SyncBatchCostsButton";
-import { API_ENDPOINTS } from "../../api";
+import { API_ENDPOINTS } from "../../../../api";
 
 const money = (v) => `¥${Number(v || 0).toLocaleString("vi-VN")}`;
 

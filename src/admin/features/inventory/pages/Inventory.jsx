@@ -37,7 +37,7 @@ import {
   CategoryOutlined,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
-import { API_ENDPOINTS } from "../../api";
+import { API_ENDPOINTS } from "../../../../api";
 
 const LOW_STOCK = 5;
 const toNumber = (value) => {

@@ -20,7 +20,7 @@ import {
 } from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import { getRequest, patchRequest } from "../common/ApiMethod";
+import { getRequest, patchRequest } from "../../../common/ApiMethod";
 
 type CostRow = {
   productId: string;

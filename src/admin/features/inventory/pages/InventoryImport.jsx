@@ -34,8 +34,8 @@ import {
   SaveOutlined,
 } from "@mui/icons-material";
 
-import { API_ENDPOINTS, BASE_URL } from "../../api";
-import ProductImageScanner from "../components/ProductImageScanner";
+import { API_ENDPOINTS, BASE_URL } from "../../../../api";
+import ProductImageScanner from "../../../components/ProductImageScanner";
 
 const INVENTORY_API = "/inventory";
 const DRAFTS_API = BASE_URL + `${INVENTORY_API}/import-drafts`;

@@ -55,7 +55,7 @@ import {
   CalendarDays,
 } from "lucide-react";
 
-import { API_ENDPOINTS } from "../../api";
+import { API_ENDPOINTS } from "../../../../api";
 import "./InventoryReservations.css";
 
 const API_BASE_URL = String(API_ENDPOINTS?.PRODUCTS || "/api/products").replace(

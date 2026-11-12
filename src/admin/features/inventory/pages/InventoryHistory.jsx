@@ -37,7 +37,7 @@ import {
 } from "@mui/icons-material";
 
 import axios from "axios";
-import { API_ENDPOINTS } from "../../api";
+import { API_ENDPOINTS } from "../../../../api";
 import { useNavigate } from "react-router-dom";
 import SyncBatchCostsButton from "./SyncBatchCostsButton";
 

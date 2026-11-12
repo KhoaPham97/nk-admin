@@ -26,7 +26,7 @@ import {
   EditOutlined,
   RefreshOutlined,
 } from "@mui/icons-material";
-import { API_ENDPOINTS } from "../../api";
+import { API_ENDPOINTS } from "../../../../api";
 
 const DRAFTS_API = API_ENDPOINTS.INVENTORY_RECEIPTS + "/import-drafts";
 
