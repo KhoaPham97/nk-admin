@@ -198,6 +198,15 @@ export const shopeeApi = {
     post(`/chat/conversations/${encode(conversationId)}/messages`, data),
   markChatRead: (conversationId, data = {}) =>
     post(`/chat/conversations/${encode(conversationId)}/read`, data),
+
+  // Compatibility aliases for older Shopee Chat components.
+  getShopeeChatConversations: (params = {}) => get("/chat/conversations", withShopId(params)),
+  getShopeeChatMessages: (conversationId, params = {}) =>
+    get(`/chat/conversations/${encode(conversationId)}/messages`, withShopId(params)),
+  sendShopeeChatMessage: (conversationId, data = {}) =>
+    post(`/chat/conversations/${encode(conversationId)}/messages`, data),
+  readShopeeChatConversation: (conversationId, data = {}) =>
+    post(`/chat/conversations/${encode(conversationId)}/read`, data),
   getChatReviewTasks: (params = {}) => get("/chat/review-tasks", withShopId(params)),
   updateChatReviewTask: (taskId, data = {}) =>
     request(`/chat/review-tasks/${encode(taskId)}${buildQuery({ shopId: data.shopId })}`, { method: "PATCH", body: data }),
