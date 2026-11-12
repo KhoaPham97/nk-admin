@@ -29,8 +29,8 @@
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  color: #e84b25;
-  background: #fff0eb;
+  color: #2563eb;
+  background: #eff6ff;
   border-radius: 14px;
 }
 
@@ -95,8 +95,8 @@
 
 .sh-history-field input:focus,
 .sh-history-field select:focus {
-  border-color: #e84b25;
-  box-shadow: 0 0 0 3px rgba(238, 77, 45, 0.09);
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.09);
 }
 
 .sh-history-search-actions {
@@ -120,7 +120,7 @@
 }
 
 .sh-history-shop-info svg {
-  color: #e84b25;
+  color: #2563eb;
 }
 
 .sh-history-shop-info strong {
@@ -147,7 +147,7 @@
 }
 
 .sh-history-empty svg {
-  color: #e84b25;
+  color: #2563eb;
 }
 
 .sh-history-empty strong {
@@ -245,7 +245,7 @@
 }
 
 .sh-history-section-heading h4 svg {
-  color: #e84b25;
+  color: #2563eb;
 }
 
 .sh-history-count {
