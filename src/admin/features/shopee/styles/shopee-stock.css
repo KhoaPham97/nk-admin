@@ -1,5 +1,5 @@
 .shopee-stock-page {
-  --ss-primary: #ee4d2d;
+  --ss-primary: #e84b25;
   --ss-text: #202938;
   --ss-muted: #778195;
   --ss-border: #e8ebf0;
@@ -454,7 +454,7 @@
   height: 39px;
   flex-shrink: 0;
   border-radius: 50%;
-  color: #ee4d2d;
+  color: #e84b25;
   background: #fff0ec;
 }
 
@@ -1190,7 +1190,7 @@
   padding: 0;
   border: 0;
   background: transparent;
-  color: var(--primary, #ee4d2d);
+  color: var(--primary, #e84b25);
   font-size: 15px;
   font-weight: 800;
   cursor: pointer;
@@ -1315,7 +1315,7 @@
 }
 
 .ss-order-detail-grand-total strong {
-  color: #ee4d2d;
+  color: #e84b25;
   font-size: 21px;
   font-weight: 800;
 }
