@@ -79,10 +79,14 @@
   transition: background-color .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease;
 }
 .admin-shell button:focus-visible, .admin-shell a:focus-visible,
-.admin-shell input:focus-visible, .admin-shell select:focus-visible,
-.admin-shell textarea:focus-visible {
+.admin-shell input:focus-visible, .admin-shell textarea:focus-visible {
   outline: 3px solid rgba(232,75,37,.2);
   outline-offset: 2px;
+}
+/* Native selects already define their own focused border/ring per component.
+   Avoid stacking the global orange outline on top of those local styles. */
+.admin-shell select:focus-visible {
+  outline: none;
 }
 .admin-shell input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
 .admin-shell select, .admin-shell textarea {
