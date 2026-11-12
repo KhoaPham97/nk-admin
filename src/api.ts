@@ -9,14 +9,14 @@ const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1";
 const configuredApiUrl =
   import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
 
-const normalizeApiUrl = (url) => String(url).trim().replace(/\\/+$/, "");
+const normalizeApiUrl = (url) => String(url).trim().replace(/\/+$/, "");
 
 export const BASE_URL = normalizeApiUrl(
   configuredApiUrl || (isLocalhost ? LOCAL_API_URL : PRODUCTION_API_URL),
 );
 
 // URL gốc dùng cho Socket.IO và các kết nối không có /api.
-export const DEFAUL_URL = BASE_URL.replace(/\\/api$/i, "");
+export const DEFAUL_URL = BASE_URL.replace(/\/api$/i, "");
 
 export const API_ENDPOINTS = {
   // =========================
