@@ -39,3 +39,44 @@
 .scw-sort-primary strong{display:block;font-size:19pt;line-height:1.05;overflow-wrap:anywhere}
 .scw-sort-secondary{border-left:1px solid #aaa;padding-left:8px;text-align:center}
 .scw-sort-secondary strong{display:block;font-size:13pt;line-height:1.1;overflow-wrap:anywhere}
+
+
+/* Shopee SPX-inspired label v2 */
+.scw-spx-top{display:grid;grid-template-columns:1.2fr 1fr;gap:8px;padding:2px 0 6px;border-bottom:2px solid #111}
+.scw-spx-top span,.scw-spx-top strong{display:block}
+.scw-spx-top span{font-size:6.5pt;font-weight:700;color:#555;margin-bottom:3px}
+.scw-spx-tracking strong{font-size:14pt;letter-spacing:.4px;overflow-wrap:anywhere}
+.scw-spx-order{border-left:1px solid #aaa;padding-left:8px}
+.scw-spx-order strong{font-size:10pt;overflow-wrap:anywhere}
+.scw-spx-carrier{font-size:7.5pt;font-weight:800;text-align:right;padding:4px 0;border-bottom:1px solid #777}
+.scw-spx-address{display:grid;grid-template-columns:1fr 1.2fr;gap:9px;padding:7px 0;border-bottom:1px solid #111}
+.scw-spx-address section{display:flex;flex-direction:column;gap:2px;min-width:0}
+.scw-spx-address section+section{border-left:1px solid #aaa;padding-left:8px}
+.scw-spx-address b{font-size:6.5pt;color:#555}
+.scw-spx-address strong{font-size:10pt;line-height:1.15;overflow-wrap:anywhere}
+.scw-spx-address span{font-size:7.2pt;line-height:1.25;overflow-wrap:anywhere}
+.scw-spx-routing{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:7px 2px;border-bottom:1px solid #111}
+.scw-spx-routing small{display:block;font-size:6.5pt;font-weight:700;color:#555}
+.scw-spx-routing strong{display:block;font-size:21pt;line-height:1.05;letter-spacing:.5px;overflow-wrap:anywhere}
+.scw-spx-routing>div+div{border-left:1px solid #aaa;padding-left:8px;text-align:center}
+.scw-spx-routing>div+div strong{font-size:12pt}
+.scw-spx-barcode{padding:4px 0 2px;text-align:center;border-bottom:1px dashed #777}
+.scw-spx-barcode .scw-barcode svg{max-width:100%;max-height:14mm}
+.scw-spx-items-row{display:flex;align-items:flex-start;gap:7px;padding:7px 0;border-bottom:1px dashed #777;min-height:29mm}
+.scw-spx-items{flex:1;min-width:0}
+.scw-spx-items-heading{display:flex;justify-content:space-between;gap:4px;font-size:7.5pt;margin-bottom:4px}
+.scw-spx-items-heading strong{font-size:7pt;white-space:nowrap}
+.scw-spx-weight{display:flex;justify-content:space-between;gap:5px;border-top:1px dotted #999;margin-top:5px;padding-top:4px;font-size:7pt}
+.scw-spx-cod{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 2px;border-bottom:1px solid #111}
+.scw-spx-cod small,.scw-spx-cod strong,.scw-spx-shop span{display:block}
+.scw-spx-cod small{font-size:6.5pt;font-weight:700}
+.scw-spx-cod strong{font-size:15pt}
+.scw-spx-shop{text-align:right;min-width:0}
+.scw-spx-shop b{font-size:8pt;display:block}
+.scw-spx-shop span{font-size:6.5pt}
+.scw-spx-signature{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:8px 0;min-height:13mm;font-size:6.5pt;font-weight:700}
+.scw-spx-signature span+span{border-left:1px solid #aaa;padding-left:8px}
+@media print{
+  .scw-label{min-height:unset!important}
+  .scw-spx-barcode svg{max-height:14mm}
+}
