@@ -15,6 +15,7 @@ const DEFAULT_TEMPLATE = {
   showWeight: true,
   showSortCode: true,
   showCarrier: true,
+  showQr: true,
   logo: "",
 };
 
@@ -228,6 +229,7 @@ export default function ShopeeCustomWaybill({ shops = [], selectedShopId = "", o
               ["showWeight", "Hiện khối lượng"],
               ["showSortCode", "Hiện mã phân loại tuyến"],
               ["showCarrier", "Hiện đơn vị vận chuyển"],
+              ["showQr", "Hiện QR mã phân loại tuyến"],
             ].map(([key, label]) => <label key={key}><input type="checkbox" checked={Boolean(template[key])} onChange={(e) => updateTemplate(key, e.target.checked)} />{label}</label>)}
           </div>
           <div className="scw-save-row"><button className="scw-primary" onClick={saveTemplate}>Lưu mẫu này</button>{saved && <span>Đã lưu mẫu trên thiết bị này.</span>}</div>
@@ -268,10 +270,15 @@ export default function ShopeeCustomWaybill({ shops = [], selectedShopId = "", o
                 {template.showCod && <div className="scw-cod"><small>TIỀN THU NGƯỜI NHẬN (COD)</small><strong>{bill.cod ? money(bill.codAmount) : "0đ"}</strong></div>}
                 {template.showWeight && <div className="scw-weight"><small>KHỐI LƯỢNG</small><strong>{bill.orderWeight ? bill.orderWeight + " g" : "—"}</strong></div>}
               </div>
-              {template.showItems && <div className="scw-package-content">
-                <div className="scw-package-heading"><b>NỘI DUNG ĐƠN HÀNG</b><strong>{itemCount} sản phẩm</strong></div>
-                {(order.items || []).map((item, index) => <div className="scw-package-item" key={index}><span>{item.itemName}{item.variantName ? " – " + item.variantName : ""}</span><b>x{item.quantity}</b></div>)}
-                <small className="scw-package-note">Vui lòng kiểm tra tình trạng kiện hàng trước khi nhận</small>
+              {(template.showItems || template.showQr) && <div className="scw-content-row">
+                {template.showItems && <div className="scw-package-content">
+                  <div className="scw-package-heading"><b>NỘI DUNG HÀNG</b><strong>Tổng SL: {itemCount}</strong></div>
+                  {(order.items || []).map((item, index) => <div className="scw-package-item" key={index}><span>{index + 1}. {item.itemName}{item.variantName ? ", " + item.variantName : ""}</span><b>SL: {item.quantity}</b></div>)}
+                </div>}
+                {template.showQr && routeCode && <div className="scw-sort-qr">
+                  <img src={"https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=2&data=" + encodeURIComponent(routeCode)} alt={"QR mã phân loại " + routeCode} loading="eager" />
+                  <strong>{routeCode}</strong>
+                </div>}
               </div>}
               <footer className="scw-label-footer">
                 <span>{template.senderName || "NHẬT KHANG BIKE"}</span>
