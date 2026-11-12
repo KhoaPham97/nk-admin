@@ -301,7 +301,7 @@ const AdminSidebar = ({
                 const active =
                   item.path === "/admin"
                     ? location.pathname === "/admin"
-                    : location.pathname === item.path;
+                    : location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
 
                 return (
                   <ListItemButton
