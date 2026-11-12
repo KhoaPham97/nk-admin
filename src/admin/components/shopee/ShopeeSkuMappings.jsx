@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Search, Plus, RefreshCw, Trash2, Link2, Wand2 } from "lucide-react";
 import { shopeeApi } from "../../services/shopeeApi";
+import { BASE_URL } from "../../../api";
 import "./style/shopee-components.css";
 
 const API_BASE = (
