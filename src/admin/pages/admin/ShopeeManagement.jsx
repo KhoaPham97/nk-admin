@@ -13,6 +13,7 @@ import {
   DollarSign,
   MessageSquare,
   Package,
+  Printer,
 } from "lucide-react";
 
 import { shopeeApi } from "../../services/shopeeApi";
@@ -27,6 +28,7 @@ import ShopeeAutoStockPage from "../../components/shopee/ShopeeAutoStockPage";
 import ShopeeRevenue from "../../components/shopee/ShopeeRevenue";
 import ShopeeReview from "../../components/shopee/ShopeeReviewsPage";
 import ShopeeProducts from "../../components/shopee/ShopeeProducts";
+import ShopeeCustomWaybill from "../../components/shopee/ShopeeCustomWaybill";
 import "../../styles/shopee-management.css";
 
 const MENU_ITEMS = [
@@ -41,6 +43,12 @@ const MENU_ITEMS = [
     label: "Đơn hàng",
     description: "Đồng bộ và quản lý đơn",
     icon: ShoppingCart,
+  },
+  {
+    id: "waybill",
+    label: "In vận đơn tùy chỉnh",
+    description: "Tự thiết kế và xuất PDF vận đơn Shopee",
+    icon: Printer,
   },
   {
     id: "products",
@@ -310,6 +318,9 @@ export default function ShopeeManagement() {
         return <ShopeeReview {...commonProps} />;
       case "products":
         return <ShopeeProducts {...commonProps} />;
+
+      case "waybill":
+        return <ShopeeCustomWaybill {...commonProps} />;
       default:
         return <ShopeeShops {...commonProps} />;
     }
