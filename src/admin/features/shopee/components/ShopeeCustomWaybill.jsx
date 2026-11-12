@@ -79,9 +79,33 @@ export default function ShopeeCustomWaybill({ shops = [], selectedShopId = "", o
       }));
       setPackages(normalized);
       setSelectedPackages(normalized.map((item) => item.key));
-      const allTypes = [...new Set(normalized.flatMap((item) => item.selectable_shipping_document_type || []))];
+      const commonTypes = normalized.reduce((common, item) => {
+        const choices = item.selectable_shipping_document_type || [];
+        return common === null ? choices : common.filter((type) => choices.includes(type));
+      }, null) || [];
       const suggested = normalized[0]?.suggest_shipping_document_type || "";
-      setDocumentType(allTypes.includes(suggested) ? suggested : allTypes[0] || suggested);
+      setDocumentType(commonTypes.includes(suggested) ? suggested : commonTypes[0] || "");
+
+      // Nếu vận đơn đã được tạo từ trước, lấy luôn trạng thái READY để hiện đúng kiện có thể in.
+      try {
+        const statusResponses = await Promise.all(chunks(normalized, 50).map((batch) =>
+          shopeeApi.getOfficialWaybillResult({
+            shopId,
+            orderList: batch.map((item) => ({
+              orderSn: item.order_sn,
+              packageNumber: item.package_number,
+              shippingDocumentType: item.suggest_shipping_document_type || item.selectedType,
+            })),
+          })
+        ));
+        const existingStatuses = statusResponses.flatMap((result) => {
+          const value = unwrap(result);
+          return Array.isArray(value) ? value : [];
+        });
+        setStatuses(existingStatuses);
+      } catch {
+        // Không chặn danh sách đơn nếu Shopee chưa có trạng thái vận đơn để trả về.
+      }
       const failedCount = rows.length - valid.length;
       setNotice(`Đã tải ${list.length} đơn · ${normalized.length} kiện đủ điều kiện lấy vận đơn${failedCount ? ` · ${failedCount} kiện Shopee từ chối` : ""}.`);
     } catch (err) {
@@ -240,7 +264,7 @@ export default function ShopeeCustomWaybill({ shops = [], selectedShopId = "", o
       {notice && <div className="scw-notice no-print">{notice}</div>}
 
       <section className="scw-stats no-print">
-        <div><span>Đơn đủ điều kiện</span><b>{packages.length}</b></div>
+        <div><span>Kiện đủ điều kiện</span><b>{packages.length}</b></div>
         <div><span>Sẵn sàng in</span><b>{readyCount}</b></div>
         <div><span>Đang xử lý</span><b>{processingCount}</b></div>
         <div><span>Lỗi vận đơn</span><b>{failedCount}</b></div>
