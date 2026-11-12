@@ -616,11 +616,11 @@ const ProfitAnalytics = () => {
           >
             <Box>
               <Typography variant="h6" fontWeight={800}>
-                Doanh thu và lợi nhuận
+                Doanh thu & lợi nhuận website
               </Typography>
 
               <Typography variant="body2" color="text.secondary">
-                Thống kê 12 tháng gần nhất
+                12 tháng gần nhất • giá vốn theo FIFO
               </Typography>
             </Box>
 
