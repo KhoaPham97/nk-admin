@@ -49,6 +49,8 @@ import {
 
 import { useNavigate } from "react-router-dom";
 import ProfitAnalytics from "./ProfitAnalytics";
+import ShopeeRevenue from "../../shopee/components/ShopeeRevenue";
+import shopeeApi from "../../shopee/services/shopeeApi";
 import { API_ENDPOINTS } from "../../../../api";
 
 // ============================================================
@@ -542,6 +544,9 @@ const AdminStatistics: React.FC = () => {
 
   const [analytics, setAnalytics] = useState<AnalyticsOverview | null>(null);
 
+  const [shopeeShops, setShopeeShops] = useState<any[]>([]);
+  const [selectedShopeeShopId, setSelectedShopeeShopId] = useState("");
+
   const [error, setError] = useState("");
 
   // ==========================================================
@@ -658,6 +663,57 @@ const AdminStatistics: React.FC = () => {
       setLoading(false);
     }
   };
+
+  // ==========================================================
+  // LOAD SHOPEE SHOPS FOR PROFIT REPORT
+  // ==========================================================
+
+  useEffect(() => {
+    let active = true;
+
+    const loadShopeeShops = async () => {
+      try {
+        const response = await shopeeApi.getShops();
+        const candidates = [
+          response?.shops,
+          response?.data?.shops,
+          response?.data?.data?.shops,
+          response?.data?.items,
+          response?.items,
+          response?.data,
+          response,
+        ];
+        const list = (candidates.find(Array.isArray) || []).filter((shop: any) =>
+          String(shop?.shop_id ?? shop?.shopId ?? shop?.id ?? ""),
+        );
+
+        if (!active) return;
+
+        setShopeeShops(list);
+        setSelectedShopeeShopId((current) => {
+          const exists = list.some(
+            (shop: any) =>
+              String(shop?.shop_id ?? shop?.shopId ?? shop?.id ?? "") === current,
+          );
+          return exists
+            ? current
+            : String(list[0]?.shop_id ?? list[0]?.shopId ?? list[0]?.id ?? "");
+        });
+      } catch (shopError) {
+        console.warn("Không thể tải danh sách shop Shopee trên Dashboard:", shopError);
+        if (active) {
+          setShopeeShops([]);
+          setSelectedShopeeShopId("");
+        }
+      }
+    };
+
+    loadShopeeShops();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // ==========================================================
   // INITIAL
@@ -1055,6 +1111,14 @@ const AdminStatistics: React.FC = () => {
       </Grid>
 
       <ProfitAnalytics />
+
+      <Box sx={{ mt: 3, mb: 3 }}>
+        <ShopeeRevenue
+          shops={shopeeShops}
+          selectedShopId={selectedShopeeShopId}
+          onShopChange={setSelectedShopeeShopId}
+        />
+      </Box>
       {/* ====================================================
           WEBSITE ANALYTICS
       ==================================================== */}
