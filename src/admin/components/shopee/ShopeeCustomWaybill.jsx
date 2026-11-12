@@ -156,6 +156,8 @@ export default function ShopeeCustomWaybill({ shops = [], selectedShopId = "", o
     : { width: "100mm", minHeight: "100mm" };
 
   return (
+    <>
+    <style>{`@page { size: ${template.paper === "100x100" ? "100mm 100mm" : "100mm 150mm"}; margin: 0; }`}</style>
     <div className="scw-page">
       <div className="scw-header">
         <div>
@@ -272,5 +274,6 @@ export default function ShopeeCustomWaybill({ shops = [], selectedShopId = "", o
         </div>
       </section>
     </div>
+    </>
   );
 }
