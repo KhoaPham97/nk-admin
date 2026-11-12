@@ -49,7 +49,7 @@ import {
 
 import { useNavigate } from "react-router-dom";
 import ProfitAnalytics from "./ProfitAnalytics";
-import { API_ENDPOINTS } from "../../api";
+import { API_ENDPOINTS } from "../../../../api";
 
 // ============================================================
 // TYPES

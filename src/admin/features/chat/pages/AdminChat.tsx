@@ -32,7 +32,7 @@ import {
   getMessages,
   markChatRead,
   sendMessageApi,
-} from "../../api/chatApi";
+} from "../../../../api/chatApi";
 
 const AdminChat = () => {
   // =====================================================

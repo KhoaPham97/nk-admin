@@ -36,7 +36,7 @@ import { Add, Delete, Edit, Refresh, Search } from "@mui/icons-material";
 
 import axios from "axios";
 
-import { API_ENDPOINTS } from "../../api";
+import { API_ENDPOINTS } from "../../../../api";
 
 interface Vehicle {
   _id: string;

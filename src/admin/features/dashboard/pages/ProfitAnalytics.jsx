@@ -28,7 +28,7 @@ import {
   Legend,
 } from "recharts";
 
-import { API_ENDPOINTS } from "../../api";
+import { API_ENDPOINTS } from "../../../../api";
 
 // =====================================================
 // HELPERS

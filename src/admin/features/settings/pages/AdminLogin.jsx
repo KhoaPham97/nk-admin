@@ -16,7 +16,7 @@ import { LockOutlined, Visibility, VisibilityOff } from "@mui/icons-material";
 import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 
-import { API_ENDPOINTS } from "../../api";
+import { API_ENDPOINTS } from "../../../../api";
 
 const AdminLogin = () => {
   const navigate = useNavigate();

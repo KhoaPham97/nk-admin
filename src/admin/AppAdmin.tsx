@@ -4,11 +4,11 @@ import { Route, Routes } from "react-router-dom";
 import AdminLayout from "./layouts/AdminLayout";
 import AdminProtectedRoute from "./AdminProtectedRoute";
 
-import AdminLogin from "./pages/AdminLogin";
+import AdminLogin from "./features/settings/pages/AdminLogin";
 
-import Dashboard from "./pages/Dashboard";
+import Dashboard from "./features/dashboard/pages/Dashboard";
 import Products from "./features/products/pages/Products";
-import Categories from "./pages/Categories";
+import Categories from "./features/catalog/pages/Categories";
 import CreateProduct from "./features/products/pages/CreateProduct";
 
 import Customers from "./features/customers/pages/Customers";
@@ -19,14 +19,14 @@ import Orders from "./features/orders/pages/Orders";
 import InvoiceDetail from "./features/orders/pages/InvoiceDetail";
 import Inventory from "./features/inventory/pages/Inventory";
 import InventoryImport from "./features/inventory/pages/InventoryImport";
-import AdminSettings from "./pages/AdminSettings";
+import AdminSettings from "./features/settings/pages/AdminSettings";
 import InventoryHistory from "./features/inventory/pages/InventoryHistory";
 import InventoryReceipts from "./features/inventory/pages/InventoryReceipts";
-import AdminChat from "./pages/AdminChat";
+import AdminChat from "./features/chat/pages/AdminChat";
 import ProductPricing from "./features/products/pages/ProductPricing";
 
-import Images from "./pages/Images";
-import Vehicles from "./pages/Vehicles";
+import Images from "./features/catalog/pages/Images";
+import Vehicles from "./features/catalog/pages/Vehicles";
 import CustomerPurchaseStats from "./features/customers/pages/CustomerPurchaseStats";
 import ProductQuotePage from "../quotes/QuoteImage";
 import BestSellingProducts from "./features/products/pages/BestSellingProducts";

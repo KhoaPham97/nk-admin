@@ -34,7 +34,7 @@ import {
   postRequest,
   patchRequest,
   deleteRequest,
-} from "../common/ApiMethod";
+} from "../../../common/ApiMethod";
 
 interface Category {
   _id: string;

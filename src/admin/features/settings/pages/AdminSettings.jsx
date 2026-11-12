@@ -35,7 +35,7 @@ import {
   Web,
 } from "@mui/icons-material";
 
-import { API_ENDPOINTS } from "../../api";
+import { API_ENDPOINTS } from "../../../../api";
 
 // ============================================================
 // DEFAULT SETTINGS
