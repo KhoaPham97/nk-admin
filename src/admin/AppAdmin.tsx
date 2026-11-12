@@ -33,7 +33,7 @@ import BestSellingProducts from "./pages/BestSellingProducts";
 import InventoryBatchPage from "./pages/InventoryBatchPage";
 import CostManagement from "./pages/CostManagement";
 import ImportDrafts from "./pages/ImportDrafts";
-import ShopeeManagement from "./pages/admin/ShopeeManagement";
+import ShopeeManagement from "./pages/ShopeeManagement";
 import SkuManagement from "./pages/SkuManagement";
 import InventoryReservations from "./pages/InventoryReservations";
 
