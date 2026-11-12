@@ -53,7 +53,7 @@ import {
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-import { API_ENDPOINTS } from "../../api";
+import { API_ENDPOINTS } from "../../../../api";
 
 const Orders = () => {
   const navigate = useNavigate();

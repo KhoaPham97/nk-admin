@@ -14,9 +14,9 @@ import CreateProduct from "./features/products/pages/CreateProduct";
 import Customers from "./pages/Customers";
 import CustomerDetail from "./pages/CustomerDetail";
 
-import CreateOrder from "./pages/CreateOrder";
-import Orders from "./pages/Orders";
-import InvoiceDetail from "./pages/InvoiceDetail";
+import CreateOrder from "./features/orders/pages/CreateOrder";
+import Orders from "./features/orders/pages/Orders";
+import InvoiceDetail from "./features/orders/pages/InvoiceDetail";
 import Inventory from "./features/inventory/pages/Inventory";
 import InventoryImport from "./features/inventory/pages/InventoryImport";
 import AdminSettings from "./pages/AdminSettings";
