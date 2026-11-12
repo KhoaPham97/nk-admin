@@ -138,7 +138,23 @@ export default function ShopeeChat({ shops = [], selectedShopId = "", onShopChan
     }
   };
 
-  const currentShop = shops.find((shop) => getId(shop) === String(selectedShopId));\n  const selectReviewTask = (task) => {\n    setDraft(task.messageText || "");\n    setActiveTaskId(task._id || "");\n    const matched = conversations.find((item) =>\n      (task.conversationId && String(item.conversationId) === String(task.conversationId)) ||\n      (task.buyerName && String(item.buyerName || "").toLowerCase() === String(task.buyerName).toLowerCase())\n    );\n    if (matched) setActive(matched);\n    else { setActive(null); setMessages([]); setError("Đã nạp nội dung. Chưa tìm thấy hội thoại khớp tự động; hãy chọn đúng hội thoại của khách trước khi gửi."); }\n  };\n  const dismissReviewTask = async (task) => {\n    try {\n      await shopeeApi.updateChatReviewTask(task._id, { shopId: selectedShopId, status: "dismissed" });\n      await loadReviewTasks();\n    } catch (err) { setError(err?.message || "Không thể bỏ qua nhiệm vụ."); }\n  };
+  const currentShop = shops.find((shop) => getId(shop) === String(selectedShopId));
+  const selectReviewTask = (task) => {
+    setDraft(task.messageText || "");
+    setActiveTaskId(task._id || "");
+    const matched = conversations.find((item) =>
+      (task.conversationId && String(item.conversationId) === String(task.conversationId)) ||
+      (task.buyerName && String(item.buyerName || "").toLowerCase() === String(task.buyerName).toLowerCase())
+    );
+    if (matched) setActive(matched);
+    else { setActive(null); setMessages([]); setError("Đã nạp nội dung. Chưa tìm thấy hội thoại khớp tự động; hãy chọn đúng hội thoại của khách trước khi gửi."); }
+  };
+  const dismissReviewTask = async (task) => {
+    try {
+      await shopeeApi.updateChatReviewTask(task._id, { shopId: selectedShopId, status: "dismissed" });
+      await loadReviewTasks();
+    } catch (err) { setError(err?.message || "Không thể bỏ qua nhiệm vụ."); }
+  };
 
   return (
     <section className="sh-chat-page">
@@ -161,7 +177,19 @@ export default function ShopeeChat({ shops = [], selectedShopId = "", onShopChan
 
       {error && <div className="sh-chat-alert"><AlertCircle size={18}/><span>{error}</span></div>}
 
-      <section className="sh-chat-review-queue">\n        <div className="sh-chat-review-queue-head"><div><strong>Chờ nhân viên kiểm tra</strong><small>{reviewTasks.length} tin nhắn được tạo từ sự kiện gần đây</small></div><button type="button" onClick={loadReviewTasks} disabled={!selectedShopId}>Làm mới danh sách</button></div>\n        {reviewTasks.length ? <div className="sh-chat-review-task-list">\n          {reviewTasks.map((task) => <article className="sh-chat-review-task" key={task._id}>\n            <div className="sh-chat-review-task-meta"><strong>{task.eventType === "new_order" ? "Đơn hàng mới" : task.eventType === "shipped" ? "Đã gửi hàng" : "Khách vừa đánh giá"}</strong><span>{task.referenceId}</span></div>\n            <p>{task.messageText}</p>\n            <div className="sh-chat-review-task-actions"><span>{task.conversationId ? "Đã tìm thấy hội thoại" : "Chưa khớp hội thoại"}</span><button type="button" onClick={() => selectReviewTask(task)}>Kiểm tra nội dung</button><button type="button" className="subtle" onClick={() => dismissReviewTask(task)}>Bỏ qua</button></div>\n          </article>)}\n        </div> : <div className="sh-chat-review-empty">Chưa có sự kiện mới trong 3 ngày gần đây. Hãy đồng bộ đơn hàng/đánh giá Shopee rồi làm mới danh sách.</div>}\n        <p className="sh-chat-review-policy">Tin nhắn chỉ được đưa vào hàng chờ. Nhân viên phải chọn đúng hội thoại, kiểm tra nội dung và bấm Gửi; hệ thống không tự gửi.</p>\n      </section>\n\n      <div className="sh-chat-workspace">
+      <section className="sh-chat-review-queue">
+        <div className="sh-chat-review-queue-head"><div><strong>Chờ nhân viên kiểm tra</strong><small>{reviewTasks.length} tin nhắn được tạo từ sự kiện gần đây</small></div><button type="button" onClick={loadReviewTasks} disabled={!selectedShopId}>Làm mới danh sách</button></div>
+        {reviewTasks.length ? <div className="sh-chat-review-task-list">
+          {reviewTasks.map((task) => <article className="sh-chat-review-task" key={task._id}>
+            <div className="sh-chat-review-task-meta"><strong>{task.eventType === "new_order" ? "Đơn hàng mới" : task.eventType === "shipped" ? "Đã gửi hàng" : "Khách vừa đánh giá"}</strong><span>{task.referenceId}</span></div>
+            <p>{task.messageText}</p>
+            <div className="sh-chat-review-task-actions"><span>{task.conversationId ? "Đã tìm thấy hội thoại" : "Chưa khớp hội thoại"}</span><button type="button" onClick={() => selectReviewTask(task)}>Kiểm tra nội dung</button><button type="button" className="subtle" onClick={() => dismissReviewTask(task)}>Bỏ qua</button></div>
+          </article>)}
+        </div> : <div className="sh-chat-review-empty">Chưa có sự kiện mới trong 3 ngày gần đây. Hãy đồng bộ đơn hàng/đánh giá Shopee rồi làm mới danh sách.</div>}
+        <p className="sh-chat-review-policy">Tin nhắn chỉ được đưa vào hàng chờ. Nhân viên phải chọn đúng hội thoại, kiểm tra nội dung và bấm Gửi; hệ thống không tự gửi.</p>
+      </section>
+
+      <div className="sh-chat-workspace">
         <aside className="sh-chat-inbox">
           <div className="sh-chat-inbox-title"><strong>Hội thoại</strong><span>{conversations.length}</span></div>
           <div className="sh-chat-search"><Search size={17}/><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Tìm khách hàng, nội dung..."/></div>
