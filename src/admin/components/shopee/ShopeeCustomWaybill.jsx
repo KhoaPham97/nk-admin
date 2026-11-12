@@ -248,41 +248,54 @@ export default function ShopeeCustomWaybill({ shops = [], selectedShopId = "", o
             const routeCode = [firstSortCode, secondSortCode, sort.third_recipient_sort_code, bill.deliverArea].filter(Boolean).join(" · ");
             const itemCount = (order.items || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0);
             return <article className="scw-label" style={paperStyle} key={bill.orderSn}>
-              <div className="scw-label-topline">
-                <span className="scw-brand-mark">NK</span>
-                <div className="scw-brand-copy"><b>{template.senderName || "NHẬT KHANG BIKE"}</b><small>{template.shopLabel || "ĐÃ CHẠY PHẢI CHẤT"}</small></div>
-                <strong className="scw-carrier">{bill.shippingCarrier || order.shippingCarrier || "ĐƠN VỊ VẬN CHUYỂN"}</strong>
+              <div className="scw-spx-top">
+                <div className="scw-spx-tracking">
+                  <span>MÃ VẬN ĐƠN</span>
+                  <strong>{bill.trackingNumber}</strong>
+                </div>
+                {template.showOrderCode && <div className="scw-spx-order"><span>MÃ ĐƠN HÀNG</span><strong>{bill.orderSn}</strong></div>}
               </div>
-              {template.showSortCode && <div className="scw-route-block">
-                <div className="scw-sort-primary"><small>MÃ PHÂN LOẠI</small><strong>{firstSortCode || "—"}</strong></div>
-                <div className="scw-sort-secondary"><small>ĐIỂM GIAO</small><strong>{secondSortCode || "—"}</strong></div>
+              {template.showCarrier && <div className="scw-spx-carrier">{bill.shippingCarrier || order.shippingCarrier || "SPX EXPRESS"}</div>}
+              <div className="scw-spx-address">
+                <section>
+                  <b>NGƯỜI GỬI</b>
+                  <strong>{template.senderName || "NHẬT KHANG BIKE"}</strong>
+                  <span>{template.senderPhone}</span>
+                  <span>{template.senderAddress}</span>
+                </section>
+                <section>
+                  <b>NGƯỜI NHẬN</b>
+                  <strong>{order.recipientName || "Thông tin người nhận"}</strong>
+                  <span>{order.recipientPhone || ""}</span>
+                  <span>{order.recipientAddress || "Chưa có địa chỉ người nhận"}</span>
+                </section>
+              </div>
+              {template.showSortCode && <div className="scw-spx-routing">
+                <div><small>MÃ PHÂN LOẠI</small><strong>{firstSortCode || "—"}</strong></div>
+                <div><small>ĐIỂM GIAO</small><strong>{secondSortCode || "—"}</strong></div>
               </div>}
-              <div className="scw-address-block">
-                <div className="scw-address-title"><b>NGƯỜI GỬI</b><small>{template.senderName}</small></div>
-                <div className="scw-sender-detail">{template.senderPhone} {template.senderAddress && " · " + template.senderAddress}</div>
-                <div className="scw-recipient-title"><span>NGƯỜI NHẬN</span><strong>{order.recipientName || "Thông tin người nhận"}</strong></div>
-                <strong className="scw-recipient-phone">{order.recipientPhone || ""}</strong>
-                <div className="scw-recipient-address">{order.recipientAddress || "Chưa có địa chỉ người nhận"}</div>
-              </div>
-              <div className="scw-waybill-code">
-                <div className="scw-waybill-code-head"><span>MÃ VẬN ĐƠN</span>{template.showOrderCode && <b>ĐƠN {bill.orderSn}</b>}</div>
-                <strong>{bill.trackingNumber}</strong>
+              <div className="scw-spx-barcode">
                 <Barcode value={bill.trackingNumber} />
               </div>
-              <div className="scw-payment-strip">
-                {template.showCod && <div className="scw-cod"><small>TIỀN THU NGƯỜI NHẬN (COD)</small><strong>{bill.cod ? money(bill.codAmount) : "0đ"}</strong></div>}
-                {template.showWeight && <div className="scw-weight"><small>KHỐI LƯỢNG</small><strong>{bill.orderWeight ? bill.orderWeight + " g" : "—"}</strong></div>}
-              </div>
-              {(template.showItems || template.showQr) && <div className="scw-content-row">
-                {template.showItems && <div className="scw-package-content">
-                  <div className="scw-package-heading"><b>NỘI DUNG HÀNG</b><strong>Tổng SL: {itemCount}</strong></div>
+              {(template.showItems || template.showQr) && <div className="scw-spx-items-row">
+                {template.showItems && <div className="scw-spx-items">
+                  <div className="scw-spx-items-heading"><b>NỘI DUNG HÀNG</b><strong>Tổng SL: {itemCount}</strong></div>
                   {(order.items || []).map((item, index) => <div className="scw-package-item" key={index}><span>{index + 1}. {item.itemName}{item.variantName ? ", " + item.variantName : ""}</span><b>SL: {item.quantity}</b></div>)}
+                  {template.showWeight && <div className="scw-spx-weight"><span>Khối lượng tối đa</span><b>{bill.orderWeight ? bill.orderWeight + " g" : "—"}</b></div>}
                 </div>}
                 {template.showQr && qrSortCode && <div className="scw-sort-qr">
                   <img src={"https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=2&data=" + encodeURIComponent(qrSortCode)} alt={"QR mã phân loại " + qrSortCode} loading="eager" />
                   <strong>{qrSortCode}</strong>
                 </div>}
               </div>}
+              <div className="scw-spx-cod">
+                {template.showCod && <div><small>TIỀN THU NGƯỜI NHẬN (COD)</small><strong>{bill.cod ? money(bill.codAmount) : "0đ"}</strong></div>}
+                <div className="scw-spx-shop"><b>{template.senderName || "NHẬT KHANG BIKE"}</b><span>{template.shopLabel || "ĐÃ CHẠY PHẢI CHẤT"}</span></div>
+              </div>
+              <div className="scw-spx-signature">
+                <span>CHỮ KÝ NGƯỜI NHẬN</span>
+                <span>GHI CHÚ GIAO HÀNG</span>
+              </div>
               <footer className="scw-label-footer">
                 <span>{template.senderName || "NHẬT KHANG BIKE"}</span>
                 <small>{bill.createDate || new Date().toLocaleDateString("vi-VN")} · Cảm ơn quý khách!</small>
