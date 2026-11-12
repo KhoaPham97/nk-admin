@@ -299,8 +299,8 @@ const AdminSidebar = ({
             <List disablePadding>
               {group.items.map((item) => {
                 const active =
-                  item.path === "/admin"
-                    ? location.pathname === "/admin"
+                  item.path === "/admin" || item.path === "/admin/products"
+                    ? location.pathname === item.path
                     : location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
 
                 return (
