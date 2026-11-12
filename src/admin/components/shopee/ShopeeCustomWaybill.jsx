@@ -59,98 +59,81 @@ function Waybill({ bill }) {
   const sender = bill.senderAddressInfo || bill.sender_address_info || {};
   const recipient = bill.recipientAddressInfo || bill.recipient_address_info || {};
   const senderName = text(sender.name, sender.sender_name, bill.senderName, "Xe điện NK");
-  const senderPhone = text(sender.phone, sender.phone_number, bill.senderPhone);
   const senderAddress = addressText(sender);
   const recipientName = text(order.recipientName, recipient.name, recipient.recipient_name);
-  const recipientPhone = text(order.recipientPhone, recipient.phone, recipient.phone_number);
   const recipientAddress = text(order.recipientAddress, addressText(recipient));
   const itemCount = (order.items || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+  const dateText = text(bill.createDate, new Date().toLocaleDateString("vi-VN"));
 
   return (
     <article className="scw-label">
-      <header className="scw-label-head">
-        <div className="scw-tracking-number">{bill.trackingNumber}</div>
-        <div className="scw-order-number">{order.orderSn || bill.orderSn}</div>
+      <header className="scw-top">
+        <div className="scw-brand">
+          <div className="scw-bag-mark">S</div>
+          <div className="scw-brand-name">Shopee</div>
+          <div className="scw-spx-word">SPX<small> EXPRESS</small></div>
+        </div>
+        <div className="scw-top-right">
+          <Barcode value={bill.trackingNumber} />
+          <div><span>Mã vận đơn:</span> <b>{bill.trackingNumber}</b></div>
+          <div><span>Mã đơn hàng:</span> <b>{order.orderSn || bill.orderSn}</b></div>
+        </div>
       </header>
-
-      <div className="scw-carrier-line">{text(bill.shippingCarrier, order.shippingCarrier, "SPX EXPRESS")}</div>
-
-      <section className="scw-parties">
-        <div className="scw-party scw-sender">
-          <b>NGƯỜI GỬI</b>
-          <strong>{senderName}</strong>
-          {senderPhone && <span>{senderPhone}</span>}
+      <section className="scw-addresses">
+        <div className="scw-address sender">
+          <b>Từ:</b><strong>{senderName}</strong>
           {senderAddress && <span>{senderAddress}</span>}
         </div>
-        <div className="scw-party scw-recipient">
-          <b>NGƯỜI NHẬN</b>
-          <strong>{recipientName || " "}</strong>
-          {recipientPhone && <span>{recipientPhone}</span>}
-          <span>{recipientAddress}</span>
+        <div className="scw-address recipient">
+          <b>Đến:</b><strong>{recipientName}</strong><span>{recipientAddress}</span>
         </div>
       </section>
-
-      <section className="scw-sort-codes">
-        <div className="scw-primary-sort">
-          <small>MÃ PHÂN LOẠI NGƯỜI NHẬN</small>
-          <strong>{firstSort || " "}</strong>
-        </div>
-        <div className="scw-secondary-sort">
-          <small>MÃ TUYẾN</small>
-          <strong>{secondSort || " "}</strong>
-        </div>
+      <section className="scw-route">
+        <div className="scw-route-first"><strong>{firstSort}</strong></div>
+        <div className="scw-route-second"><strong>{secondSort}</strong></div>
       </section>
-
-      <div className="scw-barcode-wrap">
-        <Barcode value={bill.trackingNumber} />
-      </div>
-
       <section className="scw-content-qr">
         <div className="scw-items">
-          <div className="scw-items-head">
-            <b>NỘI DUNG HÀNG</b>
-            <strong>TỔNG SL: {itemCount}</strong>
-          </div>
+          <div className="scw-items-head"><b>Nội dung hàng (Tổng SL sản phẩm: {itemCount})</b></div>
           {(order.items || []).map((item, index) => (
             <div className="scw-item" key={index}>
-              <span>{index + 1}. {item.itemName}{item.variantName ? " - " + item.variantName : ""}</span>
-              <b>x{item.quantity}</b>
+              <span>{index + 1}. {item.itemName}{item.variantName ? " " + item.variantName : ""}, SL: {item.quantity}</span>
             </div>
           ))}
-          <div className="scw-weight">
-            <span>Khối lượng tối đa</span>
-            <b>{bill.orderWeight ? Number(bill.orderWeight).toLocaleString("vi-VN") + " g" : " "}</b>
-          </div>
         </div>
         <div className="scw-qr-block">
-          {qrValue && <img
-            src={"https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=1&data=" + encodeURIComponent(qrValue)}
-            alt="QR mã phân loại vận đơn"
-          />}
-          <strong>{qrValue}</strong>
-          {thirdSort && <b className="scw-third-sort">{thirdSort}</b>}
+          {qrValue && <img src={"https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=1&data=" + encodeURIComponent(qrValue)} alt="QR mã phân loại" />}
+          {thirdSort && <strong>{thirdSort}</strong>}
+          <small>Ngày đặt hàng:</small><b>{dateText}</b>
         </div>
       </section>
-
-      <section className="scw-cod-sign">
-        <div className="scw-cod">
-          <small>TIỀN THU HỘ (COD)</small>
-          <strong>{bill.cod ? money(bill.codAmount) : "0đ"}</strong>
-        </div>
-        <div className="scw-sign">
-          <b>CHỮ KÝ NGƯỜI NHẬN</b>
-          <span> </span>
-        </div>
+      <div className="scw-policy">
+        Người gửi phải cam kết hàng hóa có đầy đủ các hóa đơn, chứng từ, giấy phép cần thiết theo quy định của pháp luật và đính kèm theo bên trong gói hàng này (Lưu ý: Một số sản phẩm có thể bị ẩn do danh sách cấm của sàn).
+      </div>
+      <div className="scw-cod-weight">
+        <span>Tiền thu Người nhận:</span>
+        <strong>{bill.cod ? money(bill.codAmount).replace("đ"," VND") : "0 VND"}</strong>
+        <span>Khối lượng tối đa: {bill.orderWeight ? Number(bill.orderWeight).toLocaleString("vi-VN") + " g" : "—"}</span>
+      </div>
+      <section className="scw-signature-row">
+        <div className="scw-cod-large">{bill.cod ? money(bill.codAmount).replace("đ"," VND") : "0 VND"}</div>
+        <div className="scw-signature"><b>Chữ ký người nhận</b><span>Xác nhận hàng nguyên vẹn, không móp/méo, bể/vỡ</span></div>
       </section>
-      <div className="scw-delivery-note">GHI CHÚ GIAO HÀNG: __________________________________</div>
+      <section className="scw-delivery">
+        <b>Chỉ dẫn giao hàng: <strong>Được đồng kiểm</strong></b>
+        <span>Chuyển hoàn sau 3 lần phát; Lưu kho tối đa 5 ngày</span>
+      </section>
       <footer className="scw-footer">
-        <b>SHOPEE</b>
-        <span>{bill.createDate || ""}</span>
+        <b>Gọi 1900 6885</b>
+        <div>
+          <span>✓ Giao hàng toàn quốc / Chuyển phát nhanh chỉ từ 11.000 VND (*)</span>
+          <span>✓ Tuyến NV Giao hàng / NV Bưu cục thu nhập đến 20.000.000 VND</span>
+          <small>(*) Theo điều kiện điều khoản áp dụng</small>
+        </div>
       </footer>
     </article>
   );
 }
-
 export default function ShopeeCustomWaybill({ shops = [], selectedShopId = "", onShopChange }) {
   const [shopId, setShopId] = useState(selectedShopId || "");
   const [orders, setOrders] = useState([]);
@@ -228,7 +211,7 @@ export default function ShopeeCustomWaybill({ shops = [], selectedShopId = "", o
       <div className="scw-toolbar no-print">
         <div>
           <h2>In vận đơn Shopee</h2>
-          <p>Mẫu vận đơn cố định theo bố cục SPX Shopee · 100 × 150 mm</p>
+          <p>Mẫu vận đơn Shopee SPX theo đúng mẫu gốc · khổ 105 × 148 mm</p>
         </div>
         <button className="scw-primary" onClick={() => window.print()} disabled={!waybills.length}>
           <span>In vận đơn / Lưu PDF</span>
