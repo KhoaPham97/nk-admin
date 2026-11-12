@@ -92,6 +92,12 @@ export default function ShopeeChat({ shops = [], selectedShopId = "", onShopChan
   }, [selectedShopId, loadConversations]);
 
   useEffect(() => {
+    if (!selectedShopId) return undefined;
+    const timer = setInterval(loadReviewTasks, 30000);
+    return () => clearInterval(timer);
+  }, [selectedShopId, loadReviewTasks]);
+
+  useEffect(() => {
     if (!active) return undefined;
     loadMessages(active);
     const timer = setInterval(() => loadMessages(active, true), 12000);
