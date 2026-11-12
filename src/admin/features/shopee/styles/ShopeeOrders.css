@@ -481,3 +481,8 @@
     padding: 10px;
   }
 }
+
+
+/* Per-item cost visibility */
+.sho-orders .sho-cost-line{display:block;margin-top:3px;color:#0f766e;font-weight:600;}
+.sho-orders .sho-cost-missing{color:#b45309;font-weight:600;}
