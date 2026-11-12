@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Search, RefreshCw, Printer, FileText, CheckCircle2, Clock3, AlertCircle, Download, Eye } from "lucide-react";
+import { Search, RefreshCw, Printer, FileText, Clock3, AlertCircle, Download, Eye } from "lucide-react";
 import { shopeeApi } from "../services/shopeeApi";
 import "../styles/ShopeeCustomWaybill.css";
 
@@ -25,6 +25,7 @@ export default function ShopeeCustomWaybill({ shops = [], selectedShopId = "", o
   const [notice, setNotice] = useState("");
   const [previewUrl, setPreviewUrl] = useState("");
   const [previewName, setPreviewName] = useState("");
+  const [previewExtension, setPreviewExtension] = useState("pdf");
 
   useEffect(() => {
     if (selectedShopId) setShopId(String(selectedShopId));
@@ -128,6 +129,7 @@ export default function ShopeeCustomWaybill({ shops = [], selectedShopId = "", o
         .some((value) => String(value || "").toLowerCase().includes(keyword));
       const status = statuses.find((row) => String(row.order_sn) === String(item.order_sn) && String(row.package_number || "") === String(item.package_number || ""));
       const matchesFilter = filter === "all" || (filter === "printable" && (!status || status.status === "READY")) ||
+        (filter === "ready" && status?.status === "READY") ||
         (filter === "processing" && status?.status === "PROCESSING") || (filter === "failed" && (status?.status === "FAILED" || status?.fail_error));
       return matchesSearch && matchesFilter;
     });
@@ -214,6 +216,7 @@ export default function ShopeeCustomWaybill({ shops = [], selectedShopId = "", o
       const url = window.URL.createObjectURL(result.blob);
       setPreviewUrl(url);
       setPreviewName(`shopee-waybill-${new Date().toISOString().slice(0, 10)}`);
+      setPreviewExtension(String(result.contentType || "").includes("html") ? "html" : "pdf");
       setNotice("Đã tải dữ liệu vận đơn từ Shopee. Bạn có thể xem trước ngay bên dưới hoặc mở file để in.");
     } catch (err) {
       setError(err.message || "Không lấy được file vận đơn.");
@@ -226,7 +229,7 @@ export default function ShopeeCustomWaybill({ shops = [], selectedShopId = "", o
     if (!previewUrl) return;
     const link = document.createElement("a");
     link.href = previewUrl;
-    link.download = `${previewName}.pdf`;
+    link.download = `${previewName}.${previewExtension}`;
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -277,6 +280,7 @@ export default function ShopeeCustomWaybill({ shops = [], selectedShopId = "", o
             <label className="scw-search"><Search size={16} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Tìm mã đơn, mã vận đơn, người nhận..." /></label>
             <select value={filter} onChange={(event) => setFilter(event.target.value)}>
               <option value="printable">Có thể in / chưa kiểm tra</option>
+              <option value="ready">Sẵn sàng in</option>
               <option value="processing">Đang xử lý</option>
               <option value="failed">Bị lỗi</option>
               <option value="all">Tất cả kiện đủ điều kiện</option>
