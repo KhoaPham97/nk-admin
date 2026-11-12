@@ -24,7 +24,7 @@ import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 
-import { API_ENDPOINTS } from "../../api";
+import { API_ENDPOINTS } from "../../../../api";
 
 const API_URL = API_ENDPOINTS || "";
 

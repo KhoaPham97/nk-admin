@@ -11,8 +11,8 @@ import Products from "./features/products/pages/Products";
 import Categories from "./pages/Categories";
 import CreateProduct from "./features/products/pages/CreateProduct";
 
-import Customers from "./pages/Customers";
-import CustomerDetail from "./pages/CustomerDetail";
+import Customers from "./features/customers/pages/Customers";
+import CustomerDetail from "./features/customers/pages/CustomerDetail";
 
 import CreateOrder from "./features/orders/pages/CreateOrder";
 import Orders from "./features/orders/pages/Orders";
@@ -27,7 +27,7 @@ import ProductPricing from "./features/products/pages/ProductPricing";
 
 import Images from "./pages/Images";
 import Vehicles from "./pages/Vehicles";
-import CustomerPurchaseStats from "./pages/CustomerPurchaseStats";
+import CustomerPurchaseStats from "./features/customers/pages/CustomerPurchaseStats";
 import ProductQuotePage from "../quotes/QuoteImage";
 import BestSellingProducts from "./features/products/pages/BestSellingProducts";
 import InventoryBatchPage from "./features/inventory/pages/InventoryBatchPage";

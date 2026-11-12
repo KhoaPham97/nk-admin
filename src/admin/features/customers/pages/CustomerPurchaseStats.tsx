@@ -43,7 +43,7 @@ import {
   ShoppingBagOutlined,
   VisibilityOutlined,
 } from "@mui/icons-material";
-import { BASE_URL } from "../../api";
+import { BASE_URL } from "../../../../api";
 
 const API_URL = BASE_URL + "/order/customer-purchase-stats";
 
