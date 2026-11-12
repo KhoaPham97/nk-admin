@@ -210,6 +210,10 @@ export const shopeeApi = {
   getOrderDetail: (orderSn, params = {}) =>
     get(`/orders/${encode(orderSn)}`, params),
 
+  // Lấy dữ liệu vận đơn Shopee để tự thiết kế PDF.
+  getWaybillData: (orderSn, data = {}) =>
+    post(`/orders/${encode(orderSn)}/waybill-data`, data),
+
   getSyncStatus: () => get("/sync/status"),
 
   updateOrderStatus: (orderSn, data = {}) =>
