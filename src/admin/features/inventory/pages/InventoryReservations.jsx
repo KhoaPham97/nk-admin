@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import axios from "axios";
+import axios from "axios";\n\nconst getProductImageUrl = (value) => {\n  const image = String(value || "").trim();\n  if (!image) return "/images/no-image.png";\n  if (/^(https?:|data:|blob:)/i.test(image) || image.startsWith("/")) return image;\n  return image.startsWith("images/") ? `/${image}` : `/images/${image}`;\n};
 
 import {
   Alert,
@@ -1175,7 +1175,7 @@ const InventoryReservations = () => {
                             <Box className="ir-product-cell">
                               {product.thumbnail ? (
                                 <img
-                                  src={"/images/" + product.thumbnail}
+                                  src={getProductImageUrl(product.thumbnail)}
                                   alt={product.title}
                                   className="ir-product-image"
                                 />
