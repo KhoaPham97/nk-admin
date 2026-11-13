@@ -37,7 +37,9 @@ const getProductImageUrl = (value) => {
   if (!image) return "/images/no-image.png";
   if (/^(https?:|data:|blob:)/i.test(image) || image.startsWith("/")) return image;
   return image.startsWith("images/") ? `/${image}` : `/images/${image}`;
-};\n\nconst formatMoney = (value) => {
+};
+
+const formatMoney = (value) => {
   return Number(value || 0).toLocaleString("vi-VN") + " đ";
 };
 const token = localStorage.getItem("adminToken"); // Hoặc accessToken tùy tên bạn lưu
