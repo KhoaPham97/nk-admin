@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import axios from "axios";\n\nconst getProductImageUrl = (value) => {
+import axios from "axios";
+
+const getProductImageUrl = (value) => {
   const image = String(value || "").trim();
   if (!image) return "/images/no-image.png";
   if (/^(https?:|data:|blob:)/i.test(image) || image.startsWith("/")) return image;
