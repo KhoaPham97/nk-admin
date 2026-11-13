@@ -121,7 +121,6 @@ const Images: React.FC = () => {
       const response = await axios.post(MEDIA_API + "/upload", form, {
         headers: {
           Authorization: "Bearer " + getToken(),
-          "Content-Type": "multipart/form-data",
         },
         timeout: 180000,
       });
