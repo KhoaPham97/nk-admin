@@ -1,5 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import axios from "axios";\n\nconst getProductImageUrl = (value) => {\n  const image = String(value || "").trim();\n  if (!image) return "/images/no-image.png";\n  if (/^(https?:|data:|blob:)/i.test(image) || image.startsWith("/")) return image;\n  return image.startsWith("images/") ? `/${image}` : `/images/${image}`;\n};
+import axios from "axios";\n\nconst getProductImageUrl = (value) => {
+  const image = String(value || "").trim();
+  if (!image) return "/images/no-image.png";
+  if (/^(https?:|data:|blob:)/i.test(image) || image.startsWith("/")) return image;
+  return image.startsWith("images/") ? `/${image}` : `/images/${image}`;
+};
 
 import {
   Alert,
