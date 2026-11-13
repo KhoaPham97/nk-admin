@@ -35,6 +35,27 @@ import { API_ENDPOINTS } from "../../../api";
    VARIANT
 ===================================================== */
 
+interface ShopeeReviewItem {
+  commentId: string;
+  customerName?: string;
+  rating: number;
+  content?: string;
+  reviewCreatedAt?: string | null;
+  images?: string[];
+  videos?: string[];
+  shopeeReply?: string;
+}
+
+interface ShopeeReviewResponse {
+  summary?: {
+    averageRating?: number;
+    total?: number;
+    breakdown?: Record<number, number>;
+  };
+  pagination?: { hasMore?: boolean };
+  data?: ShopeeReviewItem[];
+}
+
 interface ProductVariant {
   _id?: string;
   id?: string;
@@ -111,7 +132,7 @@ const SingleProduct: FC = () => {
   const [selectedImg, setSelectedImg] = useState<string>();
 
   const [similar, setSimilar] = useState<Product[]>([]);
-  const [reviewData, setReviewData] = useState<any>(null);
+  const [reviewData, setReviewData] = useState<ShopeeReviewResponse | null>(null);
   const [reviewLoading, setReviewLoading] = useState(false);
   const [reviewRatingFilter, setReviewRatingFilter] = useState(0);
   const [reviewPage, setReviewPage] = useState(1);
@@ -250,13 +271,13 @@ const SingleProduct: FC = () => {
         );
         if (!response.ok) throw new Error("Không thể tải đánh giá");
         const nextData = await response.json();
-        setReviewData((previous: any) =>
+        setReviewData((previous) =>
           reviewPage === 1
             ? nextData
             : { ...nextData, data: [...(previous?.data || []), ...(nextData.data || [])] },
         );
-      } catch (error: any) {
-        if (error?.name !== "AbortError") {
+      } catch (error: unknown) {
+        if (!(error instanceof Error) || error.name !== "AbortError") {
           console.error("Load Shopee reviews error:", error);
           setReviewData(null);
         }
@@ -1098,7 +1119,7 @@ const SingleProduct: FC = () => {
             <div className="py-10 text-center text-sm text-gray-500">Đang tải đánh giá...</div>
           ) : (reviewData?.data || []).length > 0 ? (
             <div className="mt-4 divide-y divide-gray-100 dark:divide-slate-700">
-              {reviewData.data.map((review: any) => (
+              {reviewData.data.map((review) => (
                 <article key={review.commentId} className="py-4 first:pt-1">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="font-semibold text-gray-900 dark:text-white">
