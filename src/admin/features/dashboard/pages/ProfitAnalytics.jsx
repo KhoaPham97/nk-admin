@@ -659,7 +659,20 @@ const ProfitAnalytics = () => {
     );
 
     return {
-      count: batchProfitData.length,
+      count: currentMonthBatches.length,
+      importQty: currentMonthBatches.reduce(
+        (sum, batch) => sum + n(batch.importQty),
+        0,
+      ),
+      remainingQty: currentMonthBatches.reduce(
+        (sum, batch) => sum + n(batch.remainingQty),
+        0,
+      ),
+      importValue: currentMonthBatches.reduce(
+        (sum, batch) =>
+          sum + n(batch.importQty) * n(batch.unitCost) * CNY_VND_RATE,
+        0,
+      ),
       qty: batchProfitData.reduce((sum, batch) => sum + batch.qty, 0),
       revenue: batchProfitData.reduce((sum, batch) => sum + batch.revenue, 0),
       cost: completeBatches.reduce((sum, batch) => sum + batch.cost, 0),
@@ -883,7 +896,7 @@ const ProfitAnalytics = () => {
           <Grid container spacing={2}>
             <Grid item xs={6} md={2}>
               <Typography variant="body2" color="text.secondary">
-                Tổng số lô
+                Số lô nhập mới
               </Typography>
               <Typography variant="h6" fontWeight={800}>
                 {batchSummary.count}
@@ -892,16 +905,43 @@ const ProfitAnalytics = () => {
 
             <Grid item xs={6} md={2}>
               <Typography variant="body2" color="text.secondary">
-                Đã bán
+                Tổng số lượng nhập
+              </Typography>
+              <Typography variant="h6" fontWeight={800}>
+                {batchSummary.importQty.toLocaleString("vi-VN")}
+              </Typography>
+            </Grid>
+
+            <Grid item xs={6} md={2}>
+              <Typography variant="body2" color="text.secondary">
+                Giá trị nhập
+              </Typography>
+              <Typography variant="h6" fontWeight={800} color="primary.main">
+                {money(batchSummary.importValue)}
+              </Typography>
+            </Grid>
+
+            <Grid item xs={6} md={2}>
+              <Typography variant="body2" color="text.secondary">
+                Tồn còn trong lô
+              </Typography>
+              <Typography variant="h6" fontWeight={800}>
+                {batchSummary.remainingQty.toLocaleString("vi-VN")}
+              </Typography>
+            </Grid>
+
+            <Grid item xs={6} md={2}>
+              <Typography variant="body2" color="text.secondary">
+                Đã bán từ lô
               </Typography>
               <Typography variant="h6" fontWeight={800}>
                 {batchSummary.qty.toLocaleString("vi-VN")}
               </Typography>
             </Grid>
 
-            <Grid item xs={6} md={3}>
+            <Grid item xs={6} md={2}>
               <Typography variant="body2" color="text.secondary">
-                Doanh thu các lô
+                Doanh thu từ lô
               </Typography>
               <Typography variant="h6" fontWeight={800} color="primary.main">
                 {money(batchSummary.revenue)}
@@ -910,14 +950,14 @@ const ProfitAnalytics = () => {
 
             <Grid item xs={6} md={2}>
               <Typography variant="body2" color="text.secondary">
-                Giá vốn
+                Giá vốn đã bán
               </Typography>
               <Typography variant="h6" fontWeight={800}>
                 {money(batchSummary.cost)}
               </Typography>
             </Grid>
 
-            <Grid item xs={6} md={3}>
+            <Grid item xs={6} md={2}>
               <Typography variant="body2" color="text.secondary">
                 Lợi nhuận đã xác minh
               </Typography>
