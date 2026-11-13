@@ -47,6 +47,10 @@ const MEDIA_API = API_ENDPOINTS.MEDIA;
 const getToken = () =>
   localStorage.getItem("adminToken") || localStorage.getItem("accessToken") || "";
 
+const authConfig = () => ({
+  headers: { Authorization: "Bearer " + getToken() },
+});
+
 const formatBytes = (bytes: number) => {
   if (!bytes) return "0 B";
   const units = ["B", "KB", "MB", "GB"];
@@ -77,10 +81,6 @@ const Images: React.FC = () => {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [deletingId, setDeletingId] = useState("");
-
-  const authConfig = () => ({
-    headers: { Authorization: "Bearer " + getToken() },
-  });
 
   const loadMedia = useCallback(async () => {
     try {
