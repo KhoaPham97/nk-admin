@@ -123,4 +123,9 @@ export const API_ENDPOINTS = {
   INVENTORY_BATCHES: `${BASE_URL}/inventory-batch`,
   INVENTORY_BATCH_IMPORT: `${BASE_URL}/inventory-batch/import`,
   INVENTORY_BATCH_IMPORT_MULTIPLE: `${BASE_URL}/inventory-batch/import-multiple`,
+
+  // =========================
+  // MEDIA LIBRARY (ADMIN)
+  // =========================
+  MEDIA: `${BASE_URL}/media`,
 };
