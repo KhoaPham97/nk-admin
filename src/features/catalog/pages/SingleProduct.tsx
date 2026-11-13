@@ -44,6 +44,9 @@ interface ShopeeReviewItem {
   images?: string[];
   videos?: string[];
   shopeeReply?: string;
+  variantCode?: string;
+  variantName?: string;
+  variationSku?: string;
 }
 
 interface ShopeeReviewResponse {
@@ -1213,6 +1216,11 @@ const SingleProduct: FC = () => {
                               <span className="rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-bold text-green-700 dark:bg-green-950/40 dark:text-green-300">
                                 Đánh giá Shopee
                               </span>
+                              {(review.variantName || review.variationSku || review.variantCode) && (
+                                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                                  Phân loại: {review.variantName || review.variationSku || review.variantCode}
+                                </span>
+                              )}
                             </div>
                           </div>
                         </div>
