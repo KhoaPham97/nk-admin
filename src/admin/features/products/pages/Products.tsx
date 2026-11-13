@@ -2174,6 +2174,21 @@ const Products = () => {
                 </CardContent>
               </Card>
 
+              {/* SHOPEE MAPPING */}
+              <Card sx={panelSx}>
+                <CardContent sx={{ p: { xs: 2, md: 2.5 } }}>
+                  <SectionHeading icon={<CategoryOutlinedIcon fontSize="small" />} title="Liên kết Shopee" subtitle="Nhập Item ID để website lấy đúng đánh giá của sản phẩm này" />
+                  <Grid container spacing={2}>
+                    <Grid size={{ xs: 12, md: 6 }}>
+                      <TextField fullWidth label="Shopee Item ID" value={selectedProduct.shopeeItemId || ""} onChange={(event) => updateProductField("shopeeItemId", event.target.value)} helperText="ID sản phẩm trong gian hàng Shopee" />
+                    </Grid>
+                    <Grid size={{ xs: 12, md: 6 }}>
+                      <TextField fullWidth label="Shopee Shop ID" value={selectedProduct.shopeeShopId || ""} onChange={(event) => updateProductField("shopeeShopId", event.target.value)} helperText="Để trống nếu chỉ có một gian hàng" />
+                    </Grid>
+                  </Grid>
+                </CardContent>
+              </Card>
+
               {/* DESCRIPTION */}
 
               <Card sx={panelSx}>
