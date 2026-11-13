@@ -277,12 +277,14 @@ const Products = () => {
     if (
       filename.startsWith("http://") ||
       filename.startsWith("https://") ||
-      filename.startsWith("data:")
+      filename.startsWith("data:") ||
+      filename.startsWith("blob:") ||
+      filename.startsWith("/")
     ) {
       return filename;
     }
 
-    return `/images/${filename}`;
+    return filename.startsWith("images/") ? `/${filename}` : `/images/${filename}`;
   };
 
   const getReservedQty = (variant: Variant) =>
