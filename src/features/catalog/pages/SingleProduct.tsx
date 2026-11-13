@@ -111,6 +111,9 @@ const SingleProduct: FC = () => {
   const [selectedImg, setSelectedImg] = useState<string>();
 
   const [similar, setSimilar] = useState<Product[]>([]);
+  const [reviewData, setReviewData] = useState<any>(null);
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [reviewRatingFilter, setReviewRatingFilter] = useState(0);
 
   /* ===================================================
      VARIANT
@@ -222,6 +225,37 @@ const SingleProduct: FC = () => {
       fetchProductDetails();
     }
   }, [productID, dispatch]);
+
+  /* ===================================================
+     SHOPEE REVIEWS
+  =================================================== */
+
+  useEffect(() => {
+    if (!productID) return;
+    const controller = new AbortController();
+    const loadReviews = async () => {
+      try {
+        setReviewLoading(true);
+        const params = new URLSearchParams({ page: "1", limit: "10" });
+        if (reviewRatingFilter) params.set("rating", String(reviewRatingFilter));
+        const response = await fetch(
+          `${API_ENDPOINTS.PRODUCTS}/${productID}/reviews?${params.toString()}`,
+          { signal: controller.signal },
+        );
+        if (!response.ok) throw new Error("Không thể tải đánh giá");
+        setReviewData(await response.json());
+      } catch (error: any) {
+        if (error?.name !== "AbortError") {
+          console.error("Load Shopee reviews error:", error);
+          setReviewData(null);
+        }
+      } finally {
+        if (!controller.signal.aborted) setReviewLoading(false);
+      }
+    };
+    loadReviews();
+    return () => controller.abort();
+  }, [productID, reviewRatingFilter]);
 
   /* ===================================================
      SIMILAR PRODUCTS
@@ -1023,6 +1057,68 @@ const SingleProduct: FC = () => {
             </div>
           </div>
         </div>
+
+        {/* SHOPEE REVIEWS */}
+        <section className="mt-10 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 sm:p-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-orange-600">Đánh giá từ Shopee</p>
+              <h2 className="mt-1 text-xl font-bold text-gray-900 dark:text-white">Khách hàng nói gì về sản phẩm</h2>
+            </div>
+            <div className="text-right">
+              <div className="text-2xl font-extrabold text-amber-500">{Number(reviewData?.summary?.averageRating || 0).toFixed(1)} / 5</div>
+              <div className="text-xs text-gray-500">{reviewData?.summary?.total || 0} đánh giá</div>
+            </div>
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {[0, 5, 4, 3, 2, 1].map((rating) => (
+              <button key={rating} type="button" onClick={() => setReviewRatingFilter(rating)} className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+                reviewRatingFilter === rating ? "border-orange-500 bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-300" : "border-gray-200 text-gray-600 dark:border-slate-700 dark:text-gray-300"
+              }`}>
+                {rating === 0 ? "Tất cả" : `${rating} sao`}
+                {rating === 0 ? ` (${reviewData?.summary?.total || 0})` : ` (${reviewData?.summary?.breakdown?.[rating] || 0})`}
+              </button>
+            ))}
+          </div>
+          {reviewLoading ? (
+            <div className="py-10 text-center text-sm text-gray-500">Đang tải đánh giá...</div>
+          ) : (reviewData?.data || []).length > 0 ? (
+            <div className="mt-4 divide-y divide-gray-100 dark:divide-slate-700">
+              {reviewData.data.map((review: any) => (
+                <article key={review.commentId} className="py-4 first:pt-1">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="font-semibold text-gray-900 dark:text-white">
+                      {review.customerName || "Khách hàng Shopee"}
+                      <span className="ml-2 rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-semibold text-green-700 dark:bg-green-900/20 dark:text-green-300">Shopee</span>
+                    </div>
+                    <time className="text-xs text-gray-400">{review.reviewCreatedAt ? new Date(review.reviewCreatedAt).toLocaleDateString("vi-VN") : ""}</time>
+                  </div>
+                  <div className="mt-1 flex items-center gap-1 text-amber-500" aria-label={`${review.rating} sao`}>
+                    {Array.from({ length: 5 }, (_, index) => <span key={index} className={index < Number(review.rating) ? "text-amber-500" : "text-gray-300"}>★</span>)}
+                  </div>
+                  {review.content && <p className="mt-2 whitespace-pre-line text-sm leading-6 text-gray-700 dark:text-gray-300">{review.content}</p>}
+                  {(review.images || []).length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {review.images.map((image: string, index: number) => (
+                        <a key={image + index} href={image} target="_blank" rel="noreferrer">
+                          <img src={image} alt="Ảnh đánh giá Shopee" loading="lazy" className="h-20 w-20 rounded-lg border border-gray-100 object-cover dark:border-slate-700" />
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                  {review.shopeeReply && (
+                    <div className="mt-3 rounded-xl bg-gray-50 p-3 dark:bg-slate-800">
+                      <p className="text-xs font-bold text-blue-600 dark:text-blue-400">Phản hồi từ Nhật Khang Bike</p>
+                      <p className="mt-1 whitespace-pre-line text-sm text-gray-600 dark:text-gray-300">{review.shopeeReply}</p>
+                    </div>
+                  )}
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="py-10 text-center text-sm text-gray-500">Chưa có đánh giá Shopee cho sản phẩm này.</div>
+          )}
+        </section>
 
         {/* =================================================
             SIMILAR PRODUCTS
