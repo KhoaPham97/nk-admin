@@ -112,11 +112,11 @@ export default function BestSellingProducts() {
       return "";
     }
 
-    if (filename.startsWith("http://") || filename.startsWith("https://")) {
+    if (filename.startsWith("http://") || filename.startsWith("https://") || filename.startsWith("/") || filename.startsWith("data:")) {
       return filename;
     }
 
-    return `/images/${filename}`;
+    return filename.startsWith("images/") ? `/${filename}` : `/images/${filename}`;
   };
   return (
     <Box sx={{ p: { xs: 2, md: 3 } }}>
