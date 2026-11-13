@@ -28,7 +28,7 @@ import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import RefreshOutlinedIcon from "@mui/icons-material/RefreshOutlined";
 import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
-import { BASE_URL } from "../../../../api";
+import { API_ENDPOINTS } from "../../../../api";
 
 type MediaItem = {
   _id: string;
@@ -43,7 +43,7 @@ type MediaItem = {
   createdAt: string;
 };
 
-const MEDIA_API = BASE_URL + "/media";
+const MEDIA_API = API_ENDPOINTS.MEDIA;
 const getToken = () =>
   localStorage.getItem("adminToken") || localStorage.getItem("accessToken") || "";
 
