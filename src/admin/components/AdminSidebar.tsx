@@ -14,6 +14,7 @@ import {
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import ChatIcon from "@mui/icons-material/Chat";
 import ImageIcon from "@mui/icons-material/Image";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import Inventory2Icon from "@mui/icons-material/Inventory2";
 import PostAddIcon from "@mui/icons-material/PostAdd";
 import StorefrontIcon from "@mui/icons-material/Storefront";
@@ -76,6 +77,11 @@ const AdminSidebar = ({
           label: "Quản lý hình ảnh",
           icon: <ImageIcon />,
           path: "/admin/images",
+        },
+        {
+          label: "Đồng bộ Cloudinary",
+          icon: <CloudUploadIcon />,
+          path: "/admin/images/cloudinary-sync",
         },
       ],
     },

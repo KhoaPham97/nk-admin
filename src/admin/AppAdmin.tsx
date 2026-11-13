@@ -26,6 +26,7 @@ import AdminChat from "./features/chat/pages/AdminChat";
 import ProductPricing from "./features/products/pages/ProductPricing";
 
 import Images from "./features/catalog/pages/Images";
+import CloudinarySync from "./features/catalog/pages/CloudinarySync";
 import Vehicles from "./features/catalog/pages/Vehicles";
 import CustomerPurchaseStats from "./features/customers/pages/CustomerPurchaseStats";
 import ProductQuotePage from "../quotes/QuoteImage";
@@ -106,6 +107,7 @@ export default function BasicExample() {
               IMAGES
           ======================================== */}
           <Route path="images" element={<Images />} />
+          <Route path="images/cloudinary-sync" element={<CloudinarySync />} />
           <Route
             path="customer-purchase-stats"
             element={<CustomerPurchaseStats />}
