@@ -1762,27 +1762,28 @@ const Orders = () => {
   // TOTAL PROFIT CURRENT FILTER
   // =====================================================
 
+  const completedOrders = useMemo(
+    () => filteredOrders.filter((order) => order?.status === "completed"),
+    [filteredOrders],
+  );
+
   const currentPageProfit = useMemo(() => {
-    return filteredOrders.reduce(
+    return completedOrders.reduce(
       (totalProfit, order) => totalProfit + getOrderProfit(order),
       0,
     );
-  }, [filteredOrders, exchangeRate]);
+  }, [completedOrders, exchangeRate]);
 
   // =====================================================
   // TOTAL COST CURRENT FILTER
   // =====================================================
 
   const currentPageCost = useMemo(() => {
-    return filteredOrders.reduce(
+    return completedOrders.reduce(
       (totalCost, order) => totalCost + getOrderCost(order),
       0,
     );
-  }, [filteredOrders, exchangeRate]);
-
-  // =====================================================
-  // TOTAL REVENUE CURRENT FILTER
-  // =====================================================
+  }, [completedOrders, exchangeRate]);
 
   const currentPageRevenue = useMemo(() => {
     // Doanh thu chỉ ghi nhận các đơn đã hoàn thành.
@@ -2165,7 +2166,7 @@ const Orders = () => {
 
                 <Box>
                   <Typography variant="body2" color="text.secondary">
-                    Lãi/lỗ đang lọc
+                    Lãi/lỗ đơn hoàn thành
                   </Typography>
 
                   <Typography
@@ -2220,7 +2221,7 @@ const Orders = () => {
           <Grid container spacing={2}>
             <Grid item xs={12} md={4}>
               <Typography variant="caption" color="text.secondary">
-                Doanh thu đang lọc
+                Doanh thu đơn hoàn thành
               </Typography>
 
               <Typography variant="h6" fontWeight={700}>
@@ -2230,7 +2231,7 @@ const Orders = () => {
 
             <Grid item xs={12} md={4}>
               <Typography variant="caption" color="text.secondary">
-                Giá vốn đang lọc
+                Giá vốn đơn hoàn thành
               </Typography>
 
               <Typography variant="h6" fontWeight={700}>
@@ -2373,12 +2374,13 @@ const Orders = () => {
                   const stockSynced = order.stockDeducted === true;
 
                   const isCancelled = order.status === "cancelled";
+                  const isCompleted = order.status === "completed";
 
                   const orderDebt = Number(order.debt || 0);
 
-                  const orderProfit = getOrderProfit(order);
+                  const orderProfit = isCompleted ? getOrderProfit(order) : null;
 
-                  const orderCost = getOrderCost(order);
+                  const orderCost = isCompleted ? getOrderCost(order) : null;
 
                   return (
                     <TableRow
@@ -2442,45 +2444,44 @@ const Orders = () => {
                       </TableCell>
 
                       {/* GIÁ VỐN */}
-
                       <TableCell>
-                        <Typography fontWeight={700}>
-                          {formatMoney(orderCost)}
-                        </Typography>
-
-                        <Typography variant="caption" color="text.secondary">
-                          Theo defaultPrice × tỷ giá
-                        </Typography>
+                        {isCompleted ? (
+                          <>
+                            <Typography fontWeight={700}>{formatMoney(orderCost)}</Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              Theo giá vốn đã lưu × tỷ giá
+                            </Typography>
+                          </>
+                        ) : (
+                          <Typography color="text.secondary">Chưa ghi nhận</Typography>
+                        )}
                       </TableCell>
 
                       {/* LÃI / LỖ */}
-
                       <TableCell>
-                        <Stack
-                          direction="row"
-                          spacing={0.5}
-                          alignItems="center"
-                        >
-                          {orderProfit >= 0 ? (
-                            <TrendingUp fontSize="small" color="success" />
-                          ) : (
-                            <TrendingDown fontSize="small" color="error" />
-                          )}
-
-                          <Typography
-                            fontWeight={800}
-                            color={
-                              orderProfit >= 0 ? "success.main" : "error.main"
-                            }
-                          >
-                            {orderProfit >= 0 ? "+" : ""}
-                            {formatMoney(orderProfit)}
-                          </Typography>
-                        </Stack>
-
-                        <Typography variant="caption" color="text.secondary">
-                          Tỷ giá {exchangeRate.toLocaleString("vi-VN")}
-                        </Typography>
+                        {isCompleted ? (
+                          <>
+                            <Stack direction="row" spacing={0.5} alignItems="center">
+                              {orderProfit >= 0 ? (
+                                <TrendingUp fontSize="small" color="success" />
+                              ) : (
+                                <TrendingDown fontSize="small" color="error" />
+                              )}
+                              <Typography
+                                fontWeight={800}
+                                color={orderProfit >= 0 ? "success.main" : "error.main"}
+                              >
+                                {orderProfit >= 0 ? "+" : ""}
+                                {formatMoney(orderProfit)}
+                              </Typography>
+                            </Stack>
+                            <Typography variant="caption" color="text.secondary">
+                              Tỷ giá {exchangeRate.toLocaleString("vi-VN")}
+                            </Typography>
+                          </>
+                        ) : (
+                          <Typography color="text.secondary">Chưa ghi nhận</Typography>
+                        )}
                       </TableCell>
 
                       {/* ĐÃ TRẢ */}
