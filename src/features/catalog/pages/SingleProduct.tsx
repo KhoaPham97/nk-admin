@@ -227,6 +227,11 @@ const SingleProduct: FC = () => {
     }
   }, [productID, dispatch]);
 
+  useEffect(() => {
+    setReviewPage(1);
+    setReviewData(null);
+  }, [productID]);
+
   /* ===================================================
      SHOPEE REVIEWS
   =================================================== */
@@ -1112,6 +1117,13 @@ const SingleProduct: FC = () => {
                         <a key={image + index} href={image} target="_blank" rel="noreferrer">
                           <img src={image} alt="Ảnh đánh giá Shopee" loading="lazy" className="h-20 w-20 rounded-lg border border-gray-100 object-cover dark:border-slate-700" />
                         </a>
+                      ))}
+                    </div>
+                  )}
+                  {(review.videos || []).length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {review.videos.map((video: string, index: number) => (
+                        <video key={video + index} src={video} controls preload="metadata" className="max-h-48 max-w-full rounded-lg border border-gray-100 dark:border-slate-700" />
                       ))}
                     </div>
                   )}
