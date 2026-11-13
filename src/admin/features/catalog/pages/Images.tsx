@@ -179,12 +179,12 @@ const Images: React.FC = () => {
   };
 
   const deleteItem = async (item: MediaItem) => {
-    if (!window.confirm("Xóa ảnh này khỏi thư viện R2? Thao tác này không thể hoàn tác.")) return;
+    if (!window.confirm("Xóa ảnh này khỏi thư viện Cloudinary? Thao tác này không thể hoàn tác.")) return;
     try {
       setDeletingId(item._id);
       setError("");
       await axios.delete(MEDIA_API + "/" + item._id, authConfig());
-      setNotice("Đã xóa ảnh khỏi Cloudflare R2.");
+      setNotice("Đã xóa ảnh khỏi Cloudinary.");
       if (selected?._id === item._id) setSelected(null);
       await loadMedia();
     } catch (err: any) {
@@ -208,7 +208,7 @@ const Images: React.FC = () => {
             Thư viện hình ảnh
           </Typography>
           <Typography color="text.secondary" fontSize={13} sx={{ mt: 0.5 }}>
-            Quản lý ảnh tập trung trên Cloudflare R2
+            Quản lý ảnh tập trung trên Cloudinary
           </Typography>
         </Box>
         <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
@@ -259,7 +259,7 @@ const Images: React.FC = () => {
         <Card variant="outlined" sx={panelSx}><CardContent sx={{ p: 2, "&:last-child": { pb: 2 } }}>
           <Typography color="text.secondary" fontSize={12}>Lưu trữ</Typography>
           <Stack direction="row" alignItems="center" spacing={1} sx={{ mt: 0.5 }}>
-            <Chip label="Cloudflare R2" color="success" size="small" />
+            <Chip label="Cloudinary" color="success" size="small" />
             <Typography color="text.secondary" fontSize={12}>MongoDB quản lý metadata</Typography>
           </Stack>
         </CardContent></Card>
@@ -330,7 +330,7 @@ const Images: React.FC = () => {
           <ImageOutlinedIcon sx={{ fontSize: 54, color: "text.disabled", mb: 1 }} />
           <Typography fontWeight={700}>Chưa có hình ảnh trong thư viện</Typography>
           <Typography color="text.secondary" fontSize={13} sx={{ mt: 0.5, textAlign: "center" }}>
-            Tải ảnh lên để lưu trữ trên Cloudflare R2.
+            Tải ảnh lên để lưu trữ trên Cloudinary.
           </Typography>
           <Button sx={{ mt: 2, textTransform: "none" }} startIcon={<AddPhotoAlternateOutlinedIcon />} onClick={() => fileInputRef.current?.click()}>
             Chọn ảnh
@@ -350,7 +350,7 @@ const Images: React.FC = () => {
                 <Box component="img" src={selected.url} alt={selected.alt || selected.originalName} sx={{ maxWidth: "100%", maxHeight: "60vh", objectFit: "contain" }} />
               </Box>
               <Typography fontSize={13} sx={{ overflowWrap: "anywhere" }}><b>Tên file:</b> {selected.originalName}</Typography>
-              <Typography fontSize={13} sx={{ overflowWrap: "anywhere" }}><b>Đường dẫn R2:</b> {selected.storageKey}</Typography>
+              <Typography fontSize={13} sx={{ overflowWrap: "anywhere" }}><b>Cloudinary public ID:</b> {selected.storageKey}</Typography>
               <Typography fontSize={13}><b>Định dạng:</b> {selected.mimeType} · {formatBytes(selected.size)}</Typography>
               <TextField size="small" label="URL hình ảnh" value={selected.url} fullWidth InputProps={{ readOnly: true }} />
             </Stack>
