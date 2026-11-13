@@ -1785,10 +1785,13 @@ const Orders = () => {
   // =====================================================
 
   const currentPageRevenue = useMemo(() => {
-    return filteredOrders.reduce(
-      (totalRevenue, order) => totalRevenue + getOrderRevenue(order),
-      0,
-    );
+    // Doanh thu chỉ ghi nhận các đơn đã hoàn thành.
+    return filteredOrders
+      .filter((order) => order?.status === "completed")
+      .reduce(
+        (totalRevenue, order) => totalRevenue + getOrderRevenue(order),
+        0,
+      );
   }, [filteredOrders]);
 
   // =====================================================
