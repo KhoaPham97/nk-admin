@@ -171,7 +171,7 @@ const ProductCard: FC<ProductCardProps> = (product) => {
       return value;
     }
 
-    return `/images/${value}`;
+    return value.startsWith("images/") ? `/${value}` : `/images/${value}`;
   };
 
   /* =======================================================
