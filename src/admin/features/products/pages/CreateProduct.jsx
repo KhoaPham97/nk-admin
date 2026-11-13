@@ -102,6 +102,8 @@ const initialForm = {
 
   price: "",
   rating: 5,
+  shopeeItemId: "",
+  shopeeShopId: "",
   originalPrice: "",
 
   thumbnail: "",
@@ -422,6 +424,9 @@ export default function CreateProduct() {
         originalPrice: String(form.originalPrice || "0"),
 
         rating: Number(form.rating || 0),
+
+        shopeeItemId: String(form.shopeeItemId || "").trim(),
+        shopeeShopId: String(form.shopeeShopId || "").trim(),
 
         thumbnail: form.thumbnail || "",
 
@@ -1139,6 +1144,22 @@ export default function CreateProduct() {
       {/* =====================================================
           DESCRIPTION
       ===================================================== */}
+
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Typography fontWeight={700} mb={2}>
+            Liên kết Shopee
+          </Typography>
+          <Grid container spacing={2}>
+            <Grid item xs={12} md={6}>
+              <TextField fullWidth label="Shopee Item ID" value={form.shopeeItemId} onChange={handleChange("shopeeItemId")} helperText="ID sản phẩm Shopee dùng để lấy đánh giá." />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField fullWidth label="Shopee Shop ID" value={form.shopeeShopId} onChange={handleChange("shopeeShopId")} helperText="Có thể để trống nếu chỉ kết nối một gian hàng." />
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
 
       <Card sx={{ mb: 3 }}>
         <CardContent>
