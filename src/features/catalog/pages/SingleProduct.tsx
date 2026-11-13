@@ -1091,87 +1091,225 @@ const SingleProduct: FC = () => {
         </div>
 
         {/* SHOPEE REVIEWS */}
-        <section className="mt-10 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 sm:p-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-orange-600">Đánh giá từ Shopee</p>
-              <h2 className="mt-1 text-xl font-bold text-gray-900 dark:text-white">Khách hàng nói gì về sản phẩm</h2>
-            </div>
-            <div className="text-right">
-              <div className="text-2xl font-extrabold text-amber-500">{Number(reviewData?.summary?.averageRating || 0).toFixed(1)} / 5</div>
-              <div className="text-xs text-gray-500">{reviewData?.summary?.total || 0} đánh giá</div>
+        <section
+          id="product-reviews"
+          className="mt-10 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900"
+        >
+          <div className="border-b border-slate-100 bg-gradient-to-r from-orange-50 via-white to-amber-50 px-4 py-5 dark:border-slate-700 dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 sm:px-6">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <div className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-bold text-orange-700 shadow-sm dark:bg-slate-800 dark:text-orange-300">
+                  <span className="h-2 w-2 rounded-full bg-orange-500" />
+                  ĐÁNH GIÁ ĐÃ MUA TRÊN SHOPEE
+                </div>
+                <h2 className="mt-3 text-xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-2xl">
+                  Đánh giá sản phẩm
+                </h2>
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                  Chia sẻ thực tế từ khách hàng Nhật Khang Bike trên Shopee
+                </p>
+              </div>
+              <div className="min-w-[116px] rounded-2xl border border-orange-100 bg-white px-4 py-3 text-center shadow-sm dark:border-slate-700 dark:bg-slate-800">
+                <div className="text-3xl font-black leading-none text-orange-600 dark:text-orange-400">
+                  {Number(reviewData?.summary?.averageRating || 0).toFixed(1)}
+                  <span className="ml-1 text-base font-bold text-slate-400">/5</span>
+                </div>
+                <div className="mt-1 text-sm tracking-wider text-amber-500" aria-label="Điểm đánh giá">
+                  ★★★★★
+                </div>
+                <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                  {reviewData?.summary?.total || 0} lượt đánh giá
+                </div>
+              </div>
             </div>
           </div>
-          <div className="mt-4 flex flex-wrap gap-2">
-            {[0, 5, 4, 3, 2, 1].map((rating) => (
-              <button key={rating} type="button" onClick={() => {
-                setReviewRatingFilter(rating);
-                setReviewPage(1);
-              }} className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
-                reviewRatingFilter === rating ? "border-orange-500 bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-300" : "border-gray-200 text-gray-600 dark:border-slate-700 dark:text-gray-300"
-              }`}>
-                {rating === 0 ? "Tất cả" : `${rating} sao`}
-                {rating === 0 ? ` (${reviewData?.summary?.total || 0})` : ` (${reviewData?.summary?.breakdown?.[rating] || 0})`}
-              </button>
-            ))}
-          </div>
-          {reviewLoading ? (
-            <div className="py-10 text-center text-sm text-gray-500">Đang tải đánh giá...</div>
-          ) : (reviewData?.data || []).length > 0 ? (
-            <div className="mt-4 divide-y divide-gray-100 dark:divide-slate-700">
-              {reviewData.data.map((review) => (
-                <article key={review.commentId} className="py-4 first:pt-1">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="font-semibold text-gray-900 dark:text-white">
-                      {review.customerName || "Khách hàng Shopee"}
-                      <span className="ml-2 rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-semibold text-green-700 dark:bg-green-900/20 dark:text-green-300">Shopee</span>
-                    </div>
-                    <time className="text-xs text-gray-400">{review.reviewCreatedAt ? new Date(review.reviewCreatedAt).toLocaleDateString("vi-VN") : ""}</time>
-                  </div>
-                  <div className="mt-1 flex items-center gap-1 text-amber-500" aria-label={`${review.rating} sao`}>
-                    {Array.from({ length: 5 }, (_, index) => <span key={index} className={index < Number(review.rating) ? "text-amber-500" : "text-gray-300"}>★</span>)}
-                  </div>
-                  {review.content && <p className="mt-2 whitespace-pre-line text-sm leading-6 text-gray-700 dark:text-gray-300">{review.content}</p>}
-                  {(review.images || []).length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {review.images.map((image: string, index: number) => (
-                        <a key={image + index} href={image} target="_blank" rel="noreferrer">
-                          <img src={image} alt="Ảnh đánh giá Shopee" loading="lazy" className="h-20 w-20 rounded-lg border border-gray-100 object-cover dark:border-slate-700" />
-                        </a>
-                      ))}
-                    </div>
-                  )}
-                  {(review.videos || []).length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {review.videos.map((video: string, index: number) => (
-                        <video key={video + index} src={video} controls preload="metadata" className="max-h-48 max-w-full rounded-lg border border-gray-100 dark:border-slate-700" />
-                      ))}
-                    </div>
-                  )}
-                  {review.shopeeReply && (
-                    <div className="mt-3 rounded-xl bg-gray-50 p-3 dark:bg-slate-800">
-                      <p className="text-xs font-bold text-blue-600 dark:text-blue-400">Phản hồi từ Nhật Khang Bike</p>
-                      <p className="mt-1 whitespace-pre-line text-sm text-gray-600 dark:text-gray-300">{review.shopeeReply}</p>
-                    </div>
-                  )}
-                </article>
-              ))}
-            </div>
-          ) : (
-            <div className="py-10 text-center text-sm text-gray-500">Chưa có đánh giá Shopee cho sản phẩm này.</div>
-          )}
-          {reviewData?.pagination?.hasMore && (
-            <div className="mt-4 text-center">
+
+          <div className="grid gap-5 px-4 py-5 sm:px-6 lg:grid-cols-[230px_minmax(0,1fr)]">
+            <div className="space-y-3">
+              <p className="text-sm font-bold text-slate-800 dark:text-slate-100">Thống kê số sao</p>
+              {[5, 4, 3, 2, 1].map((rating) => {
+                const total = Number(reviewData?.summary?.total || 0);
+                const count = Number(reviewData?.summary?.breakdown?.[rating] || 0);
+                const percent = total > 0 ? (count / total) * 100 : 0;
+                return (
+                  <button
+                    key={rating}
+                    type="button"
+                    onClick={() => {
+                      setReviewRatingFilter(rating);
+                      setReviewPage(1);
+                    }}
+                    aria-pressed={reviewRatingFilter === rating}
+                    className={`group flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition ${
+                      reviewRatingFilter === rating
+                        ? "bg-orange-50 ring-1 ring-orange-200 dark:bg-orange-950/30 dark:ring-orange-900"
+                        : "hover:bg-slate-50 dark:hover:bg-slate-800"
+                    }`}
+                  >
+                    <span className="w-9 shrink-0 text-xs font-semibold text-slate-600 dark:text-slate-300">{rating} sao</span>
+                    <span className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700">
+                      <span className="block h-full rounded-full bg-amber-400 transition-all" style={{ width: `${percent}%` }} />
+                    </span>
+                    <span className="w-7 shrink-0 text-right text-xs tabular-nums text-slate-500 dark:text-slate-400">{count}</span>
+                  </button>
+                );
+              })}
               <button
                 type="button"
-                disabled={reviewLoading}
-                onClick={() => setReviewPage((page) => page + 1)}
-                className="rounded-xl border border-orange-200 px-5 py-2.5 text-sm font-semibold text-orange-700 transition hover:bg-orange-50 disabled:opacity-50 dark:border-orange-900 dark:text-orange-300 dark:hover:bg-orange-900/20"
+                onClick={() => {
+                  setReviewRatingFilter(0);
+                  setReviewPage(1);
+                }}
+                aria-pressed={reviewRatingFilter === 0}
+                className={`mt-2 w-full rounded-xl border px-3 py-2 text-sm font-semibold transition ${
+                  reviewRatingFilter === 0
+                    ? "border-orange-500 bg-orange-500 text-white shadow-sm"
+                    : "border-slate-200 text-slate-600 hover:border-orange-300 hover:text-orange-700 dark:border-slate-700 dark:text-slate-300"
+                }`}
               >
-                {reviewLoading ? "Đang tải..." : "Xem thêm đánh giá"}
+                Xem tất cả đánh giá
               </button>
             </div>
-          )}
+
+            <div className="min-w-0">
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                  {reviewRatingFilter ? `Đánh giá ${reviewRatingFilter} sao` : "Tất cả nhận xét"}
+                </h3>
+                <span className="text-xs text-slate-500 dark:text-slate-400">
+                  Nguồn dữ liệu: Shopee
+                </span>
+              </div>
+
+              {reviewLoading && reviewPage === 1 ? (
+                <div className="space-y-4 py-3" aria-live="polite">
+                  {[1, 2, 3].map((item) => (
+                    <div key={item} className="animate-pulse border-b border-slate-100 pb-4 dark:border-slate-800">
+                      <div className="h-3 w-32 rounded bg-slate-100 dark:bg-slate-800" />
+                      <div className="mt-3 h-3 w-24 rounded bg-slate-100 dark:bg-slate-800" />
+                      <div className="mt-3 h-3 w-full rounded bg-slate-100 dark:bg-slate-800" />
+                      <div className="mt-2 h-3 w-2/3 rounded bg-slate-100 dark:bg-slate-800" />
+                    </div>
+                  ))}
+                </div>
+              ) : (reviewData?.data || []).length > 0 ? (
+                <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {reviewData?.data?.map((review) => (
+                    <article key={review.commentId} className="py-5 first:pt-2">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-100 text-sm font-extrabold text-orange-700 dark:bg-orange-950/50 dark:text-orange-300">
+                            {(review.customerName || "K").trim().charAt(0).toUpperCase()}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-bold text-slate-900 dark:text-white">
+                              {review.customerName || "Khách hàng Shopee"}
+                            </p>
+                            <div className="mt-0.5 flex flex-wrap items-center gap-2">
+                              <span className="text-xs tracking-wider text-amber-500" aria-label={`${review.rating} trên 5 sao`}>
+                                {"★".repeat(Math.max(0, Math.min(5, Number(review.rating) || 0)))}
+                                <span className="text-slate-300 dark:text-slate-600">{"★".repeat(5 - Math.max(0, Math.min(5, Number(review.rating) || 0)))}</span>
+                              </span>
+                              <span className="rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-bold text-green-700 dark:bg-green-950/40 dark:text-green-300">
+                                Đánh giá Shopee
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <time className="shrink-0 text-xs text-slate-400">
+                          {review.reviewCreatedAt ? new Date(review.reviewCreatedAt).toLocaleDateString("vi-VN") : ""}
+                        </time>
+                      </div>
+
+                      {review.content ? (
+                        <p className="mt-3 whitespace-pre-line text-sm leading-6 text-slate-700 dark:text-slate-300">
+                          {review.content}
+                        </p>
+                      ) : (
+                        <p className="mt-3 text-sm italic text-slate-400">Khách hàng không để lại nội dung.</p>
+                      )}
+
+                      {(review.images || []).length > 0 && (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {review.images?.map((image, index) => (
+                            <a
+                              key={image + index}
+                              href={image}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="block overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700"
+                            >
+                              <img
+                                src={image}
+                                alt={`Ảnh đánh giá của khách hàng ${index + 1}`}
+                                loading="lazy"
+                                className="h-20 w-20 object-cover transition duration-200 hover:scale-105 sm:h-24 sm:w-24"
+                              />
+                            </a>
+                          ))}
+                        </div>
+                      )}
+
+                      {(review.videos || []).length > 0 && (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {review.videos?.map((video, index) => (
+                            <video
+                              key={video + index}
+                              src={video}
+                              controls
+                              preload="metadata"
+                              className="max-h-52 max-w-full rounded-xl border border-slate-200 dark:border-slate-700"
+                            />
+                          ))}
+                        </div>
+                      )}
+
+                      {review.shopeeReply && (
+                        <div className="mt-4 rounded-xl border-l-4 border-blue-400 bg-blue-50/80 px-4 py-3 dark:border-blue-500 dark:bg-blue-950/30">
+                          <p className="text-xs font-bold text-blue-700 dark:text-blue-300">
+                            Nhật Khang Bike phản hồi
+                          </p>
+                          <p className="mt-1 whitespace-pre-line text-sm leading-6 text-slate-700 dark:text-slate-300">
+                            {review.shopeeReply}
+                          </p>
+                        </div>
+                      )}
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-10 text-center dark:border-slate-700">
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-orange-50 text-2xl text-orange-500 dark:bg-orange-950/30">
+                    ★
+                  </div>
+                  <p className="mt-3 text-sm font-bold text-slate-800 dark:text-slate-100">
+                    Chưa có đánh giá cho sản phẩm này
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                    Đánh giá từ Shopee sẽ hiển thị tại đây sau khi được đồng bộ.
+                  </p>
+                </div>
+              )}
+
+              {reviewData?.pagination?.hasMore && (
+                <div className="mt-5 text-center">
+                  <button
+                    type="button"
+                    disabled={reviewLoading}
+                    onClick={() => setReviewPage((page) => page + 1)}
+                    className="inline-flex min-w-44 items-center justify-center gap-2 rounded-xl border border-orange-200 bg-white px-5 py-2.5 text-sm font-bold text-orange-700 shadow-sm transition hover:border-orange-400 hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-orange-900 dark:bg-slate-800 dark:text-orange-300 dark:hover:bg-slate-700"
+                  >
+                    {reviewLoading ? (
+                      <>
+                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-orange-200 border-t-orange-600" />
+                        Đang tải...
+                      </>
+                    ) : "Xem thêm đánh giá"}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
         </section>
 
         {/* =================================================
