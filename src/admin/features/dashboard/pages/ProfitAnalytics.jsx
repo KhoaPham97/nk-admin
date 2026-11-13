@@ -124,6 +124,7 @@ const getBatchLabel = (allocation) =>
 const ProfitAnalytics = () => {
   const [orders, setOrders] = useState([]);
   const [histories, setHistories] = useState([]);
+  const [batches, setBatches] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -143,7 +144,7 @@ const ProfitAnalytics = () => {
 
       setError("");
 
-      const [orderRes, historyRes] = await Promise.all([
+      const [orderRes, historyRes, batchRes] = await Promise.all([
         axios.get(API_ENDPOINTS.ORDER, {
           ...getAuthConfig(),
           params: {
@@ -160,10 +161,47 @@ const ProfitAnalytics = () => {
             type: "order",
           },
         }),
+
+        axios.get(API_ENDPOINTS.INVENTORY_BATCHES, {
+          ...getAuthConfig(),
+          params: {
+            page: 1,
+            limit: 100,
+            sort: "created_at",
+            order: "desc",
+          },
+        }),
       ]);
 
       setOrders(getRows(orderRes.data, "orders"));
       setHistories(getRows(historyRes.data, "histories"));
+
+      // Lấy đủ các trang lô để thống kê tháng không bị thiếu khi kho có
+      // nhiều hơn 100 lô.
+      const firstPageBatches = getRows(batchRes.data, "batches");
+      const totalPages = Math.max(
+        1,
+        Number(batchRes.data?.pagination?.totalPages || 1),
+      );
+      const remainingPages = await Promise.all(
+        Array.from({ length: totalPages - 1 }, (_, index) =>
+          axios.get(API_ENDPOINTS.INVENTORY_BATCHES, {
+            ...getAuthConfig(),
+            params: {
+              page: index + 2,
+              limit: 100,
+              sort: "created_at",
+              order: "desc",
+            },
+          }),
+        ),
+      );
+      setBatches([
+        ...firstPageBatches,
+        ...remainingPages.flatMap((response) =>
+          getRows(response.data, "batches"),
+        ),
+      ]);
     } catch (err) {
       console.error("LOAD PROFIT ANALYTICS:", err);
 
@@ -340,12 +378,71 @@ const ProfitAnalytics = () => {
   }, [orders, historyMap]);
 
   // =====================================================
+  // CÁC LÔ NHẬP MỚI TRONG THÁNG HIỆN TẠI
+  // Chỉ tính lô nhập thực tế từ phiếu nhập; không lấy tồn đầu kỳ,
+  // lô dựng lịch sử hoặc điều chỉnh thủ công.
+  // =====================================================
+
+  const currentMonthBatches = useMemo(() => {
+    const now = new Date();
+    return batches.filter((batch) => {
+      if (batch.source !== "receipt") return false;
+      const importDate = getDate(batch.importDate);
+      return Boolean(
+        importDate &&
+          importDate.getFullYear() === now.getFullYear() &&
+          importDate.getMonth() === now.getMonth(),
+      );
+    });
+  }, [batches]);
+
+  const currentMonthBatchIds = useMemo(
+    () => new Set(currentMonthBatches.map((batch) => normalizeId(batch._id))),
+    [currentMonthBatches],
+  );
+
+  const currentMonthLabel = useMemo(
+    () =>
+      new Date().toLocaleDateString("vi-VN", {
+        month: "long",
+        year: "numeric",
+      }),
+    [],
+  );
+
+  // =====================================================
   // BATCH PROFIT DATA
   // MỖI LÔ HÀNG LÀ MỘT BIỂU ĐỒ RIÊNG
   // =====================================================
 
   const batchProfitData = useMemo(() => {
     const batchMap = new Map();
+
+    // Khởi tạo trước tất cả lô nhập trong tháng, kể cả lô chưa phát sinh bán.
+    currentMonthBatches.forEach((batch) => {
+      const key = getBatchKey(
+        { batchId: batch._id, batchCode: batch.batchCode },
+        batch,
+      );
+      batchMap.set(key, {
+        key,
+        batchCode: getBatchLabel({
+          batchId: batch._id,
+          batchCode: batch.batchCode,
+        }),
+        batchId: normalizeId(batch._id),
+        importDate: batch.importDate,
+        importQty: n(batch.importQty),
+        remainingQty: n(batch.remainingQty),
+        qty: 0,
+        revenue: 0,
+        cost: 0,
+        profit: 0,
+        missingCost: false,
+        orderCount: new Set(),
+        products: new Set([String(batch.productTitle || "Sản phẩm")]),
+      });
+    });
 
     const addBatch = ({
       allocation,
@@ -359,6 +456,9 @@ const ProfitAnalytics = () => {
       if (qty <= 0) return;
 
       const key = getBatchKey(allocation, item);
+
+      // Chỉ ghi nhận doanh thu/giá vốn từ những lô được nhập trong tháng này.
+      if (!currentMonthBatchIds.has(normalizeId(allocation.batchId))) return;
 
       const current = batchMap.get(key) || {
         key,
@@ -535,7 +635,7 @@ const ProfitAnalytics = () => {
 
         return n(b.profit) - n(a.profit);
       });
-  }, [orders, historyMap]);
+  }, [orders, historyMap, currentMonthBatches, currentMonthBatchIds]);
 
   // =====================================================
   // SUMMARY
@@ -773,8 +873,11 @@ const ProfitAnalytics = () => {
         }}
       >
         <CardContent>
-          <Typography variant="h6" fontWeight={800} mb={2}>
-            Thống kê lợi nhuận theo lô hàng
+          <Typography variant="h6" fontWeight={800} mb={0.5}>
+            Thống kê lợi nhuận theo lô nhập mới
+          </Typography>
+          <Typography variant="body2" color="text.secondary" mb={2}>
+            Chỉ các lô nhập từ phiếu nhập trong {currentMonthLabel}; không tính tồn đầu kỳ hoặc lô lịch sử.
           </Typography>
 
           <Grid container spacing={2}>
@@ -839,12 +942,12 @@ const ProfitAnalytics = () => {
 
       <Stack spacing={2}>
         <Typography variant="h6" fontWeight={800}>
-          Biểu đồ chi tiết từng lô hàng
+          Biểu đồ chi tiết từng lô nhập trong {currentMonthLabel}
         </Typography>
 
         {batchProfitData.length === 0 ? (
           <Alert severity="info">
-            Chưa tìm thấy dữ liệu lô hàng từ các đơn hoàn thành và đã trừ kho.
+            Tháng này chưa có lô nhập mới hoặc chưa có dữ liệu phân bổ bán hàng từ các lô này.
           </Alert>
         ) : (
           <Grid container spacing={2}>
