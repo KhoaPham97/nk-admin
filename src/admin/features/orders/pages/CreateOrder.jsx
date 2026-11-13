@@ -32,7 +32,7 @@ import { useNavigate } from "react-router-dom";
 
 import { API_ENDPOINTS } from "../../../../api";
 
-const formatMoney = (value) => {
+const getProductImageUrl = (value) => {\n  const image = String(value || "").trim();\n  if (!image) return "/images/no-image.png";\n  if (/^(https?:|data:|blob:)/i.test(image) || image.startsWith("/")) return image;\n  return image.startsWith("images/") ? `/${image}` : `/images/${image}`;\n};\n\nconst formatMoney = (value) => {
   return Number(value || 0).toLocaleString("vi-VN") + " đ";
 };
 const token = localStorage.getItem("adminToken"); // Hoặc accessToken tùy tên bạn lưu
@@ -770,7 +770,7 @@ const CreateOrder = () => {
                       {option.thumbnail ? (
                         <Box
                           component="img"
-                          src={"/images/" + option.thumbnail}
+                          src={getProductImageUrl(option.thumbnail)}
                           alt={option.title || option.name || ""}
                           sx={{
                             width: 45,
@@ -1104,7 +1104,7 @@ const CreateOrder = () => {
                           {item.thumbnail ? (
                             <Box
                               component="img"
-                              src={"/images/" + item.thumbnail}
+                              src={getProductImageUrl(item.thumbnail)}
                               alt={item.productTitle}
                               sx={{
                                 width: 60,
