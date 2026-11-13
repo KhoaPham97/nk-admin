@@ -58,6 +58,39 @@ const formatBytes = (bytes: number) => {
   return (bytes / Math.pow(1024, index)).toFixed(index ? 1 : 0) + " " + units[index];
 };
 
+const prepareImageForUpload = async (file: File): Promise<File> => {
+  if (file.type === "image/gif" || !["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+    return file;
+  }
+
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, 1800 / Math.max(bitmap.width, bitmap.height));
+    const width = Math.max(1, Math.round(bitmap.width * scale));
+    const height = Math.max(1, Math.round(bitmap.height * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d");
+    if (!context) {
+      bitmap.close();
+      return file;
+    }
+    context.drawImage(bitmap, 0, 0, width, height);
+    bitmap.close();
+
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, "image/webp", 0.84),
+    );
+    if (!blob || blob.size >= file.size) return file;
+
+    const name = file.name.replace(/\.[^.]+$/, "") + ".webp";
+    return new File([blob], name, { type: "image/webp", lastModified: Date.now() });
+  } catch {
+    return file;
+  }
+};
+
 const panelSx = {
   border: "1px solid",
   borderColor: "divider",
@@ -112,7 +145,8 @@ const Images: React.FC = () => {
   const uploadFiles = async (files: FileList | null) => {
     if (!files?.length) return;
     const form = new FormData();
-    Array.from(files).forEach((file) => form.append("images", file));
+    const preparedFiles = await Promise.all(Array.from(files).map(prepareImageForUpload));
+    preparedFiles.forEach((file) => form.append("images", file));
     form.append("folder", uploadFolder);
     try {
       setUploading(true);
