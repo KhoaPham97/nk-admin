@@ -21,6 +21,10 @@ import {
   TableHead,
   TableRow,
   Typography,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
 } from "@mui/material";
 
 import {
@@ -546,6 +550,7 @@ const AdminStatistics: React.FC = () => {
 
   const [shopeeShops, setShopeeShops] = useState<any[]>([]);
   const [selectedShopeeShopId, setSelectedShopeeShopId] = useState("");
+  const [selectedRevenueYear, setSelectedRevenueYear] = useState(String(new Date().getFullYear()));
 
   const [error, setError] = useState("");
 
@@ -850,70 +855,45 @@ const AdminStatistics: React.FC = () => {
   // MONTHLY REVENUE
   // ==========================================================
 
-  const monthlyRevenue = useMemo(() => {
-    const now = new Date();
-
-    const months = Array.from({ length: 12 }, (_, index) => {
-      const date = new Date(now.getFullYear(), now.getMonth() - 11 + index, 1);
-
-      return {
-        key: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
-          2,
-          "0",
-        )}`,
-        label: `T${date.getMonth() + 1}/${date.getFullYear()}`,
-        revenue: 0,
-        orderCount: 0,
-      };
+  const revenueYears = useMemo(() => {
+    const years = new Set([String(new Date().getFullYear())]);
+    orders.forEach((order) => {
+      if (order.status !== "completed") return;
+      const date = new Date(order.created_at || order.createdAt || "");
+      if (!Number.isNaN(date.getTime())) years.add(String(date.getFullYear()));
     });
+    return [...years].sort((a, b) => Number(b) - Number(a));
+  }, [orders]);
 
+  const monthlyRevenue = useMemo(() => {
+    const year = Number(selectedRevenueYear);
+    const monthLabels = ["Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6", "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"];
+    const months = monthLabels.map((label, index) => ({
+      key: `${year}-${String(index + 1).padStart(2, "0")}`,
+      label,
+      revenue: 0,
+      orderCount: 0,
+    }));
     const monthMap = new Map(months.map((month) => [month.key, month]));
 
     orders.forEach((order) => {
       if (order.status !== "completed") return;
-
       const orderDate = new Date(order.created_at || order.createdAt || "");
-
-      if (Number.isNaN(orderDate.getTime())) return;
-
-      const key = `${orderDate.getFullYear()}-${String(
-        orderDate.getMonth() + 1,
-      ).padStart(2, "0")}`;
-
+      if (Number.isNaN(orderDate.getTime()) || orderDate.getFullYear() !== year) return;
+      const key = `${year}-${String(orderDate.getMonth() + 1).padStart(2, "0")}`;
       const month = monthMap.get(key);
-
       if (!month) return;
-
       month.revenue += Number(order.totalAmount || 0);
       month.orderCount += 1;
     });
 
-    const totalRevenue = months.reduce((sum, month) => sum + month.revenue, 0);
-
-    const maxRevenue = Math.max(...months.map((month) => month.revenue), 1);
-
-    const currentMonth = months[months.length - 1];
-    const previousMonth = months[months.length - 2];
-
-    const growth =
-      previousMonth.revenue > 0
-        ? ((currentMonth.revenue - previousMonth.revenue) /
-            previousMonth.revenue) *
-          100
-        : currentMonth.revenue > 0
-          ? 100
-          : 0;
-
     return {
       months,
-      totalRevenue,
-      maxRevenue,
+      totalRevenue: months.reduce((sum, month) => sum + month.revenue, 0),
+      maxRevenue: Math.max(...months.map((month) => month.revenue), 1),
       totalOrders: months.reduce((sum, month) => sum + month.orderCount, 0),
-      currentMonth,
-      previousMonth,
-      growth,
     };
-  }, [orders]);
+  }, [orders, selectedRevenueYear]);
   // ==========================================================
   // ANALYTICS SAFE DATA
   // ==========================================================
@@ -1109,6 +1089,51 @@ const AdminStatistics: React.FC = () => {
           />
         </Grid>
       </Grid>
+
+      <Card sx={{ mb: 3, border: "1px solid", borderColor: "divider", borderRadius: 3 }}>
+        <CardContent sx={{ p: { xs: 2, md: 3 } }}>
+          <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" alignItems={{ xs: "stretch", sm: "center" }} spacing={2} mb={2}>
+            <SectionHeader icon={<TrendingUpOutlined />} title="Doanh thu theo tháng" subtitle="Chỉ tính các đơn hàng đã hoàn thành" />
+            <FormControl size="small" sx={{ minWidth: 140 }}>
+              <InputLabel id="revenue-year-label">Năm</InputLabel>
+              <Select labelId="revenue-year-label" value={selectedRevenueYear} label="Năm" onChange={(event) => setSelectedRevenueYear(event.target.value)}>
+                {revenueYears.map((year) => <MenuItem key={year} value={year}>{year}</MenuItem>)}
+              </Select>
+            </FormControl>
+          </Stack>
+          <Grid container spacing={2} mb={2}>
+            <Grid item xs={12} sm={6}>
+              <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+                <Typography variant="body2" color="text.secondary">Tổng doanh thu năm {selectedRevenueYear}</Typography>
+                <Typography variant="h5" fontWeight={900} color="success.main">{formatMoney(monthlyRevenue.totalRevenue)} ₫</Typography>
+              </Paper>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+                <Typography variant="body2" color="text.secondary">Số đơn hoàn thành</Typography>
+                <Typography variant="h5" fontWeight={900}>{formatNumber(monthlyRevenue.totalOrders)}</Typography>
+              </Paper>
+            </Grid>
+          </Grid>
+          <Box sx={{ width: "100%", overflowX: "auto", pb: 1 }}>
+            <Box sx={{ minWidth: 720, height: 290, display: "flex", alignItems: "stretch", gap: 1.25, px: 1, pt: 2 }}>
+              {monthlyRevenue.months.map((month) => {
+                const barHeight = month.revenue > 0 ? Math.max((month.revenue / monthlyRevenue.maxRevenue) * 190, 6) : 2;
+                return (
+                  <Box key={month.key} title={`${month.label}: ${formatMoney(month.revenue)} ₫ • ${month.orderCount} đơn hoàn thành`} sx={{ flex: 1, minWidth: 42, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", gap: 0.75 }}>
+                    <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: "nowrap", fontSize: 10 }}>{month.revenue > 0 ? formatMoney(month.revenue) : "—"}</Typography>
+                    <Box sx={{ width: "min(100%, 42px)", height: 195, display: "flex", alignItems: "flex-end", justifyContent: "center", borderRadius: 1.5, bgcolor: "action.hover", overflow: "hidden" }}>
+                      <Box sx={{ width: "100%", height: barHeight, borderRadius: "6px 6px 0 0", bgcolor: "success.main", transition: "height .25s ease" }} />
+                    </Box>
+                    <Typography variant="caption" fontWeight={700} noWrap>{month.label}</Typography>
+                    <Typography variant="caption" color="text.secondary">{month.orderCount} đơn</Typography>
+                  </Box>
+                );
+              })}
+            </Box>
+          </Box>
+        </CardContent>
+      </Card>
 
       <ProfitAnalytics />
 
