@@ -51,9 +51,33 @@ export default function CloudinarySync() {
   const [current, setCurrent] = useState("");
   const [message, setMessage] = useState("");
   const [finished, setFinished] = useState(false);
+  const [migrationRunning, setMigrationRunning] = useState(false);
+  const [migrationResult, setMigrationResult] = useState(null);
 
   const total = PUBLIC_IMAGE_MANIFEST.length;
   const percent = total ? Math.round((progress / total) * 100) : 0;
+
+  const migrateUrls = async () => {
+    if (migrationRunning) return;
+    const token = getToken();
+    if (!token) { setMessage("Không tìm thấy phiên đăng nhập admin. Vui lòng đăng nhập lại."); return; }
+    setMigrationRunning(true);
+    setMigrationResult(null);
+    try {
+      const response = await fetch(BASE_URL + "/media/migrate-cloudinary-urls?apply=1", {
+        method: "POST",
+        headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" },
+        body: JSON.stringify({ apply: true }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || !result.success) throw new Error(result.message || "Không thể chuyển URL ảnh");
+      setMigrationResult(result);
+    } catch (error) {
+      setMessage(error.message || "Lỗi chuyển URL ảnh");
+    } finally {
+      setMigrationRunning(false);
+    }
+  };
 
   const startSync = async () => {
     if (running) return;
@@ -179,6 +203,33 @@ export default function CloudinarySync() {
             >
               {running ? "Đang đồng bộ…" : finished ? "Chạy đồng bộ lại / kiểm tra ảnh mới" : "Bắt đầu tải ảnh lên Cloudinary"}
             </Button>
+          </Stack>
+        </Paper>
+
+        <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 }, borderRadius: 3 }}>
+          <Stack spacing={1.5}>
+            <Typography fontWeight={800}>Chuyển đường dẫn ảnh sang Cloudinary</Typography>
+            <Typography variant="body2" color="text.secondary">
+              Sau khi tải ảnh lên, nhấn nút này để cập nhật URL trong sản phẩm: ảnh đại diện, ảnh chi tiết và ảnh từng phân loại; đồng thời cập nhật ảnh danh mục. Chỉ thay những ảnh có tên khớp với thư viện Cloudinary, ảnh chưa tải lên sẽ được giữ nguyên.
+            </Typography>
+            <Button variant="contained" color="success" onClick={migrateUrls} disabled={migrationRunning} sx={{ alignSelf: "flex-start", minHeight: 44, borderRadius: 2, fontWeight: 700 }}>
+              {migrationRunning ? "Đang chuyển đường dẫn…" : "Chuyển toàn bộ đường dẫn ảnh sang Cloudinary"}
+            </Button>
+            {migrationResult && (
+              <Alert severity="success">
+                {migrationResult.message} Sản phẩm: {migrationResult.products.updated}/{migrationResult.products.scanned}; danh mục: {migrationResult.categories.updated}/{migrationResult.categories.scanned}; số trường ảnh đã đổi: {migrationResult.products.fieldsChanged + migrationResult.categories.fieldsChanged}. Ảnh chưa khớp: {migrationResult.missingCount}; tên bị trùng: {migrationResult.ambiguousCount}.
+              </Alert>
+            )}
+            {migrationResult?.missing?.length > 0 && (
+              <Alert severity="warning">
+                Một số ảnh chưa có trên Cloudinary (hiển thị tối đa 100 mục): {migrationResult.missing.map((item) => item.image).join(", ")}
+              </Alert>
+            )}
+            {migrationResult?.ambiguous?.length > 0 && (
+              <Alert severity="warning">
+                Một số tên ảnh bị trùng nên hệ thống không tự đổi để tránh gắn nhầm: {migrationResult.ambiguous.map((item) => item.image).join(", ")}
+              </Alert>
+            )}
           </Stack>
         </Paper>
 
