@@ -32,7 +32,12 @@ import { useNavigate } from "react-router-dom";
 
 import { API_ENDPOINTS } from "../../../../api";
 
-const getProductImageUrl = (value) => {\n  const image = String(value || "").trim();\n  if (!image) return "/images/no-image.png";\n  if (/^(https?:|data:|blob:)/i.test(image) || image.startsWith("/")) return image;\n  return image.startsWith("images/") ? `/${image}` : `/images/${image}`;\n};\n\nconst formatMoney = (value) => {
+const getProductImageUrl = (value) => {
+  const image = String(value || "").trim();
+  if (!image) return "/images/no-image.png";
+  if (/^(https?:|data:|blob:)/i.test(image) || image.startsWith("/")) return image;
+  return image.startsWith("images/") ? `/${image}` : `/images/${image}`;
+};\n\nconst formatMoney = (value) => {
   return Number(value || 0).toLocaleString("vi-VN") + " đ";
 };
 const token = localStorage.getItem("adminToken"); // Hoặc accessToken tùy tên bạn lưu
