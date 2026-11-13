@@ -114,6 +114,7 @@ const SingleProduct: FC = () => {
   const [reviewData, setReviewData] = useState<any>(null);
   const [reviewLoading, setReviewLoading] = useState(false);
   const [reviewRatingFilter, setReviewRatingFilter] = useState(0);
+  const [reviewPage, setReviewPage] = useState(1);
 
   /* ===================================================
      VARIANT
@@ -236,14 +237,19 @@ const SingleProduct: FC = () => {
     const loadReviews = async () => {
       try {
         setReviewLoading(true);
-        const params = new URLSearchParams({ page: "1", limit: "10" });
+        const params = new URLSearchParams({ page: String(reviewPage), limit: "10" });
         if (reviewRatingFilter) params.set("rating", String(reviewRatingFilter));
         const response = await fetch(
           `${API_ENDPOINTS.PRODUCTS}/${productID}/reviews?${params.toString()}`,
           { signal: controller.signal },
         );
         if (!response.ok) throw new Error("Không thể tải đánh giá");
-        setReviewData(await response.json());
+        const nextData = await response.json();
+        setReviewData((previous: any) =>
+          reviewPage === 1
+            ? nextData
+            : { ...nextData, data: [...(previous?.data || []), ...(nextData.data || [])] },
+        );
       } catch (error: any) {
         if (error?.name !== "AbortError") {
           console.error("Load Shopee reviews error:", error);
@@ -255,7 +261,7 @@ const SingleProduct: FC = () => {
     };
     loadReviews();
     return () => controller.abort();
-  }, [productID, reviewRatingFilter]);
+  }, [productID, reviewRatingFilter, reviewPage]);
 
   /* ===================================================
      SIMILAR PRODUCTS
@@ -1072,7 +1078,10 @@ const SingleProduct: FC = () => {
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
             {[0, 5, 4, 3, 2, 1].map((rating) => (
-              <button key={rating} type="button" onClick={() => setReviewRatingFilter(rating)} className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+              <button key={rating} type="button" onClick={() => {
+                setReviewRatingFilter(rating);
+                setReviewPage(1);
+              }} className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
                 reviewRatingFilter === rating ? "border-orange-500 bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-300" : "border-gray-200 text-gray-600 dark:border-slate-700 dark:text-gray-300"
               }`}>
                 {rating === 0 ? "Tất cả" : `${rating} sao`}
@@ -1117,6 +1126,18 @@ const SingleProduct: FC = () => {
             </div>
           ) : (
             <div className="py-10 text-center text-sm text-gray-500">Chưa có đánh giá Shopee cho sản phẩm này.</div>
+          )}
+          {reviewData?.pagination?.hasMore && (
+            <div className="mt-4 text-center">
+              <button
+                type="button"
+                disabled={reviewLoading}
+                onClick={() => setReviewPage((page) => page + 1)}
+                className="rounded-xl border border-orange-200 px-5 py-2.5 text-sm font-semibold text-orange-700 transition hover:bg-orange-50 disabled:opacity-50 dark:border-orange-900 dark:text-orange-300 dark:hover:bg-orange-900/20"
+              >
+                {reviewLoading ? "Đang tải..." : "Xem thêm đánh giá"}
+              </button>
+            </div>
           )}
         </section>
 
