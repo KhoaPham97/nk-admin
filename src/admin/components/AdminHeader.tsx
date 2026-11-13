@@ -161,6 +161,9 @@ const AdminHeader = ({ onMenuClick, drawerWidth = 260, isMobile = false }) => {
           </Typography>
         </Box>
 
+        {/* ORDER NOTIFICATIONS */}
+        <AdminOrderNotifications />
+
         {/* USER */}
         <Box
           sx={{
