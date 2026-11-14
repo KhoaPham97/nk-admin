@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Store,
   ShoppingCart,
@@ -145,7 +146,10 @@ function getErrorMessage(error) {
 }
 
 export default function ShopeeManagement() {
-  const [activeTab, setActiveTab] = useState("shops");
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(() =>
+    searchParams.get("tab") === "orders" ? "orders" : "shops",
+  );
 
   const [stats, setStats] = useState(DEFAULT_STATS);
   const [shops, setShops] = useState([]);
