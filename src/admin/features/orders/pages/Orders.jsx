@@ -126,6 +126,8 @@ const Orders = () => {
   // =====================================================
 
   const [dateRange, setDateRange] = useState("today");
+  const [customFromDate, setCustomFromDate] = useState("");
+  const [customToDate, setCustomToDate] = useState("");
 
   const [page, setPage] = useState(1);
 
@@ -221,7 +223,11 @@ const Orders = () => {
     const day = String(date.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
   };
-  const getDateParams = (range) => {
+  const getDateParams = (range, customFrom, customTo) => {
+    if (range === "custom") {
+      if (!customFrom || !customTo || customFrom > customTo) return null;
+      return { fromDate: customFrom, toDate: customTo };
+    }
     if (range === "all") {
       return {};
     }
@@ -269,7 +275,8 @@ const Orders = () => {
         params.search = search.trim();
       }
       // ================================================= // STATUS // ================================================= if (status !== "all") { params.status = status; } // ================================================= // DATE FILTER // BE nhận: // fromDate=YYYY-MM-DD // toDate=YYYY-MM-DD // =================================================
-      const dateParams = getDateParams(dateRange);
+      const dateParams = getDateParams(dateRange, customFromDate, customToDate);
+      if (dateParams === null) return;
       Object.assign(params, dateParams);
 
       const response = await axios.get(API_ENDPOINTS.ORDER, {
@@ -299,8 +306,11 @@ const Orders = () => {
   // =====================================================
 
   useEffect(() => {
+    if (dateRange === "custom") {
+      if (!customFromDate || !customToDate || customFromDate > customToDate) return;
+    }
     loadOrders();
-  }, [page, limit, status, dateRange]);
+  }, [page, limit, status, dateRange, customFromDate, customToDate]);
 
   // =====================================================
   // EXCHANGE RATE
@@ -402,6 +412,16 @@ const Orders = () => {
 
   const handleDateRangeChange = (event) => {
     setDateRange(event.target.value);
+    setPage(1);
+  };
+
+  const handleCustomFromDateChange = (event) => {
+    setCustomFromDate(event.target.value);
+    setPage(1);
+  };
+
+  const handleCustomToDateChange = (event) => {
+    setCustomToDate(event.target.value);
     setPage(1);
   };
 
@@ -1816,6 +1836,11 @@ const Orders = () => {
       case "year":
         return "1 năm gần nhất";
 
+      case "custom":
+        return customFromDate && customToDate
+          ? `${customFromDate} đến ${customToDate}`
+          : "Chọn khoảng ngày";
+
       default:
         return "Tất cả thời gian";
     }
@@ -2029,8 +2054,38 @@ const Orders = () => {
                 <MenuItem value="month"> 30 ngày gần nhất </MenuItem>{" "}
                 <MenuItem value="3months"> 3 tháng gần nhất </MenuItem>{" "}
                 <MenuItem value="year"> 1 năm gần nhất </MenuItem>{" "}
+                <MenuItem value="custom"> Tùy chọn từ ngày đến ngày </MenuItem>
               </TextField>
             </Grid>
+
+            {dateRange === "custom" && (
+              <>
+                <Grid item xs={12} sm={6} md={2}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    type="date"
+                    label="Từ ngày"
+                    value={customFromDate}
+                    onChange={handleCustomFromDateChange}
+                    InputLabelProps={{ shrink: true }}
+                    inputProps={{ max: customToDate || undefined }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={2}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    type="date"
+                    label="Đến ngày"
+                    value={customToDate}
+                    onChange={handleCustomToDateChange}
+                    InputLabelProps={{ shrink: true }}
+                    inputProps={{ min: customFromDate || undefined }}
+                  />
+                </Grid>
+              </>
+            )}
 
             {/* LIMIT */}
 
