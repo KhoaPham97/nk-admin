@@ -73,7 +73,18 @@ export default function AdminOrderNotifications() {
     });
   };
 
-  const openOrders = () => {
+  const openNotification = (item) => {
+    const next = items.map((entry) =>
+      entry.id === item.id ? { ...entry, read: true } : entry
+    );
+    setItems(next);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    setAnchor(null);
+
+    navigate(item.source === "shopee" ? "/admin/shopee?tab=orders" : "/admin/orders");
+  };
+
+  const openInternalOrders = () => {
     markAllRead();
     setAnchor(null);
     navigate("/admin/orders");
@@ -100,7 +111,7 @@ export default function AdminOrderNotifications() {
             <Typography variant="body2">Chưa có thông báo mới</Typography>
           </Box>
         ) : items.slice(0, 10).map((item) => (
-          <MenuItem key={item.id} onClick={openOrders} sx={{ whiteSpace: "normal", alignItems: "flex-start", py: 1.25, bgcolor: item.read ? "inherit" : "action.hover" }}>
+          <MenuItem key={item.id} onClick={() => openNotification(item)} sx={{ whiteSpace: "normal", alignItems: "flex-start", py: 1.25, bgcolor: item.read ? "inherit" : "action.hover" }}>
             <Box sx={{ minWidth: 0, width: "100%" }}>
               <Typography fontWeight={700} fontSize={13}>{item.code}</Typography>
               <Typography variant="body2">{item.customerName} · {formatMoney(item.totalAmount)}</Typography>
@@ -112,7 +123,7 @@ export default function AdminOrderNotifications() {
         ))}
         <Divider />
         <Box sx={{ p: 1 }}>
-          <Button fullWidth onClick={openOrders}>Xem danh sách đơn hàng</Button>
+          <Button fullWidth onClick={openInternalOrders}>Xem đơn hàng nội bộ</Button>
         </Box>
       </Menu>
     </>
