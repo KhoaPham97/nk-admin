@@ -41,6 +41,7 @@ export default function AdminOrderNotifications() {
         code: payload.code || "Đơn hàng mới",
         customerName: payload.customerName || "Khách hàng",
         totalAmount: Number(payload.totalAmount || 0),
+        source: payload.source || "website",
         createdAt: payload.created_at || new Date().toISOString(),
         read: false,
       };
@@ -103,6 +104,7 @@ export default function AdminOrderNotifications() {
             <Box sx={{ minWidth: 0, width: "100%" }}>
               <Typography fontWeight={700} fontSize={13}>{item.code}</Typography>
               <Typography variant="body2">{item.customerName} · {formatMoney(item.totalAmount)}</Typography>
+              <Typography variant="caption" color="primary.main">Kênh: {item.source === "shopee" ? "Shopee" : item.source === "zalo" ? "Zalo Mini App" : "Website"}</Typography>
               <Typography variant="caption" color="text.secondary">{new Date(item.createdAt).toLocaleString("vi-VN")}</Typography>
             </Box>
             {!item.read && <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: "error.main", ml: 1, mt: 0.7, flexShrink: 0 }} />}
