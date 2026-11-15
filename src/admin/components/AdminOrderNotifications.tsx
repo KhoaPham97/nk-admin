@@ -38,16 +38,26 @@ export default function AdminOrderNotifications() {
         });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const payload = await response.json();
-        const persisted = (payload.notifications || []).map((entry) => ({
-          id: String(entry.orderId || `shopee-${entry._id}`),
-          dbId: entry._id,
-          code: entry.orderSn || "Đơn Shopee mới",
-          customerName: entry.customerName || "Khách Shopee",
-          totalAmount: Number(entry.totalAmount || 0),
-          source: "shopee",
-          createdAt: entry.orderCreatedAt || entry.notifiedAt || entry.createdAt,
-          read: Boolean(entry.read),
-        }));
+        const persisted = (payload.notifications || []).map((entry) => {
+          const orderItems = entry.items || entry.orderItems || entry.itemList || entry.productDetails || entry.products || entry.orderItemList || [];
+          const productNames = Array.isArray(orderItems)
+            ? orderItems.map((product) => ({
+                name: product.productName || product.product_name || product.itemName || product.item_name || product.name || product.modelName || product.model_name || product.title || "Sản phẩm Shopee",
+                quantity: Number(product.quantity || product.qty || product.amount || 1),
+              }))
+            : [];
+          return {
+            id: String(entry.orderId || `shopee-${entry._id}`),
+            dbId: entry._id,
+            code: entry.orderSn || "Đơn Shopee mới",
+            customerName: entry.customerName || "Khách Shopee",
+            productNames,
+            totalAmount: Number(entry.totalAmount || 0),
+            source: "shopee",
+            createdAt: entry.orderCreatedAt || entry.notifiedAt || entry.createdAt,
+            read: Boolean(entry.read),
+          };
+        });
         setItems((current) => {
           const internal = current.filter((item) => item.source !== "shopee");
           const merged = [...persisted, ...internal].slice(0, 50);
@@ -76,6 +86,10 @@ export default function AdminOrderNotifications() {
         customerName: payload.customerName || "Khách hàng",
         totalAmount: Number(payload.totalAmount || 0),
         source: payload.source || "website",
+        productNames: (payload.items || payload.orderItems || payload.products || []).map((product) => ({
+          name: product.productName || product.product_name || product.itemName || product.item_name || product.name || product.modelName || product.title || "Sản phẩm",
+          quantity: Number(product.quantity || product.qty || 1),
+        })),
         createdAt: payload.created_at || new Date().toISOString(),
         read: false,
       };
@@ -185,6 +199,18 @@ export default function AdminOrderNotifications() {
                 <Chip size="small" label={item.source === "shopee" ? "Shopee" : item.source === "zalo" ? "Zalo Mini App" : "Website"} sx={{ height: 21, fontSize: 10, fontWeight: 800, bgcolor: item.source === "shopee" ? "#fff0eb" : item.source === "zalo" ? "#eaf3ff" : "#eef2f7", color: item.source === "shopee" ? "#d84315" : item.source === "zalo" ? "#1565c0" : "#475569" }} />
               </Stack>
               <Typography variant="body2" sx={{ mt: 0.5 }}>{item.customerName}</Typography>
+              {item.source === "shopee" && item.productNames?.length > 0 && (
+                <Box sx={{ mt: 0.5, mb: 0.5, pl: 1, borderLeft: "2px solid #ee4d2d" }}>
+                  {item.productNames.slice(0, 3).map((product, index) => (
+                    <Typography key={`${item.id}-product-${index}`} variant="caption" display="block" sx={{ lineHeight: 1.5, color: "text.primary" }}>
+                      • {product.name}{product.quantity > 1 ? ` × ${product.quantity}` : ""}
+                    </Typography>
+                  ))}
+                  {item.productNames.length > 3 && (
+                    <Typography variant="caption" color="text.secondary">+{item.productNames.length - 3} sản phẩm khác</Typography>
+                  )}
+                </Box>
+              )}
               <Typography variant="body2" fontWeight={700}>{formatMoney(item.totalAmount)}</Typography>
               <Typography variant="caption" color="text.secondary">{new Date(item.createdAt).toLocaleString("vi-VN")}</Typography>
             </Box>
