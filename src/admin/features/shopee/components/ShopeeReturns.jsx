@@ -421,6 +421,7 @@ export default function ShopeeReturns() {
   const [loading, setLoading] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [resyncingMarked, setResyncingMarked] = useState(false);
   const [processing, setProcessing] = useState(false);
 
   const [error, setError] = useState("");
@@ -509,6 +510,31 @@ export default function ShopeeReturns() {
       setError(getErrorMessage(e));
     } finally {
       setSyncing(false);
+    }
+  };
+
+  const resyncMarkedReturns = async () => {
+    if (!selectedShopId) {
+      setError("Vui lòng chọn shop Shopee trước khi đồng bộ phục hồi.");
+      return;
+    }
+    if (!window.confirm("Chỉ phục hồi phiếu đã đánh dấu RESTOCK nhưng chưa có giao dịch kho, lô nhập hoặc lịch sử nhập. Phiếu đã có dữ liệu kho sẽ được bỏ qua để tránh cộng trùng. Tiếp tục?")) return;
+
+    setResyncingMarked(true);
+    setError("");
+    setNotice("");
+    try {
+      const res = await shopeeApi.resyncMarkedReturns({ shopId: selectedShopId });
+      const data = getPayload(res);
+      setNotice(
+        data?.message ||
+        `Đã phục hồi ${data?.restored || 0} phiếu, cộng lại ${data?.restoredQty || 0} sản phẩm. Bỏ qua ${data?.skipped || 0}, lỗi ${data?.failed || 0}.`
+      );
+      await loadReturns();
+    } catch (e) {
+      setError(getErrorMessage(e));
+    } finally {
+      setResyncingMarked(false);
     }
   };
 
@@ -734,6 +760,14 @@ export default function ShopeeReturns() {
             disabled={loading || !selectedShopId}
           >
             <RefreshCw size={16} /> Làm mới
+          </button>
+          <button
+            className="sr-btn sr-warning"
+            onClick={resyncMarkedReturns}
+            disabled={resyncingMarked || !selectedShopId}
+          >
+            <PackageCheck size={16} />
+            {resyncingMarked ? "Đang phục hồi..." : "Đồng bộ lại đơn đã đánh dấu"}
           </button>
           <button
             className="sr-btn sr-primary"
