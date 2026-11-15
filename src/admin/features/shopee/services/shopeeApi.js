@@ -358,6 +358,9 @@ export const shopeeApi = {
       ...withShopId(data),
     }),
 
+  // Đối soát toàn bộ lịch sử phiếu hoàn (chỉ đọc, không cộng kho).
+  auditReturnHistory: (params = {}) => get("/returns/audit-history", withShopId(params)),
+
   // Phục hồi các phiếu đã đánh dấu RESTOCK nhưng thiếu giao dịch nhập kho.
   resyncMarkedReturns: (data = {}) =>
     post("/returns/resync-marked", {
