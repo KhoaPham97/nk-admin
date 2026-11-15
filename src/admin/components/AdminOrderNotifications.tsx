@@ -31,6 +31,36 @@ export default function AdminOrderNotifications() {
     const token = localStorage.getItem("adminToken") || localStorage.getItem("accessToken");
     if (!token) return;
 
+    const loadPersistentShopeeNotifications = async () => {
+      try {
+        const response = await fetch(`${DEFAUL_URL}/api/shopee/notifications?limit=50`, {
+          headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const payload = await response.json();
+        const persisted = (payload.notifications || []).map((entry) => ({
+          id: `shopee-${entry._id}`,
+          dbId: entry._id,
+          code: entry.orderSn || "Đơn Shopee mới",
+          customerName: entry.customerName || "Khách Shopee",
+          totalAmount: Number(entry.totalAmount || 0),
+          source: "shopee",
+          createdAt: entry.orderCreatedAt || entry.notifiedAt || entry.createdAt,
+          read: Boolean(entry.read),
+        }));
+        setItems((current) => {
+          const internal = current.filter((item) => item.source !== "shopee");
+          const merged = [...persisted, ...internal].slice(0, 50);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+          return merged;
+        });
+      } catch (error) {
+        console.warn("[Order Notifications] Không tải được thông báo Shopee đã lưu:", error.message);
+      }
+    };
+
+    loadPersistentShopeeNotifications();
+
     const socket = io(`${DEFAUL_URL}/order-notifications`, {
       transports: ["websocket", "polling"],
       auth: { token },
@@ -69,7 +99,16 @@ export default function AdminOrderNotifications() {
     return () => socket.disconnect();
   }, []);
 
-  const markAllRead = () => {
+  const markAllRead = async () => {
+    const token = localStorage.getItem("adminToken") || localStorage.getItem("accessToken");
+    try {
+      await fetch(`${DEFAUL_URL}/api/shopee/notifications/read-all`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+      });
+    } catch (error) {
+      console.warn("[Order Notifications] Không thể đồng bộ trạng thái đã đọc:", error.message);
+    }
     setItems((current) => {
       const next = current.map((item) => ({ ...item, read: true }));
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
@@ -77,7 +116,18 @@ export default function AdminOrderNotifications() {
     });
   };
 
-  const openNotification = (item) => {
+  const openNotification = async (item) => {
+    if (item.source === "shopee" && item.dbId) {
+      const token = localStorage.getItem("adminToken") || localStorage.getItem("accessToken");
+      try {
+        await fetch(`${DEFAUL_URL}/api/shopee/notifications/${item.dbId}/read`, {
+          method: "PATCH",
+          headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+        });
+      } catch (error) {
+        console.warn("[Order Notifications] Không thể đánh dấu đã đọc:", error.message);
+      }
+    }
     const next = items.map((entry) =>
       entry.id === item.id ? { ...entry, read: true } : entry
     );
