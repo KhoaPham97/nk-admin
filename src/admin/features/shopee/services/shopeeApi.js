@@ -358,6 +358,13 @@ export const shopeeApi = {
       ...withShopId(data),
     }),
 
+  // Phục hồi các phiếu đã đánh dấu RESTOCK nhưng thiếu giao dịch nhập kho.
+  resyncMarkedReturns: (data = {}) =>
+    post("/returns/resync-marked", {
+      ...data,
+      ...withShopId(data),
+    }),
+
   // ---------------------------------------------------
   // AUTO STOCK MANAGEMENT
   // ---------------------------------------------------
