@@ -422,6 +422,7 @@ export default function ShopeeReturns() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [resyncingMarked, setResyncingMarked] = useState(false);
+  const [auditingHistory, setAuditingHistory] = useState(false);
   const [processing, setProcessing] = useState(false);
 
   const [error, setError] = useState("");
@@ -535,6 +536,45 @@ export default function ShopeeReturns() {
       setError(getErrorMessage(e));
     } finally {
       setResyncingMarked(false);
+    }
+  };
+
+
+  const auditReturnHistory = async () => {
+    if (!selectedShopId) {
+      setError("Vui lòng chọn shop Shopee trước khi đối soát.");
+      return;
+    }
+    setAuditingHistory(true);
+    setError("");
+    setNotice("");
+    try {
+      const res = await shopeeApi.auditReturnHistory({ shopId: selectedShopId });
+      const data = getPayload(res);
+      const report = data?.data || data;
+      const totals = report?.totals || {};
+      const recoverable = report?.safelyRecoverable || [];
+      const lines = [
+        "ĐỐI SOÁT LỊCH SỬ HÀNG HOÀN",
+        `Tổng phiếu đã quét: ${report?.scanned || 0}`,
+        `Có thể phục hồi an toàn: ${totals.safelyRecoverable || 0}`,
+        `Đã có dữ liệu kho đầy đủ: ${totals.alreadyRecorded || 0}`,
+        `Có dấu vết chưa rõ / cần kiểm tra: ${totals.partialOrAmbiguous || 0}`,
+        `Chưa đánh dấu nhập kho: ${totals.notMarkedForRestock || 0}`,
+        `Thiếu hoặc lệch số lượng: ${totals.noRestockQuantity || 0}`,
+        "",
+        "Chưa có thay đổi tồn kho.",
+      ];
+      if (recoverable.length) {
+        lines.push("", "Các phiếu có thể phục hồi:", ...recoverable.slice(0, 25).map(row => row.returnSn));
+        if (recoverable.length > 25) lines.push(`... và ${recoverable.length - 25} phiếu khác.`);
+      }
+      window.alert(lines.join("\n"));
+      setNotice("Đã đối soát lịch sử. Chưa thay đổi tồn kho; xem bảng kết quả vừa hiển thị.");
+    } catch (e) {
+      setError(getErrorMessage(e));
+    } finally {
+      setAuditingHistory(false);
     }
   };
 
@@ -760,6 +800,14 @@ export default function ShopeeReturns() {
             disabled={loading || !selectedShopId}
           >
             <RefreshCw size={16} /> Làm mới
+          </button>
+          <button
+            className="sr-btn sr-secondary"
+            onClick={auditReturnHistory}
+            disabled={auditingHistory || !selectedShopId}
+          >
+            <ClipboardCheck size={16} />
+            {auditingHistory ? "Đang đối soát..." : "Đối soát lịch sử"}
           </button>
           <button
             className="sr-btn sr-warning"
