@@ -39,7 +39,7 @@ export default function AdminOrderNotifications() {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const payload = await response.json();
         const persisted = (payload.notifications || []).map((entry) => ({
-          id: `shopee-${entry._id}`,
+          id: String(entry.orderId || `shopee-${entry._id}`),
           dbId: entry._id,
           code: entry.orderSn || "Đơn Shopee mới",
           customerName: entry.customerName || "Khách Shopee",
