@@ -971,10 +971,19 @@ export default function ShopeeReturns() {
                             <ClipboardCheck size={15} />
                           </button>
                         )}
-                        {item.warehouseStatus === "inspected" && (
+                        {(item.warehouseStatus === "inspected" ||
+                          (item.resolution === "RESTOCK" &&
+                            Number(item.restockedStockQty || 0) <= 0 &&
+                            (item.items || []).some(
+                              (row) => Number(row.goodQty || 0) > 0,
+                            ))) && (
                           <button
                             className="sr-btn sr-primary"
-                            title="Xử lý kho"
+                            title={
+                              item.warehouseStatus === "inspected"
+                                ? "Xử lý kho"
+                                : "Thử nhập kho lại do lần trước chưa ghi nhận số lượng"
+                            }
                             onClick={() => openResolve(item)}
                           >
                             <Warehouse size={15} />
