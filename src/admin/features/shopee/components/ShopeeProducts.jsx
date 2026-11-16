@@ -1490,10 +1490,12 @@ export default function ShopeeProducts() {
               <Table stickyHeader size="small" sx={{ minWidth: 1100 }}>
                 <TableHead>
                   <TableRow>
-                    <TableCell padding="checkbox" sx={{ minWidth: 76, bgcolor: "background.paper" }}>
+                    <TableCell padding="checkbox" sx={{ minWidth: 76, bgcolor: "background.paper", cursor: "pointer" }}
+                      onClick={() => toggleCurrentPageSelection(!allCurrentPageSelected)}>
                       <Stack direction="row" alignItems="center" spacing={0.25}>
                         <Checkbox size="medium" color="primary" checked={allCurrentPageSelected}
                           indeterminate={currentPageItemIds.some((id) => selectedItemIds.includes(id)) && !allCurrentPageSelected}
+                          onClick={(event) => event.stopPropagation()}
                           onChange={(event) => toggleCurrentPageSelection(event.target.checked)}
                           inputProps={{ "aria-label": "Chọn tất cả sản phẩm trang hiện tại" }}
                           sx={{ p: 1, "& .MuiSvgIcon-root": { fontSize: 25 } }} />
@@ -1522,9 +1524,11 @@ export default function ShopeeProducts() {
 
                     return (
                       <TableRow key={product.itemId} hover selected={selectedItemIds.includes(String(product.itemId))}>
-                        <TableCell padding="checkbox" sx={{ minWidth: 76 }}>
+                        <TableCell padding="checkbox" sx={{ minWidth: 76, cursor: "pointer" }}
+                          onClick={() => toggleProductSelection(product.itemId)}>
                           <Checkbox size="medium" color="primary"
                             checked={selectedItemIds.includes(String(product.itemId))}
+                            onClick={(event) => event.stopPropagation()}
                             onChange={() => toggleProductSelection(product.itemId)}
                             inputProps={{ "aria-label": `Chọn ${product.itemName}` }}
                             sx={{ p: 1, "& .MuiSvgIcon-root": { fontSize: 25 } }} />
