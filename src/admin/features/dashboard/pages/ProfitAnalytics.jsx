@@ -238,128 +238,152 @@ const ProfitAnalytics = () => {
     return map;
   }, [histories]);
 
+  const dataQuality = useMemo(() => {
+    const result = {
+      completedOrders: 0,
+      completedLines: 0,
+      missingAllocationLines: 0,
+      missingBatchLinkLines: 0,
+      allocationMismatchLines: 0,
+      zeroCostAllocationLines: 0,
+      missingHistoryLines: 0,
+      examples: [],
+    };
+
+    orders.forEach((order) => {
+      if (order.status !== "completed" || order.stockDeducted !== true) return;
+      result.completedOrders += 1;
+      (order.items || []).forEach((item) => {
+        const qty = Math.abs(n(item.qty));
+        if (qty <= 0) return;
+        result.completedLines += 1;
+        const allocations = Array.isArray(item.batchAllocations) ? item.batchAllocations : [];
+        const allocatedQty = allocations.reduce((sum, allocation) => sum + Math.abs(n(allocation.qty)), 0);
+        const rows = historyMap.get(getBucketKey(order._id, item.productId, item.variantName)) || [];
+        const issues = [];
+
+        if (!allocations.length) {
+          result.missingAllocationLines += 1;
+          issues.push("Chưa lưu phân bổ lô");
+          if (!rows.length) {
+            result.missingHistoryLines += 1;
+            issues.push("Thiếu lịch sử xuất kho");
+          } else if (rows.every((history) => !history.batchId && !String(history.batchCode || "").trim())) {
+            result.missingBatchLinkLines += 1;
+            issues.push("Lịch sử không có mã lô");
+          }
+        } else {
+          if (allocatedQty !== qty) {
+            result.allocationMismatchLines += 1;
+            issues.push(`Phân bổ ${allocatedQty}/${qty}`);
+          }
+          if (allocations.some((allocation) => !(n(allocation.unitCost) > 0))) {
+            result.zeroCostAllocationLines += 1;
+            issues.push("Lô chưa có giá vốn");
+          }
+        }
+
+        if (issues.length && result.examples.length < 12) {
+          result.examples.push({
+            code: order.code || normalizeId(order._id),
+            product: item.productTitle || "Sản phẩm",
+            issue: issues.join(" • "),
+          });
+        }
+      });
+    });
+    return result;
+  }, [orders, historyMap]);
+
   // =====================================================
   // MONTHLY CHART DATA
   // =====================================================
 
   const chartData = useMemo(() => {
     const now = new Date();
-
     const months = Array.from({ length: 12 }, (_, index) => {
       const date = new Date(now.getFullYear(), now.getMonth() - 11 + index, 1);
-
-      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
-        2,
-        "0",
-      )}`;
-
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
       return {
         key,
         month: `T${date.getMonth() + 1}/${date.getFullYear()}`,
         revenue: 0,
         profit: 0,
+        estimatedProfit: 0,
         missingCost: false,
+        hasEstimatedCost: false,
       };
     });
-
     const monthMap = new Map(months.map((month) => [month.key, month]));
 
     orders.forEach((order) => {
-      if (order.status !== "completed" || order.stockDeducted !== true) {
-        return;
-      }
-
-      const date = getDate(
-        order.completed_at || order.updated_at || order.created_at,
-      );
-
+      if (order.status !== "completed" || order.stockDeducted !== true) return;
+      const date = getDate(order.completedAt || order.completed_at || order.updated_at || order.created_at);
       if (!date) return;
-
-      const monthKey = `${date.getFullYear()}-${String(
-        date.getMonth() + 1,
-      ).padStart(2, "0")}`;
-
-      const month = monthMap.get(monthKey);
-
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+      const month = monthMap.get(key);
       if (!month) return;
 
-      const items = Array.isArray(order.items) ? order.items : [];
+      let revenue = 0;
+      let cost = 0;
+      let complete = true;
+      let estimated = false;
 
-      let orderRevenue = 0;
-      let orderCost = 0;
-      let orderComplete = true;
-
-      items.forEach((item) => {
+      (Array.isArray(order.items) ? order.items : []).forEach((item) => {
         const qty = Math.abs(n(item.qty));
-
         if (qty <= 0) return;
+        revenue += getItemRevenue(item);
 
-        orderRevenue += getItemRevenue(item);
+        const allocations = Array.isArray(item.batchAllocations) ? item.batchAllocations : [];
+        const allocatedQty = allocations.reduce((sum, allocation) => sum + Math.abs(n(allocation.qty)), 0);
+        const qtyMatches = allocations.length > 0 && allocatedQty === qty;
+        const costsValid = allocations.length > 0 && allocations.every((allocation) => n(allocation.unitCost) > 0);
+        const costsMissing = allocations.length > 0 && allocations.every((allocation) => !(n(allocation.unitCost) > 0));
 
-        const allocations = Array.isArray(item.batchAllocations)
-          ? item.batchAllocations
-          : [];
-
-        if (allocations.length > 0) {
-          const allocatedQty = allocations.reduce(
-            (sum, allocation) => sum + Math.abs(n(allocation.qty)),
-            0,
-          );
-
-          const validCost = allocations.every(
-            (allocation) => n(allocation.unitCost) > 0,
-          );
-
-          if (allocatedQty === qty && validCost) {
-            orderCost += allocations.reduce(
-              (sum, allocation) =>
-                sum +
-                Math.abs(n(allocation.qty)) *
-                  n(allocation.unitCost * CNY_VND_RATE),
-              0,
-            );
-            return;
-          }
+        if (qtyMatches && costsValid) {
+          cost += allocations.reduce((sum, allocation) =>
+            sum + Math.abs(n(allocation.qty)) * n(allocation.unitCost) * CNY_VND_RATE, 0);
+          return;
         }
 
-        const key = getBucketKey(order._id, item.productId, item.variantName);
-
-        const rows = historyMap.get(key) || [];
-
-        const historyQty = rows.reduce(
-          (sum, history) => sum + Math.abs(n(history.qty)),
-          0,
-        );
-
-        const hasMissingCost = rows.some(
-          (history) => !(n(history.unitCost) > 0),
-        );
-
-        if (rows.length > 0 && historyQty >= qty && !hasMissingCost) {
-          const historyCost = rows.reduce(
-            (sum, history) =>
-              sum + Math.abs(n(history.qty)) * n(history.unitCost),
-            0,
-          );
-
-          orderCost += historyCost * (qty / historyQty);
-        } else {
-          orderComplete = false;
+        if (qtyMatches && costsMissing && n(item.unitCost) > 0) {
+          cost += qty * n(item.unitCost) * CNY_VND_RATE;
+          estimated = true;
+          return;
         }
+
+        const rows = historyMap.get(getBucketKey(order._id, item.productId, item.variantName)) || [];
+        const historyQty = rows.reduce((sum, history) => sum + Math.abs(n(history.qty)), 0);
+        const historyCostsValid = rows.length > 0 && rows.every((history) => n(history.unitCost) > 0);
+
+        // Không lấy lịch sử thừa/thiếu số lượng rồi chia tỷ lệ, vì có thể che giấu bản ghi trùng.
+        if (historyQty === qty && historyCostsValid) {
+          cost += rows.reduce((sum, history) =>
+            sum + Math.abs(n(history.qty)) * n(history.unitCost) * CNY_VND_RATE, 0);
+          return;
+        }
+
+        if (allocations.length === 0 && rows.length === 0 && n(item.unitCost) > 0) {
+          cost += qty * n(item.unitCost) * CNY_VND_RATE;
+          estimated = true;
+          return;
+        }
+
+        complete = false;
       });
 
-      month.revenue += orderRevenue;
-
-      if (orderComplete) {
-        month.profit += orderRevenue - orderCost;
-      } else {
-        month.missingCost = true;
+      month.revenue += revenue;
+      if (!complete) month.missingCost = true;
+      else {
+        month.profit += revenue - cost;
+        if (estimated) month.hasEstimatedCost = true;
       }
     });
 
     return months.map((month) => ({
       ...month,
-      profit: month.missingCost ? null : month.profit,
+      profit: month.missingCost || month.hasEstimatedCost ? null : month.profit,
+      estimatedProfit: !month.missingCost && month.hasEstimatedCost ? month.profit : null,
     }));
   }, [orders, historyMap]);
 
@@ -394,6 +418,11 @@ const ProfitAnalytics = () => {
 
   const currentMonthBatchIds = useMemo(
     () => new Set(currentMonthBatches.map((batch) => normalizeId(batch._id))),
+    [currentMonthBatches],
+  );
+
+  const currentMonthBatchCodes = useMemo(
+    () => new Set(currentMonthBatches.map((batch) => String(batch.batchCode || "").trim()).filter(Boolean)),
     [currentMonthBatches],
   );
 
@@ -435,6 +464,7 @@ const ProfitAnalytics = () => {
         cost: 0,
         profit: 0,
         missingCost: false,
+        estimatedCost: false,
         orderCount: new Set(),
         products: new Set([String(batch.productTitle || "Sản phẩm")]),
       });
@@ -448,13 +478,16 @@ const ProfitAnalytics = () => {
       revenue,
       unitCost,
       missingCost = false,
+      estimatedCost = false,
     }) => {
       if (qty <= 0) return;
 
       const key = getBatchKey(allocation, item);
+      const batchId = normalizeId(allocation.batchId);
+      const batchCode = String(allocation.batchCode || "").trim();
 
-      // Chỉ ghi nhận doanh thu/giá vốn từ những lô được nhập trong tháng này.
-      if (!currentMonthBatchIds.has(normalizeId(allocation.batchId))) return;
+      // Chỉ ghi nhận lô nhập trong tháng, đối chiếu cả ID và mã lô.
+      if (!currentMonthBatchIds.has(batchId) && !(batchCode && currentMonthBatchCodes.has(batchCode))) return;
 
       const current = batchMap.get(key) || {
         key,
@@ -465,6 +498,7 @@ const ProfitAnalytics = () => {
         cost: 0,
         profit: 0,
         missingCost: false,
+        estimatedCost: false,
         orderCount: new Set(),
         products: new Set(),
       };
@@ -480,6 +514,7 @@ const ProfitAnalytics = () => {
         current.missingCost = true;
       } else {
         current.cost += qty * n(unitCost * CNY_VND_RATE);
+        if (estimatedCost) current.estimatedCost = true;
       }
 
       batchMap.set(key, current);
@@ -512,15 +547,17 @@ const ProfitAnalytics = () => {
             (sum, allocation) => sum + Math.abs(n(allocation.qty)),
             0,
           );
-
           const allocationQtyMismatch = allocatedQty !== itemQty;
+          const canEstimateFromOrder =
+            !allocationQtyMismatch &&
+            allocations.every((allocation) => !(n(allocation.unitCost) > 0)) &&
+            n(item.unitCost) > 0;
 
           allocations.forEach((allocation) => {
             const qty = Math.abs(n(allocation.qty));
-
             if (qty <= 0) return;
-
             const revenue = (itemRevenue / itemQty) * qty;
+            const hasBatchCost = n(allocation.unitCost) > 0;
 
             addBatch({
               allocation,
@@ -528,15 +565,13 @@ const ProfitAnalytics = () => {
               order,
               qty,
               revenue,
-              unitCost: allocation.unitCost,
-              missingCost:
-                !(n(allocation.unitCost) > 0) || allocationQtyMismatch,
+              unitCost: hasBatchCost ? allocation.unitCost : canEstimateFromOrder ? item.unitCost : allocation.unitCost,
+              estimatedCost: !hasBatchCost && canEstimateFromOrder,
+              missingCost: allocationQtyMismatch || (!hasBatchCost && !canEstimateFromOrder),
             });
           });
-
           return;
         }
-
         // ---------------------------------------------
         // 2. DỰ PHÒNG: INVENTORY HISTORY
         // ---------------------------------------------
@@ -647,35 +682,33 @@ const ProfitAnalytics = () => {
     [chartData],
   );
 
+  const totalEstimatedProfit = useMemo(
+    () => chartData.reduce((sum, month) => sum + n(month.estimatedProfit), 0),
+    [chartData],
+  );
+
   const missingMonths = chartData.filter((month) => month.missingCost).length;
 
   const batchSummary = useMemo(() => {
-    const completeBatches = batchProfitData.filter(
-      (batch) => !batch.missingCost,
-    );
+    const verified = batchProfitData.filter((batch) => !batch.missingCost && !batch.estimatedCost);
+    const estimated = batchProfitData.filter((batch) => !batch.missingCost && batch.estimatedCost);
 
     return {
       count: currentMonthBatches.length,
-      importQty: currentMonthBatches.reduce(
-        (sum, batch) => sum + n(batch.importQty),
-        0,
-      ),
-      remainingQty: currentMonthBatches.reduce(
-        (sum, batch) => sum + n(batch.remainingQty),
-        0,
-      ),
-      importValue: currentMonthBatches.reduce(
-        (sum, batch) =>
-          sum + n(batch.importQty) * n(batch.unitCost) * CNY_VND_RATE,
-        0,
-      ),
+      importQty: currentMonthBatches.reduce((sum, batch) => sum + n(batch.importQty), 0),
+      remainingQty: currentMonthBatches.reduce((sum, batch) => sum + n(batch.remainingQty), 0),
+      importValue: currentMonthBatches.reduce((sum, batch) =>
+        sum + n(batch.importQty) * n(batch.unitCost) * CNY_VND_RATE, 0),
       qty: batchProfitData.reduce((sum, batch) => sum + batch.qty, 0),
       revenue: batchProfitData.reduce((sum, batch) => sum + batch.revenue, 0),
-      cost: completeBatches.reduce((sum, batch) => sum + batch.cost, 0),
-      profit: completeBatches.reduce((sum, batch) => sum + n(batch.profit), 0),
+      cost: verified.reduce((sum, batch) => sum + batch.cost, 0),
+      profit: verified.reduce((sum, batch) => sum + n(batch.profit), 0),
+      estimatedCost: estimated.reduce((sum, batch) => sum + batch.cost, 0),
+      estimatedProfit: estimated.reduce((sum, batch) => sum + n(batch.profit), 0),
       missing: batchProfitData.filter((batch) => batch.missingCost).length,
+      estimated: estimated.length,
     };
-  }, [batchProfitData]);
+  }, [batchProfitData, currentMonthBatches]);
 
   // =====================================================
   // LOADING
@@ -756,6 +789,28 @@ const ProfitAnalytics = () => {
             </Alert>
           )}
 
+          {(dataQuality.missingAllocationLines > 0 ||
+            dataQuality.allocationMismatchLines > 0 ||
+            dataQuality.zeroCostAllocationLines > 0) && (
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              <Typography fontWeight={800} gutterBottom>
+                Cảnh báo chất lượng dữ liệu kho
+              </Typography>
+              <Typography variant="body2">
+                {dataQuality.completedOrders} đơn hoàn thành • {dataQuality.completedLines} dòng sản phẩm.
+                Thiếu phân bổ lô: {dataQuality.missingAllocationLines};
+                lịch sử thiếu mã lô: {dataQuality.missingBatchLinkLines};
+                phân bổ lệch số lượng: {dataQuality.allocationMismatchLines};
+                lô chưa có giá vốn: {dataQuality.zeroCostAllocationLines}.
+              </Typography>
+              {dataQuality.examples.map((item) => (
+                <Typography key={`${item.code}-${item.product}`} variant="caption" display="block">
+                  • {item.code} — {item.product}: {item.issue}
+                </Typography>
+              ))}
+            </Alert>
+          )}
+
           <Stack direction={{ xs: "column", sm: "row" }} spacing={3} mb={3}>
             <Box>
               <Typography variant="body2" color="text.secondary">
@@ -771,9 +826,16 @@ const ProfitAnalytics = () => {
               <Typography variant="body2" color="text.secondary">
                 Lợi nhuận đã xác minh
               </Typography>
-
               <Typography variant="h5" fontWeight={800} color="success.main">
                 {money(totalProfit)}
+              </Typography>
+            </Box>
+            <Box>
+              <Typography variant="body2" color="text.secondary">
+                Lợi nhuận ước tính
+              </Typography>
+              <Typography variant="h5" fontWeight={800} color="warning.main">
+                {money(totalEstimatedProfit)}
               </Typography>
             </Box>
           </Stack>
@@ -846,9 +908,20 @@ const ProfitAnalytics = () => {
                 <Line
                   type="monotone"
                   dataKey="profit"
-                  name="Lợi nhuận"
+                  name="Lợi nhuận đã xác minh"
                   stroke="#2e7d32"
                   strokeWidth={3}
+                  dot={{ r: 3 }}
+                  activeDot={{ r: 6 }}
+                  connectNulls={false}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="estimatedProfit"
+                  name="Lợi nhuận ước tính"
+                  stroke="#ed6c02"
+                  strokeWidth={2}
+                  strokeDasharray="6 4"
                   dot={{ r: 3 }}
                   activeDot={{ r: 6 }}
                   connectNulls={false}
@@ -963,10 +1036,11 @@ const ProfitAnalytics = () => {
             </Grid>
           </Grid>
 
-          {batchSummary.missing > 0 && (
+          {(batchSummary.missing > 0 || batchSummary.estimated > 0) && (
             <Alert severity="warning" sx={{ mt: 2 }}>
-              Có {batchSummary.missing} lô thiếu hoặc chưa đủ dữ liệu giá vốn.
-              Những lô này vẫn hiển thị doanh thu nhưng không tính lợi nhuận.
+              Có {batchSummary.estimated} lô dùng giá vốn ước tính từ snapshot đơn hàng
+              (giá vốn {money(batchSummary.estimatedCost)}, lợi nhuận {money(batchSummary.estimatedProfit)}).
+              Có {batchSummary.missing} lô chưa đủ căn cứ giá vốn nên không tính lợi nhuận.
             </Alert>
           )}
         </CardContent>
@@ -1021,9 +1095,13 @@ const ProfitAnalytics = () => {
                       <Chip
                         size="small"
                         label={
-                          batch.missingCost ? "Thiếu giá vốn" : "Đã xác minh"
+                          batch.missingCost
+                            ? "Thiếu giá vốn"
+                            : batch.estimatedCost
+                              ? "Ước tính"
+                              : "Đã xác minh"
                         }
-                        color={batch.missingCost ? "warning" : "success"}
+                        color={batch.missingCost || batch.estimatedCost ? "warning" : "success"}
                         variant="outlined"
                       />
                     </Stack>
@@ -1129,7 +1207,9 @@ const ProfitAnalytics = () => {
                         justifyContent="space-between"
                         alignItems="center"
                       >
-                        <Typography fontWeight={700}>Lợi nhuận</Typography>
+                        <Typography fontWeight={700}>
+                          {batch.estimatedCost ? "Lợi nhuận ước tính" : "Lợi nhuận"}
+                        </Typography>
 
                         <Typography
                           fontWeight={800}
@@ -1179,8 +1259,9 @@ const ProfitAnalytics = () => {
         color="text.secondary"
         sx={{ display: "block", mt: 2 }}
       >
-        Dữ liệu hiện tại lấy tối đa 100 đơn hàng và 100 lịch sử xuất kho gần
-        nhất. Doanh thu theo lô được phân bổ theo số lượng xuất bán từ từng lô.
+        Hệ thống tải đủ các trang đơn hàng, lịch sử xuất kho và lô nhập.
+        Giá vốn theo lô lấy từ batchAllocations hoặc lịch sử có mã lô; snapshot
+        giá vốn của đơn chỉ dùng để ước tính và được đánh dấu riêng.
         Chưa phân bổ chiết khấu hoặc phí vận chuyển cấp đơn hàng vào từng lô.
       </Typography>
     </Box>
