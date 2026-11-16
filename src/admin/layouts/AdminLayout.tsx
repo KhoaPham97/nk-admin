@@ -84,7 +84,8 @@ const AdminLayout = () => {
             },
 
             minHeight: `calc(100vh - ${HEADER_HEIGHT}px)`,
-            overflowX: "clip",
+            overflowX: "hidden",
+            maxWidth: "100%",
           }}
         >
           <Outlet />
