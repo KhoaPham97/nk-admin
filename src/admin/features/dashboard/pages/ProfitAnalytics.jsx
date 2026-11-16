@@ -434,6 +434,11 @@ const ProfitAnalytics = () => {
     [currentMonthBatches],
   );
 
+  const currentMonthBatchByCode = useMemo(
+    () => new Map(currentMonthBatches.map((batch) => [String(batch.batchCode || "").trim(), batch])),
+    [currentMonthBatches],
+  );
+
   const currentMonthLabel = useMemo(
     () =>
       new Date().toLocaleDateString("vi-VN", {
@@ -490,17 +495,25 @@ const ProfitAnalytics = () => {
     }) => {
       if (qty <= 0) return;
 
-      const key = getBatchKey(allocation, item);
       const batchId = normalizeId(allocation.batchId);
       const batchCode = String(allocation.batchCode || "").trim();
+      const batchByCode = batchCode ? currentMonthBatchByCode.get(batchCode) : null;
 
-      // Chỉ ghi nhận lô nhập trong tháng, đối chiếu cả ID và mã lô.
-      if (!currentMonthBatchIds.has(batchId) && !(batchCode && currentMonthBatchCodes.has(batchCode))) return;
+      // Chỉ ghi nhận lô nhập trong tháng; nếu lịch sử chỉ có mã lô thì
+      // chuẩn hóa về ID của lô để không tạo hai thẻ cho cùng một lô.
+      if (!currentMonthBatchIds.has(batchId) && !batchByCode) return;
+
+      const normalizedAllocation = {
+        ...allocation,
+        batchId: allocation.batchId || batchByCode?._id,
+        batchCode: batchCode || batchByCode?.batchCode || "",
+      };
+      const key = getBatchKey(normalizedAllocation, item);
 
       const current = batchMap.get(key) || {
         key,
-        batchCode: getBatchLabel(allocation),
-        batchId: normalizeId(allocation.batchId),
+        batchCode: getBatchLabel(normalizedAllocation),
+        batchId: normalizeId(normalizedAllocation.batchId),
         qty: 0,
         revenue: 0,
         cost: 0,
@@ -674,7 +687,7 @@ const ProfitAnalytics = () => {
 
         return n(b.profit) - n(a.profit);
       });
-  }, [orders, historyMap, currentMonthBatches, currentMonthBatchIds, currentMonthBatchCodes]);
+  }, [orders, historyMap, currentMonthBatches, currentMonthBatchIds, currentMonthBatchCodes, currentMonthBatchByCode]);
 
   // =====================================================
   // SUMMARY
