@@ -144,64 +144,50 @@ const ProfitAnalytics = () => {
 
       setError("");
 
-      const [orderRes, historyRes, batchRes] = await Promise.all([
-        axios.get(API_ENDPOINTS.ORDER, {
+      // API đơn hàng trả totalPages ở cấp cao nhất, trong khi một số
+      // endpoint kho trả pagination.totalPages. Đọc cả hai dạng và tải
+      // toàn bộ trang để không bỏ sót đơn/lịch sử khi vượt 100 bản ghi.
+      const loadAllPages = async (url, params, key) => {
+        const firstResponse = await axios.get(url, {
           ...getAuthConfig(),
-          params: {
-            page: 1,
-            limit: 100,
-          },
-        }),
+          params: { ...params, page: 1, limit: 100 },
+        });
+        const firstRows = getRows(firstResponse.data, key);
+        const totalPages = Math.max(
+          1,
+          Number(
+            firstResponse.data?.pagination?.totalPages ||
+              firstResponse.data?.totalPages ||
+              firstResponse.data?.data?.pagination?.totalPages ||
+              1,
+          ),
+        );
+        const rows = [...firstRows];
 
-        axios.get(API_ENDPOINTS.INVENTORY_HISTORY, {
-          ...getAuthConfig(),
-          params: {
-            page: 1,
-            limit: 100,
-            type: "order",
-          },
-        }),
-
-        axios.get(API_ENDPOINTS.INVENTORY_BATCHES, {
-          ...getAuthConfig(),
-          params: {
-            page: 1,
-            limit: 100,
-            sort: "created_at",
-            order: "desc",
-          },
-        }),
-      ]);
-
-      setOrders(getRows(orderRes.data, "orders"));
-      setHistories(getRows(historyRes.data, "histories"));
-
-      // Lấy đủ các trang lô để thống kê tháng không bị thiếu khi kho có
-      // nhiều hơn 100 lô.
-      const firstPageBatches = getRows(batchRes.data, "batches");
-      const totalPages = Math.max(
-        1,
-        Number(batchRes.data?.pagination?.totalPages || 1),
-      );
-      const remainingPages = await Promise.all(
-        Array.from({ length: totalPages - 1 }, (_, index) =>
-          axios.get(API_ENDPOINTS.INVENTORY_BATCHES, {
+        for (let page = 2; page <= totalPages; page += 1) {
+          const response = await axios.get(url, {
             ...getAuthConfig(),
-            params: {
-              page: index + 2,
-              limit: 100,
-              sort: "created_at",
-              order: "desc",
-            },
-          }),
-        ),
-      );
-      setBatches([
-        ...firstPageBatches,
-        ...remainingPages.flatMap((response) =>
-          getRows(response.data, "batches"),
+            params: { ...params, page, limit: 100 },
+          });
+          rows.push(...getRows(response.data, key));
+        }
+
+        return rows;
+      };
+
+      const [allOrders, allHistories, allBatches] = await Promise.all([
+        loadAllPages(API_ENDPOINTS.ORDER, {}, "orders"),
+        loadAllPages(API_ENDPOINTS.INVENTORY_HISTORY, { type: "order" }, "histories"),
+        loadAllPages(
+          API_ENDPOINTS.INVENTORY_BATCHES,
+          { sort: "created_at", order: "desc" },
+          "batches",
         ),
       ]);
+
+      setOrders(allOrders);
+      setHistories(allHistories);
+      setBatches(allBatches);
     } catch (err) {
       console.error("LOAD PROFIT ANALYTICS:", err);
 
