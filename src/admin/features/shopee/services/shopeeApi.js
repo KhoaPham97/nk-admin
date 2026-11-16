@@ -395,6 +395,12 @@ export const shopeeApi = {
 
   getRevenueOrders: (params = {}) => get("/revenue/orders", withShopId(params)),
 
+  // Shopee finance documents
+  getDocuments: (params = {}) => get("/documents", withShopId(params)),
+  syncDocuments: (data = {}) => post("/documents/sync", data),
+  pollDocument: (id, shopId) => post(`/documents/${encode(id)}/poll`, { shopId }),
+  getDocumentDownload: (id, shopId) => get(`/documents/${encode(id)}/download`, { shopId }),
+
   // =====================================================
   // SHOPEE REVIEW MANAGEMENT
   // =====================================================
