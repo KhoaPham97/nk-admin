@@ -666,7 +666,7 @@ const ProfitAnalytics = () => {
 
         return n(b.profit) - n(a.profit);
       });
-  }, [orders, historyMap, currentMonthBatches, currentMonthBatchIds]);
+  }, [orders, historyMap, currentMonthBatches, currentMonthBatchIds, currentMonthBatchCodes]);
 
   // =====================================================
   // SUMMARY
