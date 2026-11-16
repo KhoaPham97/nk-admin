@@ -98,6 +98,12 @@ const MENU_ITEMS = [
     icon: DollarSign,
   },
   {
+    id: "documents",
+    label: "Chứng từ Shopee",
+    description: "Tự động tải và lưu báo cáo tài chính",
+    icon: FileText,
+  },
+  {
     id: "chat",
     label: "Shopee Chat",
     description: "Đọc và trả lời tin nhắn người mua",
@@ -328,6 +334,8 @@ export default function ShopeeManagement() {
         return <ShopeeAutoStockPage {...commonProps} />;
       case "revenue":
         return <ShopeeRevenue {...commonProps} />;
+      case "documents":
+        return <ShopeeDocuments {...commonProps} />;
       case "reviews":
         return <ShopeeReview {...commonProps} />;
 
