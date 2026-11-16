@@ -465,6 +465,9 @@ export const shopeeApi = {
   // Cập nhật tồn kho các phân loại
   updateManagedProductStock: (itemId, data = {}) =>
     put(`/management/products/${encode(itemId)}/stock`, data),
+
+  // Đồng bộ tồn kho các sản phẩm được chọn, chỉ xử lý mapping có allowStockDeduction.
+  runSelectedStockSync: (data = {}) => post("/stock-sync/run-selected", data),
 };
 
 export default shopeeApi;
