@@ -1448,6 +1448,11 @@ export default function ShopeeProducts() {
 
           <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
             <Chip size="small" color={selectedItemIds.length ? "primary" : "default"} label={`Đã chọn ${selectedItemIds.length}`} />
+            <Button size="small" variant="outlined" color="primary"
+              onClick={() => toggleCurrentPageSelection(!allCurrentPageSelected)}
+              disabled={!products.length || loading || selectedSyncRunning}>
+              {allCurrentPageSelected ? "Bỏ chọn trang này" : "Chọn tất cả trang"}
+            </Button>
             <Button size="small" variant="contained"
               startIcon={selectedSyncRunning ? <CircularProgress size={16} color="inherit" /> : <Sync />}
               onClick={handleSyncSelectedProducts}
@@ -1485,11 +1490,15 @@ export default function ShopeeProducts() {
               <Table stickyHeader size="small" sx={{ minWidth: 1100 }}>
                 <TableHead>
                   <TableRow>
-                    <TableCell padding="checkbox">
-                      <Checkbox size="small" checked={allCurrentPageSelected}
-                        indeterminate={currentPageItemIds.some((id) => selectedItemIds.includes(id)) && !allCurrentPageSelected}
-                        onChange={(event) => toggleCurrentPageSelection(event.target.checked)}
-                        inputProps={{ "aria-label": "Chọn tất cả sản phẩm trang hiện tại" }} />
+                    <TableCell padding="checkbox" sx={{ minWidth: 76, bgcolor: "background.paper" }}>
+                      <Stack direction="row" alignItems="center" spacing={0.25}>
+                        <Checkbox size="medium" color="primary" checked={allCurrentPageSelected}
+                          indeterminate={currentPageItemIds.some((id) => selectedItemIds.includes(id)) && !allCurrentPageSelected}
+                          onChange={(event) => toggleCurrentPageSelection(event.target.checked)}
+                          inputProps={{ "aria-label": "Chọn tất cả sản phẩm trang hiện tại" }}
+                          sx={{ p: 1, "& .MuiSvgIcon-root": { fontSize: 25 } }} />
+                        <Typography variant="caption" fontWeight={700} color="primary.main">Chọn</Typography>
+                      </Stack>
                     </TableCell>
                     <TableCell width={70}>Ảnh</TableCell>
                     <TableCell>Sản phẩm</TableCell>
@@ -1513,10 +1522,12 @@ export default function ShopeeProducts() {
 
                     return (
                       <TableRow key={product.itemId} hover selected={selectedItemIds.includes(String(product.itemId))}>
-                        <TableCell padding="checkbox">
-                          <Checkbox size="small" checked={selectedItemIds.includes(String(product.itemId))}
+                        <TableCell padding="checkbox" sx={{ minWidth: 76 }}>
+                          <Checkbox size="medium" color="primary"
+                            checked={selectedItemIds.includes(String(product.itemId))}
                             onChange={() => toggleProductSelection(product.itemId)}
-                            inputProps={{ "aria-label": `Chọn ${product.itemName}` }} />
+                            inputProps={{ "aria-label": `Chọn ${product.itemName}` }}
+                            sx={{ p: 1, "& .MuiSvgIcon-root": { fontSize: 25 } }} />
                         </TableCell>
                         <TableCell>
                           <Avatar
