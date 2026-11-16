@@ -12,6 +12,7 @@ import {
   AlertCircle,
   Zap,
   DollarSign,
+  FileText,
   MessageSquare,
   MessageCircle,
   Package,
