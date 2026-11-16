@@ -386,8 +386,18 @@ const ProfitAnalytics = () => {
   const currentMonthBatches = useMemo(() => {
     const now = new Date();
     return batches.filter((batch) => {
-      if (batch.source !== "receipt") return false;
-      const importDate = getDate(batch.importDate);
+      // Backend InventoryBatch dùng enum viết HOA: IMPORT / OPENING /
+      // ADJUSTMENT / RETURN / OTHER. Dữ liệu receipt là alias cũ.
+      const source = String(batch.source || "").trim().toUpperCase();
+      const isRealImport =
+        source === "IMPORT" ||
+        source === "RECEIPT" ||
+        Boolean(batch.importReceiptId);
+
+      if (!isRealImport) return false;
+
+      // Ưu tiên ngày nhập; fallback createdAt cho dữ liệu cũ thiếu importDate.
+      const importDate = getDate(batch.importDate || batch.createdAt);
       return Boolean(
         importDate &&
           importDate.getFullYear() === now.getFullYear() &&
