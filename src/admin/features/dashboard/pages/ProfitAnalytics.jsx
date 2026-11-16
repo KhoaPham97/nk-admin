@@ -429,11 +429,6 @@ const ProfitAnalytics = () => {
     [currentMonthBatches],
   );
 
-  const currentMonthBatchCodes = useMemo(
-    () => new Set(currentMonthBatches.map((batch) => String(batch.batchCode || "").trim()).filter(Boolean)),
-    [currentMonthBatches],
-  );
-
   const currentMonthBatchByCode = useMemo(
     () => new Map(currentMonthBatches.map((batch) => [String(batch.batchCode || "").trim(), batch])),
     [currentMonthBatches],
@@ -687,7 +682,7 @@ const ProfitAnalytics = () => {
 
         return n(b.profit) - n(a.profit);
       });
-  }, [orders, historyMap, currentMonthBatches, currentMonthBatchIds, currentMonthBatchCodes, currentMonthBatchByCode]);
+  }, [orders, historyMap, currentMonthBatches, currentMonthBatchIds, currentMonthBatchByCode]);
 
   // =====================================================
   // SUMMARY
