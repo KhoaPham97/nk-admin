@@ -246,6 +246,8 @@ const ProfitAnalytics = () => {
       missingBatchLinkLines: 0,
       allocationMismatchLines: 0,
       zeroCostAllocationLines: 0,
+      estimatedCostLines: 0,
+      unresolvedCostLines: 0,
       missingHistoryLines: 0,
       examples: [],
     };
@@ -279,7 +281,13 @@ const ProfitAnalytics = () => {
           }
           if (allocations.some((allocation) => !(n(allocation.unitCost) > 0))) {
             result.zeroCostAllocationLines += 1;
-            issues.push("Lô chưa có giá vốn");
+            const canEstimate =
+              allocatedQty === qty &&
+              allocations.every((allocation) => !(n(allocation.unitCost) > 0)) &&
+              n(item.unitCost) > 0;
+            if (canEstimate) result.estimatedCostLines += 1;
+            else result.unresolvedCostLines += 1;
+            issues.push(canEstimate ? "Giá vốn đang ước tính từ đơn" : "Lô chưa có giá vốn");
           }
         }
 
@@ -801,7 +809,8 @@ const ProfitAnalytics = () => {
                 Thiếu phân bổ lô: {dataQuality.missingAllocationLines};
                 lịch sử thiếu mã lô: {dataQuality.missingBatchLinkLines};
                 phân bổ lệch số lượng: {dataQuality.allocationMismatchLines};
-                lô chưa có giá vốn: {dataQuality.zeroCostAllocationLines}.
+                lô chưa có giá vốn: {dataQuality.zeroCostAllocationLines}
+                (ước tính được {dataQuality.estimatedCostLines}, chưa xác định {dataQuality.unresolvedCostLines}).
               </Typography>
               {dataQuality.examples.map((item) => (
                 <Typography key={`${item.code}-${item.product}`} variant="caption" display="block">
