@@ -7,6 +7,7 @@ import {
   Button,
   Card,
   CardContent,
+  Checkbox,
   Chip,
   CircularProgress,
   Collapse,
@@ -163,6 +164,8 @@ export default function ShopeeProducts() {
   const [shopId, setShopId] = useState("");
 
   const [products, setProducts] = useState([]);
+  const [selectedItemIds, setSelectedItemIds] = useState([]);
+  const [selectedSyncRunning, setSelectedSyncRunning] = useState(false);
 
   const [pagination, setPagination] = useState({
     page: 1,
@@ -530,6 +533,57 @@ export default function ShopeeProducts() {
   };
 
   // ===================================================
+  // SELECTED PRODUCT STOCK SYNC
+  // ===================================================
+
+  const currentPageItemIds = products.map((product) => String(product.itemId));
+  const allCurrentPageSelected =
+    currentPageItemIds.length > 0 &&
+    currentPageItemIds.every((itemId) => selectedItemIds.includes(itemId));
+
+  const toggleProductSelection = (itemId) => {
+    const normalizedId = String(itemId);
+    setSelectedItemIds((current) =>
+      current.includes(normalizedId)
+        ? current.filter((id) => id !== normalizedId)
+        : [...current, normalizedId],
+    );
+  };
+
+  const toggleCurrentPageSelection = (checked) => {
+    setSelectedItemIds((current) => {
+      if (checked) return [...new Set([...current, ...currentPageItemIds])];
+      return current.filter((id) => !currentPageItemIds.includes(id));
+    });
+  };
+
+  const handleSyncSelectedProducts = async () => {
+    if (!shopId || selectedItemIds.length === 0 || selectedSyncRunning) return;
+    const confirmed = window.confirm(
+      `Bạn muốn đồng bộ tồn kho cho ${selectedItemIds.length} sản phẩm đã chọn? Chỉ SKU có ánh xạ hợp lệ và bật allowStockDeduction mới được cập nhật.`,
+    );
+    if (!confirmed) return;
+
+    setSelectedSyncRunning(true);
+    try {
+      const result = await shopeeApi.runSelectedStockSync({ shopId, itemIds: selectedItemIds });
+      if (!result?.success) throw new Error(result?.message || "Không thể đồng bộ sản phẩm đã chọn.");
+
+      const data = result.data || {};
+      toast.success(
+        `Đã xử lý ${data.totalCount ?? selectedItemIds.length} mapping: ${Number(data.successCount || 0)} cập nhật, ${Number(data.unchangedCount || 0)} đã khớp, ${Number(data.blockedCount || 0)} bị bỏ qua do chưa bật quyền, ${Number(data.failedCount || 0)} lỗi.`,
+        { duration: 6000 },
+      );
+      setSelectedItemIds([]);
+      await Promise.all([loadProducts(pagination.page), loadStockSyncData()]);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    } finally {
+      setSelectedSyncRunning(false);
+    }
+  };
+
+  // ===================================================
   // DETAIL
   // ===================================================
 
@@ -838,7 +892,10 @@ export default function ShopeeProducts() {
                 <Select
                   value={shopId}
                   label="Gian hàng Shopee"
-                  onChange={(event) => setShopId(event.target.value)}
+                  onChange={(event) => {
+                    setShopId(event.target.value);
+                    setSelectedItemIds([]);
+                  }}
                 >
                   {shops.map((shop) => (
                     <MenuItem key={shop.shopId} value={String(shop.shopId)}>
@@ -1383,15 +1440,25 @@ export default function ShopeeProducts() {
           alignItems="center"
           justifyContent="space-between"
         >
-          <Stack direction="row" spacing={1} alignItems="center">
+          <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
             <Inventory2 color="action" />
 
             <Typography fontWeight={700}>Danh sách sản phẩm</Typography>
           </Stack>
 
-          <Typography variant="body2" color="text.secondary">
-            {Number(pagination.total || 0).toLocaleString("vi-VN")} sản phẩm
-          </Typography>
+          <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+            <Chip size="small" color={selectedItemIds.length ? "primary" : "default"} label={`Đã chọn ${selectedItemIds.length}`} />
+            <Button size="small" variant="contained"
+              startIcon={selectedSyncRunning ? <CircularProgress size={16} color="inherit" /> : <Sync />}
+              onClick={handleSyncSelectedProducts}
+              disabled={!selectedItemIds.length || selectedSyncRunning || loading}>
+              {selectedSyncRunning ? "Đang đồng bộ..." : "Đồng bộ sản phẩm đã chọn"}
+            </Button>
+            <Button size="small" variant="text" onClick={() => setSelectedItemIds([])} disabled={!selectedItemIds.length || selectedSyncRunning}>Bỏ chọn</Button>
+            <Typography variant="body2" color="text.secondary">
+              {Number(pagination.total || 0).toLocaleString("vi-VN")} sản phẩm
+            </Typography>
+          </Stack>
         </Box>
 
         <Divider />
@@ -1418,6 +1485,12 @@ export default function ShopeeProducts() {
               <Table stickyHeader size="small" sx={{ minWidth: 1100 }}>
                 <TableHead>
                   <TableRow>
+                    <TableCell padding="checkbox">
+                      <Checkbox size="small" checked={allCurrentPageSelected}
+                        indeterminate={currentPageItemIds.some((id) => selectedItemIds.includes(id)) && !allCurrentPageSelected}
+                        onChange={(event) => toggleCurrentPageSelection(event.target.checked)}
+                        inputProps={{ "aria-label": "Chọn tất cả sản phẩm trang hiện tại" }} />
+                    </TableCell>
                     <TableCell width={70}>Ảnh</TableCell>
                     <TableCell>Sản phẩm</TableCell>
                     <TableCell>SKU</TableCell>
@@ -1439,7 +1512,12 @@ export default function ShopeeProducts() {
                     };
 
                     return (
-                      <TableRow key={product.itemId} hover>
+                      <TableRow key={product.itemId} hover selected={selectedItemIds.includes(String(product.itemId))}>
+                        <TableCell padding="checkbox">
+                          <Checkbox size="small" checked={selectedItemIds.includes(String(product.itemId))}
+                            onChange={() => toggleProductSelection(product.itemId)}
+                            inputProps={{ "aria-label": `Chọn ${product.itemName}` }} />
+                        </TableCell>
                         <TableCell>
                           <Avatar
                             variant="rounded"
