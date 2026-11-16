@@ -2,12 +2,12 @@ import React, { useCallback, useEffect, useState } from "react";
 import { AlertCircle, CheckCircle2, Clock3, Download, FileSpreadsheet, FileText, RefreshCw, UploadCloud } from "lucide-react";
 import { shopeeApi } from "../services/shopeeApi";
 import "../styles/ShopeeDocuments.css";
-const currentMonth = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`; };
+const latestCompleteMonth = () => { const d = new Date(); d.setDate(1); d.setMonth(d.getMonth()-1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`; };
 const unwrap = (v) => v?.data?.data || v?.data || v || {};
 const title = (kind) => kind === "income_statement" ? "Bảng kê thu nhập (PDF)" : "Báo cáo thu nhập đã quyết toán (Excel)";
 const statusText = (s) => ({requested:"Đã gửi yêu cầu",processing:"Shopee đang tạo file",ready:"Đã lưu chứng từ",downloaded:"Đã tải file",failed:"Lỗi"}[s] || s || "—");
 export default function ShopeeDocuments({ selectedShopId }) {
- const [month,setMonth]=useState(currentMonth()); const [items,setItems]=useState([]);
+ const [month,setMonth]=useState(latestCompleteMonth()); const [items,setItems]=useState([]);
  const [loading,setLoading]=useState(false); const [syncing,setSyncing]=useState(false);
  const [polling,setPolling]=useState(""); const [error,setError]=useState(""); const [notice,setNotice]=useState("");
  const load=useCallback(async()=>{ if(!selectedShopId){setItems([]);return;} setLoading(true);setError("");try{const r=unwrap(await shopeeApi.getDocuments({shopId:selectedShopId}));setItems(Array.isArray(r.data)?r.data:Array.isArray(r)?r:[]);}catch(e){setError(e.message||"Không tải được danh sách chứng từ.");}finally{setLoading(false);}},[selectedShopId]);
@@ -20,7 +20,7 @@ export default function ShopeeDocuments({ selectedShopId }) {
   {!selectedShopId&&<div className="sd-alert"><AlertCircle size={17}/>Vui lòng chọn gian hàng ở phía trên.</div>}
   {error&&<div className="sd-alert"><AlertCircle size={17}/>{error}</div>}{notice&&<div className="sd-success"><CheckCircle2 size={17}/>{notice}</div>}
   <section className="sd-panel"><strong>Tạo báo cáo theo tháng</strong><p>Gửi hai yêu cầu: bảng kê thu nhập PDF và báo cáo chi tiết các khoản đã quyết toán dạng Excel (gói ZIP).</p>
-   <div className="sd-controls"><label>Tháng<input type="month" value={month} max={currentMonth()} onChange={e=>setMonth(e.target.value)}/></label><button disabled={!selectedShopId||syncing||!month} onClick={sync}><UploadCloud size={16}/>{syncing?"Đang gửi...":"Tạo / đồng bộ chứng từ"}</button><button className="sd-secondary" disabled={loading} onClick={load}><RefreshCw size={16}/>{loading?"Đang tải":"Làm mới"}</button></div>
+   <div className="sd-controls"><label>Tháng<input type="month" value={month} max={latestCompleteMonth()} onChange={e=>setMonth(e.target.value)}/></label><button disabled={!selectedShopId||syncing||!month} onClick={sync}><UploadCloud size={16}/>{syncing?"Đang gửi...":"Tạo / đồng bộ chứng từ"}</button><button className="sd-secondary" disabled={loading} onClick={load}><RefreshCw size={16}/>{loading?"Đang tải":"Làm mới"}</button></div>
    <small className="sd-note">Báo cáo PDF phải đúng kỳ tháng theo giờ Việt Nam. Shopee thường cần thời gian xử lý; Render sẽ tự kiểm tra các yêu cầu đang chờ mỗi 2 phút.</small>
   </section>
   <section className="sd-panel"><div className="sd-list-head"><strong>Kho chứng từ</strong><span>{items.length} yêu cầu</span></div>
