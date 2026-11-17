@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Box,
   Button,
@@ -32,6 +32,7 @@ import {
 } from "@mui/icons-material";
 
 import axios from "axios";
+import html2canvas from "html2canvas";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { API_ENDPOINTS } from "../../../../api";
@@ -108,6 +109,8 @@ const InvoiceDetail = () => {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [savingImage, setSavingImage] = useState(false);
+  const invoiceRef = useRef(null);
 
   // =========================================================
   // LOAD ORDER
@@ -182,8 +185,24 @@ const InvoiceDetail = () => {
   // PRINT
   // =========================================================
 
-  const handlePrint = () => {
-    window.print();
+  const handlePrint = () => { window.print(); };
+
+  const handleSaveImage = async () => {
+    if (!invoiceRef.current || savingImage) return;
+    try {
+      setSavingImage(true);
+      if (document.fonts?.ready) await document.fonts.ready;
+      const canvas = await html2canvas(invoiceRef.current, { scale: 2, useCORS: true, allowTaint: false, backgroundColor: "#ffffff", logging: false });
+      const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+      if (!blob) throw new Error("Không thể tạo ảnh hóa đơn");
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "hoa-don-" + String(order.code || order._id || "nhatkhang").replace(/[^a-zA-Z0-9-_]/g, "-") + ".png";
+      document.body.appendChild(link); link.click(); link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 30000);
+    } catch (error) { console.error(error); alert("Không thể tạo ảnh hóa đơn. Vui lòng thử lại."); }
+    finally { setSavingImage(false); }
   };
 
   // =========================================================
@@ -311,21 +330,16 @@ const InvoiceDetail = () => {
             <Typography fontWeight={700}>{order.code}</Typography>
           </Stack>
 
-          <Stack direction="row" spacing={1}>
-            <Button
-              variant="outlined"
-              startIcon={<Print />}
-              onClick={handlePrint}
-            >
-              In hóa đơn
-            </Button>
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+            <Button variant="contained" onClick={handleSaveImage} disabled={savingImage}>{savingImage ? "Đang tạo ảnh..." : "Lưu thành ảnh"}</Button>
+            <Button variant="outlined" startIcon={<Print />} onClick={handlePrint}>In hóa đơn</Button>
           </Stack>
         </Stack>
 
         {/* ===================================================
             INVOICE
         =================================================== */}
-        <div className="print-area">
+        <div className="print-area" ref={invoiceRef}>
           <Card
             className="invoice-paper"
             elevation={0}
@@ -524,7 +538,7 @@ const InvoiceDetail = () => {
                 Chi tiết sản phẩm
               </Typography>
 
-              <TableContainer>
+              <TableContainer sx={{ display: { xs: "none", sm: "block" } }}>
                 <Table
                   sx={{
                     minWidth: 700,
@@ -600,6 +614,9 @@ const InvoiceDetail = () => {
                   </TableBody>
                 </Table>
               </TableContainer>
+              <Stack spacing={1} sx={{ display: { xs: "flex", sm: "none" } }}>
+                {items.map((item, index) => <Paper key={String(item.productId || item.productCode || index) + "-" + index} variant="outlined" sx={{ p: 1.25, borderRadius: 2 }}><Stack direction="row" spacing={1.25} alignItems="flex-start">{resolveOrderItemImage(item, index, order) ? <Box component="img" src={resolveOrderItemImage(item, index, order)} alt={item.productTitle || "Sản phẩm"} crossOrigin="anonymous" sx={{ width: 64, height: 64, flexShrink: 0, objectFit: "contain", border: "1px solid", borderColor: "divider", borderRadius: 1 }} /> : null}<Box sx={{ minWidth: 0, flex: 1 }}><Typography fontWeight={700} fontSize={13} sx={{ overflowWrap: "anywhere" }}>{index + 1}. {item.productTitle || "-"}</Typography>{item.productCode && <Typography variant="caption" color="text.secondary">Mã: {item.productCode}</Typography>}<Typography variant="caption" display="block" color="text.secondary">{item.variantName || "Mặc định"} · SL: {item.qty}</Typography><Stack direction="row" justifyContent="space-between" mt={0.5} gap={1}><Typography variant="caption" color="text.secondary">{formatMoney(item.price)} / cái</Typography><Typography fontWeight={800} fontSize={13} whiteSpace="nowrap">{formatMoney(item.total)}</Typography></Stack></Box></Stack></Paper>)}
+              </Stack>
             </Box>
 
             <Divider />
