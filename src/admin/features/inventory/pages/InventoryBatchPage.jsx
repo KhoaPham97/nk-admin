@@ -37,6 +37,7 @@ import {
   FactCheck,
   Edit,
   Inventory2,
+  Sync,
 } from "@mui/icons-material";
 
 import SyncBatchCostsButton from "./SyncBatchCostsButton";
@@ -76,6 +77,7 @@ export default function InventoryBatchPage() {
 
   const [reconcile, setReconcile] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [syncingVariants, setSyncingVariants] = useState(false);
 
   // Chỉnh tồn kho
   const [adjustmentBatch, setAdjustmentBatch] = useState(null);
@@ -202,6 +204,44 @@ export default function InventoryBatchPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+
+  // Đồng bộ tên Variant của các lô theo variantCode trong sản phẩm.
+  const syncVariantsByCode = async () => {
+    const ok = window.confirm(
+      "Đồng bộ tên Variant của tất cả lô theo mã Variant trong sản phẩm?\\n\\n" +
+        "Chỉ cập nhật tên Variant và lịch sử gắn với từng lô.\\n" +
+        "Không thay đổi mã Variant, số lượng tồn, số lượng giữ, giá vốn hoặc FIFO.",
+    );
+    if (!ok) return;
+
+    try {
+      setSyncingVariants(true);
+      setError("");
+      setSuccess("");
+
+      const { data } = await axios.post(
+        `${endpoint}/sync-variants-by-code`,
+        {},
+        authConfig,
+      );
+
+      const report = data.report || {};
+      setSuccess(
+        `Đồng bộ Variant hoàn tất: ${report.updatedBatches || 0} lô được cập nhật tên, ` +
+        `${report.updatedHistories || 0} dòng lịch sử được cập nhật; ` +
+        `${report.skippedCodeNotFound || 0} lô không tìm thấy mã Variant khớp.`,
+      );
+      await load();
+      if (detail?._id) await openHistory(detail);
+    } catch (e) {
+      setError(
+        e.response?.data?.message || "Không thể đồng bộ Variant theo mã.",
+      );
+    } finally {
+      setSyncingVariants(false);
+    }
+  };
 
   // =====================================================
   // OPEN HISTORY
@@ -572,6 +612,15 @@ export default function InventoryBatchPage() {
 
         <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
           {/* <SyncBatchCostsButton apiUrl={`${endpoint}`} /> */}
+
+          <Button
+            variant="outlined"
+            startIcon={syncingVariants ? <CircularProgress size={17} /> : <Sync />}
+            onClick={syncVariantsByCode}
+            disabled={syncingVariants || loading}
+          >
+            {syncingVariants ? "Đang đồng bộ..." : "Đồng bộ Variant theo mã"}
+          </Button>
 
           <Button
             variant="outlined"
