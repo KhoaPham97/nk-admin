@@ -87,6 +87,7 @@ export default function InventoryBatchPage() {
   const [editVariantName, setEditVariantName] = useState("");
   const [editVariantCode, setEditVariantCode] = useState("");
   const [savingVariantIdentity, setSavingVariantIdentity] = useState(false);
+  const [variantIdentityChanged, setVariantIdentityChanged] = useState(false);
   const [subtractBatchRow, setSubtractBatchRow] = useState(null);
   const [subtractBatchQty, setSubtractBatchQty] = useState("");
   const [subtractBatchNote, setSubtractBatchNote] = useState("");
@@ -394,6 +395,7 @@ export default function InventoryBatchPage() {
     setAdjustmentNote("");
     setEditVariantName(String(batch.variantName || ""));
     setEditVariantCode(String(batch.variantCode || ""));
+    setVariantIdentityChanged(false);
   };
 
   const closeAdjustment = () => {
@@ -404,6 +406,7 @@ export default function InventoryBatchPage() {
     setAdjustmentNote("");
     setEditVariantName("");
     setEditVariantCode("");
+    setVariantIdentityChanged(false);
   };
 
   const saveVariantIdentity = async () => {
@@ -443,6 +446,7 @@ export default function InventoryBatchPage() {
         ? { ...current, variantName, variantCode }
         : current
       );
+      setVariantIdentityChanged(true);
       setSuccess(data.message || "Đã cập nhật Variant cho lô.");
       await load();
     } catch (e) {
@@ -466,15 +470,28 @@ export default function InventoryBatchPage() {
       return;
     }
 
-    if (!adjustmentNote.trim()) {
-      setError("Vui lòng nhập lý do điều chỉnh tồn kho.");
+    const oldQty = Number(adjustmentBatch.remainingQty || 0);
+    const quantityUnchanged = newQty === oldQty;
+
+    if (quantityUnchanged && variantIdentityChanged) {
+      setAdjustmentBatch(null);
+      setAdjustmentQty("");
+      setAdjustmentNote("");
+      setEditVariantName("");
+      setEditVariantCode("");
+      setVariantIdentityChanged(false);
+      setSuccess("Đã lưu thay đổi Variant. Số lượng tồn được giữ nguyên.");
+      await load();
       return;
     }
 
-    const oldQty = Number(adjustmentBatch.remainingQty || 0);
-
-    if (newQty === oldQty) {
+    if (quantityUnchanged) {
       setError("Số lượng mới không thay đổi so với tồn hiện tại.");
+      return;
+    }
+
+    if (!adjustmentNote.trim()) {
+      setError("Vui lòng nhập lý do điều chỉnh tồn kho.");
       return;
     }
 
