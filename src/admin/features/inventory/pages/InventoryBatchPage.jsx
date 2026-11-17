@@ -84,6 +84,9 @@ export default function InventoryBatchPage() {
   const [adjustmentQty, setAdjustmentQty] = useState("");
   const [adjustmentNote, setAdjustmentNote] = useState("");
   const [savingAdjustment, setSavingAdjustment] = useState(false);
+  const [editVariantName, setEditVariantName] = useState("");
+  const [editVariantCode, setEditVariantCode] = useState("");
+  const [savingVariantIdentity, setSavingVariantIdentity] = useState(false);
   const [subtractBatchRow, setSubtractBatchRow] = useState(null);
   const [subtractBatchQty, setSubtractBatchQty] = useState("");
   const [subtractBatchNote, setSubtractBatchNote] = useState("");
@@ -389,6 +392,8 @@ export default function InventoryBatchPage() {
     setAdjustmentBatch(batch);
     setAdjustmentQty(String(batch.remainingQty ?? 0));
     setAdjustmentNote("");
+    setEditVariantName(String(batch.variantName || ""));
+    setEditVariantCode(String(batch.variantCode || ""));
   };
 
   const closeAdjustment = () => {
@@ -397,6 +402,54 @@ export default function InventoryBatchPage() {
     setAdjustmentBatch(null);
     setAdjustmentQty("");
     setAdjustmentNote("");
+    setEditVariantName("");
+    setEditVariantCode("");
+  };
+
+  const saveVariantIdentity = async () => {
+    if (!adjustmentBatch) return;
+    const variantName = editVariantName.trim();
+    const variantCode = editVariantCode.trim();
+
+    if (Boolean(variantName) !== Boolean(variantCode)) {
+      setError("Vui lòng nhập cả tên và mã Variant.");
+      return;
+    }
+    if (!window.confirm(
+      `Cập nhật Variant cho lô ${adjustmentBatch.batchCode}?\n\nTên: ${variantName || "(trống)"}\nMã: ${variantCode || "(trống)"}\n\nThông tin lô và lịch sử liên quan sẽ được cập nhật.`
+    )) return;
+
+    try {
+      setSavingVariantIdentity(true);
+      setError("");
+      setSuccess("");
+      const { data } = await axios.patch(
+        `${endpoint}/${adjustmentBatch._id}/variant-identity`,
+        { variantName, variantCode },
+        authConfig,
+      );
+
+      setAdjustmentBatch((current) => current ? {
+        ...current,
+        variantName: data.batch?.variantName ?? variantName,
+        variantCode: data.batch?.variantCode ?? variantCode,
+      } : current);
+      setRows((current) => current.map((row) =>
+        row._id === adjustmentBatch._id
+          ? { ...row, variantName, variantCode }
+          : row
+      ));
+      setDetail((current) => current?._id === adjustmentBatch._id
+        ? { ...current, variantName, variantCode }
+        : current
+      );
+      setSuccess(data.message || "Đã cập nhật Variant cho lô.");
+      await load();
+    } catch (e) {
+      setError(e.response?.data?.message || "Không thể cập nhật Variant.");
+    } finally {
+      setSavingVariantIdentity(false);
+    }
   };
 
   // =====================================================
@@ -1215,9 +1268,46 @@ export default function InventoryBatchPage() {
               </Paper>
 
               <Alert severity="info">
-                Chỉ điều chỉnh số lượng còn lại của lô. Số lượng nhập ban đầu và
-                giá vốn không bị thay đổi.
+                Bạn có thể sửa tên và mã Variant thủ công. Hệ thống chỉ chấp nhận cặp tên/mã khớp với một Variant của sản phẩm; thao tác này không đổi tồn kho hay giá vốn.
               </Alert>
+
+              <TextField
+                fullWidth
+                label="Variant name"
+                value={editVariantName}
+                onChange={(e) => setEditVariantName(e.target.value)}
+                disabled={savingVariantIdentity || savingAdjustment}
+                inputProps={{ maxLength: 200 }}
+              />
+
+              <TextField
+                fullWidth
+                label="Variant code"
+                value={editVariantCode}
+                onChange={(e) => setEditVariantCode(e.target.value)}
+                disabled={savingVariantIdentity || savingAdjustment}
+                inputProps={{ maxLength: 100 }}
+              />
+
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+                <Button
+                  variant="outlined"
+                  onClick={saveVariantIdentity}
+                  disabled={
+                    savingVariantIdentity ||
+                    savingAdjustment ||
+                    (editVariantName.trim() === String(adjustmentBatch.variantName || "").trim() &&
+                      editVariantCode.trim() === String(adjustmentBatch.variantCode || "").trim()) ||
+                    Boolean(editVariantName.trim()) !== Boolean(editVariantCode.trim())
+                  }
+                  startIcon={savingVariantIdentity ? <CircularProgress size={16} /> : <Edit />}
+                >
+                  {savingVariantIdentity ? "Đang lưu Variant..." : "Lưu tên & mã Variant"}
+                </Button>
+              </Stack>
+
+              <Divider />
+              <Typography fontWeight={700}>Điều chỉnh số lượng tồn</Typography>
 
               <TextField
                 fullWidth
@@ -1293,7 +1383,7 @@ export default function InventoryBatchPage() {
           <Button
             onClick={closeAdjustment}
             color="inherit"
-            disabled={savingAdjustment}
+            disabled={savingAdjustment || savingVariantIdentity}
           >
             Hủy
           </Button>
