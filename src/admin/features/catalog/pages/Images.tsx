@@ -93,10 +93,12 @@ const Images: React.FC = () => {
     try {
       setProductsLoading(true);
       const first = await getRequest({ url: "/products", params: { type: "all", page: 1, limit: 100 } });
+      if (first?.response || first?.isAxiosError) throw new Error(first?.response?.data?.message || "Không thể tải danh sách sản phẩm.");
       const all: ProductOption[] = Array.isArray(first?.products) ? [...first.products] : [];
       const totalPages = Math.min(200, Number(first?.pagination?.totalPages) || 1);
       for (let current = 2; current <= totalPages; current++) {
         const response = await getRequest({ url: "/products", params: { type: "all", page: current, limit: 100 } });
+        if (response?.response || response?.isAxiosError) throw new Error(response?.response?.data?.message || "Không thể tải trang sản phẩm.");
         if (Array.isArray(response?.products)) all.push(...response.products);
       }
       setProducts(all);
@@ -153,7 +155,8 @@ const Images: React.FC = () => {
     else updated.images = Array.from(new Set([...(Array.isArray(product.images) ? product.images : []), item.url]));
     try {
       setSavingIds((current) => [...current, item._id]); setError(""); setNotice("");
-      await patchRequest({ url: "/products", data: [updated] });
+      const result = await patchRequest({ url: "/products", data: [updated] });
+      if (result?.response || result?.isAxiosError) throw new Error(result?.response?.data?.message || "API không thể cập nhật sản phẩm.");
       setProducts((current) => current.map((entry) => entry._id === updated._id ? updated : entry));
       setNotice(target === "thumbnail"
         ? `Đã cập nhật ảnh đại diện cho “${product.title}”.`
