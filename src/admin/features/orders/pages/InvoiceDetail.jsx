@@ -400,7 +400,10 @@ const InvoiceDetail = () => {
               <Paper variant="outlined" sx={{ p: { xs: 1.25, sm: 1.75 }, borderRadius: 2 }}>
                 <Stack spacing={1}>
                   <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1}>
-                    <Stack direction="row" spacing={0.75} alignItems="center" minWidth={0}><PersonOutline fontSize="small" /><Typography fontWeight={800} fontSize={14}>Khách hàng</Typography></Stack>
+                    <Stack direction="row" spacing={0.75} alignItems="center" minWidth={0}>
+                      <PersonOutline fontSize="small" />
+                      <Typography fontWeight={800} fontSize={14}>Khách hàng</Typography>
+                    </Stack>
                     <Chip size="small" label={statusConfig.label} color={statusConfig.color} />
                   </Stack>
                   <Typography fontWeight={700} fontSize={14}>{order.customerName || "Khách lẻ"}</Typography>
@@ -410,17 +413,25 @@ const InvoiceDetail = () => {
                   </Stack>
                   <Divider />
                   <Stack direction={{ xs: "column", sm: "row" }} spacing={1} justifyContent="space-between" alignItems={{ xs: "stretch", sm: "center" }}>
-                    <Stack direction="row" spacing={0.75} alignItems="center"><CalendarToday fontSize="small" /><Typography variant="body2" color="text.secondary">Ngày tạo: {formatDate(order.created_at)}</Typography></Stack>
+                    <Stack direction="row" spacing={0.75} alignItems="center">
+                      <CalendarToday fontSize="small" />
+                      <Typography variant="body2" color="text.secondary">Ngày tạo: {formatDate(order.created_at)}</Typography>
+                    </Stack>
                     <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
                       <Typography variant="body2" color="text.secondary">Trạng thái</Typography>
                       <Select size="small" value={order.status || "pending"} disabled={updatingStatus} onChange={(e) => handleChangeStatus(e.target.value)} sx={{ minWidth: 145, height: 36 }}>
-                        <MenuItem value="pending">Chờ xác nhận</MenuItem><MenuItem value="confirmed">Đã xác nhận</MenuItem><MenuItem value="shipping">Đang giao</MenuItem><MenuItem value="completed">Hoàn thành</MenuItem><MenuItem value="cancelled">Đã hủy</MenuItem>
+                        <MenuItem value="pending">Chờ xác nhận</MenuItem>
+                        <MenuItem value="confirmed">Đã xác nhận</MenuItem>
+                        <MenuItem value="shipping">Đang giao</MenuItem>
+                        <MenuItem value="completed">Hoàn thành</MenuItem>
+                        <MenuItem value="cancelled">Đã hủy</MenuItem>
                       </Select>
                     </Stack>
                   </Stack>
                 </Stack>
               </Paper>
             </Box>
+
             <Divider />
 
             {/* =================================================
@@ -440,6 +451,358 @@ const InvoiceDetail = () => {
                 Chi tiết sản phẩm
               </Typography>
 
-              <Stack spacing={1} sx={{ display: "flex" }}>
+              <TableContainer sx={{ display: { xs: "none", sm: "block" } }}>
+                <Table
+                  sx={{
+                    minWidth: 700,
+                  }}
+                >
+                  <TableHead>
+                    <TableRow
+                      sx={{
+                        backgroundColor: "action.hover",
+                      }}
+                    >
+                      <TableCell width={50}>#</TableCell>
+
+                      <TableCell align="center" width={88}>Hình ảnh</TableCell>
+
+                      <TableCell>Sản phẩm</TableCell>
+
+                      <TableCell>Phân loại</TableCell>
+
+                      <TableCell align="center">SL</TableCell>
+
+                      <TableCell align="right">Đơn giá</TableCell>
+
+                      <TableCell align="right">Thành tiền</TableCell>
+                    </TableRow>
+                  </TableHead>
+
+                  <TableBody>
+                    {items.map((item, index) => (
+                      <TableRow key={`${item.productId}-${index}`}>
+                        <TableCell>{index + 1}</TableCell>
+
+                        <TableCell align="center">
+                          {resolveOrderItemImage(item, index, order) ? (
+                            <Box component="img" src={resolveOrderItemImage(item, index, order)} alt={item.productTitle || "Hình ảnh sản phẩm"} loading="lazy" onError={(event) => { event.currentTarget.style.visibility = "hidden"; }} sx={{ width: 64, height: 64, objectFit: "contain", borderRadius: 1.5, border: "1px solid", borderColor: "divider", backgroundColor: "#fff" }} />
+                          ) : (
+                            <Box sx={{ width: 64, height: 64, mx: "auto", display: "grid", placeItems: "center", borderRadius: 1.5, border: "1px dashed", borderColor: "divider", color: "text.disabled", fontSize: 11 }}>Chưa có ảnh</Box>
+                          )}
+                        </TableCell>
+
+                        <TableCell>
+                          <Stack spacing={0.3}>
+                            <Typography fontWeight={600}>
+                              {item.productTitle || "-"}
+                            </Typography>
+
+                            {item.productCode && (
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                Mã: {item.productCode}
+                              </Typography>
+                            )}
+                          </Stack>
+                        </TableCell>
+
+                        <TableCell>{item.variantName || "-"}</TableCell>
+
+                        <TableCell align="center">{item.qty}</TableCell>
+
+                        <TableCell align="right">
+                          {formatMoney(item.price)}
+                        </TableCell>
+
+                        <TableCell align="right">
+                          <Typography fontWeight={700}>
+                            {formatMoney(item.total)}
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              <Stack spacing={1} sx={{ display: { xs: "flex", sm: "none" } }}>
                 {items.map((item, index) => <Paper key={String(item.productId || item.productCode || index) + "-" + index} variant="outlined" sx={{ p: 1.25, borderRadius: 2 }}><Stack direction="row" spacing={1.25} alignItems="flex-start">{resolveOrderItemImage(item, index, order) ? <Box component="img" src={resolveOrderItemImage(item, index, order)} alt={item.productTitle || "Sản phẩm"} crossOrigin="anonymous" sx={{ width: 64, height: 64, flexShrink: 0, objectFit: "contain", border: "1px solid", borderColor: "divider", borderRadius: 1 }} /> : null}<Box sx={{ minWidth: 0, flex: 1 }}><Typography fontWeight={700} fontSize={13} sx={{ overflowWrap: "anywhere" }}>{index + 1}. {item.productTitle || "-"}</Typography>{item.productCode && <Typography variant="caption" color="text.secondary">Mã: {item.productCode}</Typography>}<Typography variant="caption" display="block" color="text.secondary">{item.variantName || "Mặc định"} · SL: {item.qty}</Typography><Stack direction="row" justifyContent="space-between" mt={0.5} gap={1}><Typography variant="caption" color="text.secondary">{formatMoney(item.price)} / cái</Typography><Typography fontWeight={800} fontSize={13} whiteSpace="nowrap">{formatMoney(item.total)}</Typography></Stack></Box></Stack></Paper>)}
               </Stack>
+            </Box>
+
+            <Divider />
+
+            {/* =================================================
+              TOTAL
+          ================================================= */}
+
+            <Box
+              sx={{
+                p: {
+                  xs: 2,
+                  md: 3,
+                },
+              }}
+            >
+              <Grid container justifyContent="flex-end">
+                <Grid item xs={12} sm={7} md={5}>
+                  <Stack spacing={1.2}>
+                    <Stack direction="row" justifyContent="space-between">
+                      <Typography>Tạm tính</Typography>
+
+                      <Typography>{formatMoney(order.subtotal)}</Typography>
+                    </Stack>
+
+                    <Stack direction="row" justifyContent="space-between">
+                      <Typography>Giảm giá</Typography>
+
+                      <Typography>- {formatMoney(order.discount)}</Typography>
+                    </Stack>
+
+                    <Stack direction="row" justifyContent="space-between">
+                      <Typography>Phí giao hàng</Typography>
+
+                      <Typography>{formatMoney(order.shippingFee)}</Typography>
+                    </Stack>
+
+                    <Divider />
+
+                    <Stack
+                      direction="row"
+                      justifyContent="space-between"
+                      alignItems="center"
+                    >
+                      <Typography fontWeight={800} fontSize={18}>
+                        Tổng tiền
+                      </Typography>
+
+                      <Typography fontWeight={800} fontSize={22}>
+                        {formatMoney(order.totalAmount)}
+                      </Typography>
+                    </Stack>
+
+                    <Stack direction="row" justifyContent="space-between">
+                      <Typography color="text.secondary">
+                        Đã thanh toán
+                      </Typography>
+
+                      <Typography>{formatMoney(order.paidAmount)}</Typography>
+                    </Stack>
+
+                    <Stack direction="row" justifyContent="space-between">
+                      <Typography fontWeight={700}>Còn nợ</Typography>
+
+                      <Typography fontWeight={800}>
+                        {formatMoney(order.debt)}
+                      </Typography>
+                    </Stack>
+                  </Stack>
+                </Grid>
+              </Grid>
+            </Box>
+
+            <Divider />
+
+            {/* =================================================
+              PAYMENT + NOTE
+          ================================================= */}
+
+            <Box
+              sx={{
+                p: {
+                  xs: 2,
+                  md: 3,
+                },
+              }}
+            >
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={6}>
+                  <Paper
+                    variant="outlined"
+                    sx={{
+                      p: 2,
+                      borderRadius: 2,
+                    }}
+                  >
+                    <Typography fontWeight={700} mb={1}>
+                      Thanh toán
+                    </Typography>
+
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Typography>Phương thức:</Typography>
+
+                      <Chip label={paymentMethod} size="small" />
+                    </Stack>
+                  </Paper>
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <Paper
+                    variant="outlined"
+                    sx={{
+                      p: 2,
+                      borderRadius: 2,
+                    }}
+                  >
+                    <Typography fontWeight={700} mb={1}>
+                      Ghi chú
+                    </Typography>
+
+                    <Typography
+                      color={order.note ? "text.primary" : "text.secondary"}
+                    >
+                      {order.note || "Không có ghi chú"}
+                    </Typography>
+                  </Paper>
+                </Grid>
+              </Grid>
+            </Box>
+
+            <Divider />
+
+            {/* =================================================
+              FOOTER
+          ================================================= */}
+
+            <Box
+              sx={{
+                p: {
+                  xs: 2,
+                  md: 3,
+                },
+                textAlign: "center",
+              }}
+            >
+              <Typography fontWeight={700}>Cảm ơn quý khách!</Typography>
+
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ mt: 0.5 }}
+              >
+                NHẬT KHANG BIKE
+              </Typography>
+            </Box>
+          </Card>
+        </div>
+      </Box>
+
+      {/* =====================================================
+          PRINT CSS
+      ===================================================== */}
+
+      <style>
+        {`
+    @media print {
+
+      /* ==========================================
+         CẤU HÌNH KHỔ GIẤY
+      ========================================== */
+
+      @page {
+        size: A4;
+        margin: 10mm;
+      }
+
+      /* ==========================================
+         ẨN TOÀN BỘ TRANG WEB
+      ========================================== */
+
+      body * {
+        visibility: hidden !important;
+      }
+
+      /* ==========================================
+         CHỈ HIỆN KHU VỰC HÓA ĐƠN
+      ========================================== */
+
+      .print-area,
+      .print-area * {
+        visibility: visible !important;
+      }
+
+      .print-area {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+
+        width: 100% !important;
+        max-width: none !important;
+
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+
+      /* ==========================================
+         CARD HÓA ĐƠN
+      ========================================== */
+
+      .invoice-paper {
+        width: 100% !important;
+        max-width: none !important;
+
+        margin: 0 !important;
+        padding: 0 !important;
+
+        border: none !important;
+        box-shadow: none !important;
+
+        border-radius: 0 !important;
+      }
+
+      /* ==========================================
+         ẨN ELEMENT KHÔNG MUỐN IN
+      ========================================== */
+
+      .no-print {
+        display: none !important;
+      }
+
+      /* ==========================================
+         TABLE
+      ========================================== */
+
+      table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+      }
+
+      tr {
+        page-break-inside: avoid !important;
+      }
+
+      /* ==========================================
+         FONT
+      ========================================== */
+
+      body {
+        background: #fff !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      /* ==========================================
+         KHÔNG CHO CARD BỊ TÁCH XẤU
+      ========================================== */
+
+      .MuiCard-root {
+        break-inside: avoid;
+      }
+
+      /* ==========================================
+         LOẠI BỎ MÀU NỀN KHÔNG CẦN THIẾT
+      ========================================== */
+
+      .MuiPaper-root {
+        box-shadow: none !important;
+      }
+    }
+  `}
+      </style>
+    </>
+  );
+};
+
+export default InvoiceDetail;
