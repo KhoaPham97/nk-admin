@@ -895,6 +895,7 @@ export default function InventoryBatchPage() {
               <TableCell>Mã lô</TableCell>
               <TableCell>Sản phẩm</TableCell>
               <TableCell>Variant</TableCell>
+              <TableCell>Mã Variant</TableCell>
               <TableCell>Ngày nhập</TableCell>
               <TableCell align="right">Nhập</TableCell>
               <TableCell align="right">Còn</TableCell>
@@ -930,6 +931,12 @@ export default function InventoryBatchPage() {
                   </TableCell>
 
                   <TableCell>{b.variantName || "Không Variant"}</TableCell>
+
+                  <TableCell>
+                    <Typography variant="body2" fontWeight={700} sx={{ whiteSpace: "nowrap", fontFamily: "monospace" }}>
+                      {b.variantCode || "—"}
+                    </Typography>
+                  </TableCell>
 
                   <TableCell>{date(b.importDate)}</TableCell>
 
@@ -1051,6 +1058,9 @@ export default function InventoryBatchPage() {
               <Typography>
                 Phân loại: {subtractBatchRow.variantName || "Mặc định"}
               </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ fontFamily: "monospace" }}>
+                Mã Variant: {subtractBatchRow.variantCode || "—"}
+              </Typography>
 
               <Typography>
                 Tổng tồn lô hiện tại: {subtractBatchRow.batchQty}
@@ -1166,6 +1176,9 @@ export default function InventoryBatchPage() {
 
                     <Typography fontWeight={600}>
                       {adjustmentBatch.variantName || "Không Variant"}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: "block", fontFamily: "monospace" }}>
+                      Mã Variant: {adjustmentBatch.variantCode || "—"}
                     </Typography>
                   </Grid>
 
@@ -1414,6 +1427,9 @@ export default function InventoryBatchPage() {
 
                 <Typography fontWeight={600}>
                   {detail.variantName || "—"}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ display: "block", fontFamily: "monospace" }}>
+                  Mã Variant: {detail.variantCode || "—"}
                 </Typography>
               </Grid>
 
