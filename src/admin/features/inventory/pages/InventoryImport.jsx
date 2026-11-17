@@ -450,7 +450,7 @@ export default function InventoryImport() {
   }
 
   return (
-    <Box>
+    <Box sx={{ pb: { xs: 11, sm: 2 }, "& .MuiCard-root": { borderRadius: { xs: 2.5, sm: 2 }, borderColor: "divider" }, "& .MuiCardContent-root": { p: { xs: 2, sm: 2.5 }, "&:last-child": { pb: { xs: 2, sm: 2.5 } } }, "& .MuiTextField-root .MuiInputBase-root": { borderRadius: 2 } }}>
       <Stack
         direction={{ xs: "column", sm: "row" }}
         justifyContent="space-between"
@@ -467,7 +467,7 @@ export default function InventoryImport() {
           </Typography>
         </Box>
 
-        <Stack direction="row" spacing={1} flexWrap="wrap">
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={1} flexWrap="wrap" sx={{ "& .MuiButton-root": { minHeight: 42, borderRadius: 2, flex: { xs: 1, sm: "initial" } } }}>
           <Button
             variant="outlined"
             onClick={() => navigate("/admin/inventory-drafts")}
@@ -501,7 +501,7 @@ export default function InventoryImport() {
         </Alert>
       )}
 
-      <Grid container spacing={2}>
+      <Grid container spacing={{ xs: 1.5, sm: 2 }}>
         <Grid item xs={12} md={8}>
           <Card>
             <CardContent>
@@ -554,9 +554,10 @@ export default function InventoryImport() {
 
                 {selectedProduct && (
                   <>
-                    <Typography fontWeight={600}>
-                      {getProductTitle(selectedProduct)}
-                    </Typography>
+                    <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: "action.hover", border: "1px solid", borderColor: "divider" }}>
+                      <Typography fontWeight={700} sx={{ lineHeight: 1.35 }}>{getProductTitle(selectedProduct)}</Typography>
+                      <Typography variant="caption" color="text.secondary">{selectedProduct.code || selectedProduct.productCode || selectedProduct.sku || "Sản phẩm"}</Typography>
+                    </Box>
 
                     {getVariants(selectedProduct).length > 0 && (
                       <TextField
@@ -614,8 +615,10 @@ export default function InventoryImport() {
 
                     <Button
                       variant="contained"
+                      fullWidth
                       startIcon={<AddOutlined />}
                       onClick={addItem}
+                      sx={{ minHeight: 46, borderRadius: 2, fontWeight: 700 }}
                     >
                       Thêm vào phiếu
                     </Button>
@@ -675,7 +678,54 @@ export default function InventoryImport() {
                 Danh sách hàng nhập ({items.length})
               </Typography>
 
-              <TableContainer component={Paper} variant="outlined">
+
+              <Box sx={{ display: { xs: "grid", md: "none" }, gap: 1.25 }}>
+                {items.map((item, index) => (
+                  <Paper key={index} variant="outlined" sx={{ p: 1.5, borderRadius: 2.5, minWidth: 0 }}>
+                    <Stack direction="row" spacing={1.25} alignItems="flex-start">
+                      {item.thumbnail ? (
+                        <Box component="img" src={item.thumbnail} alt="" sx={{ width: 58, height: 58, objectFit: "cover", borderRadius: 1.75, bgcolor: "action.hover", flexShrink: 0 }} />
+                      ) : (
+                        <Box sx={{ width: 58, height: 58, borderRadius: 1.75, bgcolor: "action.hover", display: "grid", placeItems: "center", flexShrink: 0 }}>
+                          <Inventory2Outlined color="disabled" />
+                        </Box>
+                      )}
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography fontWeight={700} sx={{ lineHeight: 1.35, overflowWrap: "anywhere" }}>{item.productTitle}</Typography>
+                        <Typography variant="caption" color="text.secondary">{item.productCode || "—"}</Typography>
+                        <Typography variant="body2" sx={{ mt: 0.5 }}>{item.variantName || "Mặc định"}</Typography>
+                        {item.variantCode && <Typography variant="caption" color="text.secondary" sx={{ fontFamily: "monospace" }}>{item.variantCode}</Typography>}
+                      </Box>
+                      <IconButton color="error" size="small" onClick={() => removeItem(index)} aria-label="Xóa sản phẩm"><DeleteOutline /></IconButton>
+                    </Stack>
+                    <Divider sx={{ my: 1.25 }} />
+                    <Grid container spacing={1}>
+                      <Grid item xs={4}>
+                        <Typography variant="caption" color="text.secondary">Tồn hiện tại</Typography>
+                        <Typography fontWeight={700}>{numberValue(item.currentQty).toLocaleString("vi-VN")}</Typography>
+                      </Grid>
+                      <Grid item xs={4}>
+                        <TextField size="small" fullWidth type="number" label="SL nhập" value={item.qty} onChange={(event) => updateItem(index, "qty", event.target.value)} inputProps={{ min: 0 }} />
+                      </Grid>
+                      <Grid item xs={4}>
+                        <TextField size="small" fullWidth type="number" label="Giá CNY" value={item.unitCost} onChange={(event) => updateItem(index, "unitCost", event.target.value)} inputProps={{ min: 0 }} />
+                      </Grid>
+                    </Grid>
+                    <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mt: 1.25 }}>
+                      <Typography variant="caption" color="text.secondary">Thành tiền</Typography>
+                      <Typography fontWeight={800} color="primary.main">{formatMoney(numberValue(item.qty) * numberValue(item.unitCost))}</Typography>
+                    </Stack>
+                  </Paper>
+                ))}
+                {!items.length && (
+                  <Box sx={{ textAlign: "center", py: 4, px: 2, border: "1px dashed", borderColor: "divider", borderRadius: 2 }}>
+                    <Inventory2Outlined color="disabled" sx={{ fontSize: 30, mb: 1 }} />
+                    <Typography color="text.secondary" variant="body2">Chưa có sản phẩm trong phiếu nhập</Typography>
+                  </Box>
+                )}
+              </Box>
+
+              <TableContainer component={Paper} variant="outlined" sx={{ display: { xs: "none", md: "block" } }}>
                 <Table size="small">
                   <TableHead>
                     <TableRow>
@@ -771,6 +821,17 @@ export default function InventoryImport() {
           </Card>
         </Grid>
       </Grid>
+
+
+      <Paper elevation={8} sx={{ display: { xs: "flex", sm: "none" }, position: "fixed", zIndex: (theme) => theme.zIndex.appBar + 2, left: 0, right: 0, bottom: 0, p: 1.5, pb: "calc(12px + env(safe-area-inset-bottom))", gap: 1, alignItems: "center", borderRadius: "16px 16px 0 0", borderTop: "1px solid", borderColor: "divider", bgcolor: "background.paper" }}>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Typography variant="caption" color="text.secondary">Tổng {totalQty} sản phẩm</Typography>
+          <Typography fontWeight={800} color="primary.main" sx={{ lineHeight: 1.3 }}>{formatMoney(totalAmount)}</Typography>
+        </Box>
+        <Button variant="contained" onClick={submitImport} disabled={submitting || savingDraft} startIcon={<Inventory2Outlined />} sx={{ minHeight: 44, borderRadius: 2, px: 2, whiteSpace: "nowrap" }}>
+          {submitting ? "Đang nhập..." : "Xác nhận"}
+        </Button>
+      </Paper>
 
       <Snackbar
         open={Boolean(message)}
