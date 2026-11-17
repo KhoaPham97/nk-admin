@@ -397,7 +397,7 @@ export default function InventoryBatchPage() {
   };
 
   const closeAdjustment = () => {
-    if (savingAdjustment) return;
+    if (savingAdjustment || savingVariantIdentity) return;
 
     setAdjustmentBatch(null);
     setAdjustmentQty("");
