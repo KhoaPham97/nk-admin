@@ -536,7 +536,9 @@ const InvoiceDetail = () => {
                         backgroundColor: "action.hover",
                       }}
                     >
-                      <TableCell width={50}>#</TableCell>\n\n                      <TableCell align="center" width={88}>Hình ảnh</TableCell>
+                      <TableCell width={50}>#</TableCell>
+
+                      <TableCell align="center" width={88}>Hình ảnh</TableCell>
 
                       <TableCell>Sản phẩm</TableCell>
 
@@ -553,7 +555,15 @@ const InvoiceDetail = () => {
                   <TableBody>
                     {items.map((item, index) => (
                       <TableRow key={`${item.productId}-${index}`}>
-                        <TableCell>{index + 1}</TableCell>\n\n                        <TableCell align="center">\n                          {resolveOrderItemImage(item, index, order) ? (\n                            <Box component="img" src={resolveOrderItemImage(item, index, order)} alt={item.productTitle || "Hình ảnh sản phẩm"} loading="lazy" onError={(event) => { event.currentTarget.style.visibility = "hidden"; }} sx={{ width: 64, height: 64, objectFit: "contain", borderRadius: 1.5, border: "1px solid", borderColor: "divider", backgroundColor: "#fff" }} />\n                          ) : (\n                            <Box sx={{ width: 64, height: 64, mx: "auto", display: "grid", placeItems: "center", borderRadius: 1.5, border: "1px dashed", borderColor: "divider", color: "text.disabled", fontSize: 11 }}>Chưa có ảnh</Box>\n                          )}\n                        </TableCell>
+                        <TableCell>{index + 1}</TableCell>
+
+                        <TableCell align="center">
+                          {resolveOrderItemImage(item, index, order) ? (
+                            <Box component="img" src={resolveOrderItemImage(item, index, order)} alt={item.productTitle || "Hình ảnh sản phẩm"} loading="lazy" onError={(event) => { event.currentTarget.style.visibility = "hidden"; }} sx={{ width: 64, height: 64, objectFit: "contain", borderRadius: 1.5, border: "1px solid", borderColor: "divider", backgroundColor: "#fff" }} />
+                          ) : (
+                            <Box sx={{ width: 64, height: 64, mx: "auto", display: "grid", placeItems: "center", borderRadius: 1.5, border: "1px dashed", borderColor: "divider", color: "text.disabled", fontSize: 11 }}>Chưa có ảnh</Box>
+                          )}
+                        </TableCell>
 
                         <TableCell>
                           <Stack spacing={0.3}>
