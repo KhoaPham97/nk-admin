@@ -37,12 +37,47 @@ import ShoppingBagIcon from "@mui/icons-material/ShoppingBag";
 import { useLocation, useNavigate } from "react-router-dom";
 import PriceChangeIcon from "@mui/icons-material/PriceChange";
 import { PackageSearch, Barcode } from "lucide-react";
+import HelpTooltip from "./HelpTooltip";
 interface Props {
   drawerWidth: number;
   mobileOpen: boolean;
   onClose: () => void;
   isMobile: boolean;
 }
+
+const MENU_HELP: Record<string, string> = {
+  "Dashboard": "Tổng hợp tình hình kinh doanh, doanh thu, tồn kho và các chỉ số hoạt động của cửa hàng.",
+  "Chat": "Theo dõi và trả lời tin nhắn khách hàng từ các kênh được kết nối.",
+  "Quản lý hình ảnh": "Tải lên, xem và quản lý hình ảnh sản phẩm đang sử dụng trong hệ thống.",
+  "Đồng bộ Cloudinary": "Đưa ảnh sản phẩm lên Cloudinary và cập nhật đường dẫn ảnh trên hệ thống.",
+  "Tất cả sản phẩm": "Tra cứu, lọc và quản lý toàn bộ sản phẩm cùng thông tin, giá bán và tồn kho.",
+  "Nhập sản phẩm": "Tạo sản phẩm mới và khai báo thông tin, phân loại, hình ảnh, giá và biến thể.",
+  "Phụ tùng xe đạp": "Danh sách sản phẩm thuộc nhóm phụ tùng xe đạp.",
+  "Phụ tùng xe điện": "Danh sách sản phẩm thuộc nhóm phụ tùng xe điện.",
+  "Phụ tùng xe ba gác": "Danh sách sản phẩm thuộc nhóm phụ tùng xe ba gác.",
+  "Danh mục sản phẩm": "Tạo và sắp xếp các danh mục dùng để phân loại sản phẩm.",
+  "Xe tương thích": "Quản lý các dòng xe tương thích với từng sản phẩm.",
+  "Sản phẩm bán chạy": "Xem các sản phẩm có lượng bán cao theo dữ liệu đơn hàng.",
+  "Tính giá sản phẩm": "Tính giá bán dựa trên giá vốn, tỷ giá và mức lợi nhuận mong muốn.",
+  "Báo giá sản phẩm": "Chọn sản phẩm để tạo báo giá gửi khách hàng.",
+  "Quản lý SKU": "Tra cứu và quản lý mã SKU, mã biến thể để nhận diện chính xác từng phiên bản sản phẩm.",
+  "Tổng quan tồn kho": "Xem số lượng tồn, hàng giữ chỗ và tình hình kho hiện tại.",
+  "Quản lý giá vốn": "Theo dõi và cập nhật giá vốn sản phẩm, phục vụ tính lợi nhuận.",
+  "Nhập kho": "Ghi nhận hàng nhập, số lượng, biến thể, giá vốn và thông tin lô nhập.",
+  "Quản lý lô hàng": "Theo dõi từng lô nhập, số lượng còn lại, giá vốn và mã Variant; có thể chỉnh sửa thông tin lô.",
+  "Sản phẩm đang giữ": "Xem số lượng hàng đang được giữ cho các đơn chưa hoàn tất.",
+  "Lịch sử nhập kho": "Tra cứu các phiếu và lần nhập kho đã được ghi nhận.",
+  "Lịch sử xuất kho": "Tra cứu lịch sử tăng giảm kho và các nghiệp vụ xuất/điều chỉnh tồn.",
+  "Đơn hàng": "Theo dõi, lọc và xử lý đơn hàng nội bộ cùng trạng thái giao dịch.",
+  "Tạo đơn hàng": "Lập đơn bán hàng mới và chọn sản phẩm, số lượng, khách hàng.",
+  "Danh sách khách hàng": "Quản lý thông tin và lịch sử giao dịch của khách hàng.",
+  "Thống kê mua hàng": "Phân tích tần suất và giá trị mua hàng theo từng khách hàng.",
+  "Quản lý Shopee": "Quản lý kết nối Shopee, đơn hàng, sản phẩm, tồn kho và các chức năng đồng bộ.",
+  "Cài đặt": "Thiết lập các tùy chọn và cấu hình hoạt động của hệ thống.",
+};
+
+const getMenuHelp = (label: string) =>
+  MENU_HELP[label] || `Mở khu vực ${label} để xem và quản lý dữ liệu liên quan.`;
 
 const AdminSidebar = ({
   drawerWidth,
@@ -360,6 +395,7 @@ const AdminSidebar = ({
                         fontWeight: active ? 600 : 400,
                       }}
                     />
+                    <HelpTooltip title={getMenuHelp(item.label)} placement="right" />
                   </ListItemButton>
                 );
               })}
