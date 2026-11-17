@@ -216,6 +216,10 @@ export default function InventoryImport() {
 
     const productId = selectedProduct._id;
     const variantName = selectedVariant || "";
+    const selectedVariantData = getVariants(selectedProduct).find(
+      (variant) => String(variant.name || "") === variantName,
+    );
+    const variantCode = String(selectedVariantData?.variantCode || "").trim();
 
     const newItem = {
       productId,
@@ -227,6 +231,7 @@ export default function InventoryImport() {
         "",
       thumbnail: getProductImage(selectedProduct),
       variantName,
+      variantCode,
       qty: quantity,
       unitCost: cost,
       currentQty: getCurrentQty(selectedProduct, variantName),
@@ -236,7 +241,8 @@ export default function InventoryImport() {
       const index = previous.findIndex(
         (item) =>
           String(item.productId) === String(productId) &&
-          item.variantName === variantName,
+          item.variantName === variantName &&
+          String(item.variantCode || "") === variantCode,
       );
 
       if (index === -1) return [...previous, newItem];
@@ -285,6 +291,7 @@ export default function InventoryImport() {
       productCode: item.productCode,
       thumbnail: item.thumbnail,
       variantName: item.variantName,
+      variantCode: item.variantCode || "",
       qty: numberValue(item.qty),
       unitCost: numberValue(item.unitCost),
       currentQty: numberValue(item.currentQty),
@@ -560,6 +567,15 @@ export default function InventoryImport() {
                           setSelectedVariant(event.target.value)
                         }
                         fullWidth
+                        helperText={
+                          getVariants(selectedProduct).find(
+                            (variant) => variant.name === selectedVariant,
+                          )?.variantCode
+                            ? `Mã Variant: ${getVariants(selectedProduct).find(
+                                (variant) => variant.name === selectedVariant,
+                              ).variantCode}`
+                            : "Variant chưa có mã"
+                        }
                       >
                         {getVariants(selectedProduct).map((variant) => (
                           <MenuItem
@@ -685,7 +701,14 @@ export default function InventoryImport() {
                           </Typography>
                         </TableCell>
 
-                        <TableCell>{item.variantName || "Mặc định"}</TableCell>
+                        <TableCell>
+                          <Typography>{item.variantName || "Mặc định"}</Typography>
+                          {item.variantCode && (
+                            <Typography variant="caption" color="text.secondary" sx={{ fontFamily: "monospace" }}>
+                              {item.variantCode}
+                            </Typography>
+                          )}
+                        </TableCell>
 
                         <TableCell align="right">
                           {numberValue(item.currentQty)}
