@@ -37,7 +37,6 @@ import ShoppingBagIcon from "@mui/icons-material/ShoppingBag";
 import { useLocation, useNavigate } from "react-router-dom";
 import PriceChangeIcon from "@mui/icons-material/PriceChange";
 import { PackageSearch, Barcode } from "lucide-react";
-import HelpTooltip from "./HelpTooltip";
 interface Props {
   drawerWidth: number;
   mobileOpen: boolean;
@@ -395,7 +394,6 @@ const AdminSidebar = ({
                         fontWeight: active ? 600 : 400,
                       }}
                     />
-                    <HelpTooltip title={getMenuHelp(item.label)} placement="right" />
                   </ListItemButton>
                 );
               })}
