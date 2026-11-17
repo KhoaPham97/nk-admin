@@ -660,8 +660,9 @@ const Orders = () => {
 
       if (res.data?.success) {
         alert(
-          `Đồng bộ variants thành công!\n` +
-            `Đã cập nhật: ${res.data.data?.updatedItems || 0} sản phẩm`,
+          `Đồng bộ variant thành công!\n` +
+            `Đã cập nhật variant: ${res.data.data?.updatedItems || 0} sản phẩm\n` +
+            `Đã lấy hình ảnh: ${res.data.data?.updatedImages || 0} sản phẩm`,
         );
 
         await loadOrders();
