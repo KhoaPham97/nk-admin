@@ -428,6 +428,17 @@ const InvoiceDetail = () => {
                       </Select>
                     </Stack>
                   </Stack>
+                  <Divider />
+                  <Stack direction={{ xs: "column", sm: "row" }} spacing={0.75} alignItems={{ xs: "flex-start", sm: "center" }}>
+                    <Typography variant="body2" color="text.secondary">Thanh toán:</Typography>
+                    <Chip label={paymentMethod} size="small" variant="outlined" />
+                  </Stack>
+                  <Stack spacing={0.35}>
+                    <Typography variant="body2" color="text.secondary">Ghi chú</Typography>
+                    <Typography variant="body2" sx={{ overflowWrap: "anywhere", whiteSpace: "pre-wrap" }}>
+                      {order.note || "Không có ghi chú"}
+                    </Typography>
+                  </Stack>
                 </Stack>
               </Paper>
             </Box>
@@ -599,63 +610,6 @@ const InvoiceDetail = () => {
                       </Typography>
                     </Stack>
                   </Stack>
-                </Grid>
-              </Grid>
-            </Box>
-
-            <Divider />
-
-            {/* =================================================
-              PAYMENT + NOTE
-          ================================================= */}
-
-            <Box
-              sx={{
-                p: {
-                  xs: 2,
-                  md: 3,
-                },
-              }}
-            >
-              <Grid container spacing={2}>
-                <Grid item xs={12} md={6}>
-                  <Paper
-                    variant="outlined"
-                    sx={{
-                      p: 2,
-                      borderRadius: 2,
-                    }}
-                  >
-                    <Typography fontWeight={700} mb={1}>
-                      Thanh toán
-                    </Typography>
-
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <Typography>Phương thức:</Typography>
-
-                      <Chip label={paymentMethod} size="small" />
-                    </Stack>
-                  </Paper>
-                </Grid>
-
-                <Grid item xs={12} md={6}>
-                  <Paper
-                    variant="outlined"
-                    sx={{
-                      p: 2,
-                      borderRadius: 2,
-                    }}
-                  >
-                    <Typography fontWeight={700} mb={1}>
-                      Ghi chú
-                    </Typography>
-
-                    <Typography
-                      color={order.note ? "text.primary" : "text.secondary"}
-                    >
-                      {order.note || "Không có ghi chú"}
-                    </Typography>
-                  </Paper>
                 </Grid>
               </Grid>
             </Box>
