@@ -2449,7 +2449,28 @@ const Orders = () => {
                       {/* MÃ ĐƠN */}
 
                       <TableCell>
-                        <Typography fontWeight={600}>
+                        <Typography
+                          component="button"
+                          type="button"
+                          onClick={() => navigate(`/admin/invoices/${order._id}`)}
+                          fontWeight={700}
+                          sx={{
+                            p: 0,
+                            border: 0,
+                            background: "transparent",
+                            color: "primary.main",
+                            cursor: "pointer",
+                            textAlign: "left",
+                            font: "inherit",
+                            fontWeight: 700,
+                            textDecoration: "underline",
+                            textUnderlineOffset: "3px",
+                            "&:hover": {
+                              color: "primary.dark",
+                            },
+                          }}
+                          aria-label={`Mở chi tiết đơn hàng ${order.code || order._id}`}
+                        >
                           {order.code || order._id}
                         </Typography>
                       </TableCell>
