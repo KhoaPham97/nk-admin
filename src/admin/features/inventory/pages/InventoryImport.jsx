@@ -630,14 +630,20 @@ export default function InventoryImport() {
         </Grid>
 
         <Grid item xs={12} md={4}>
-          <Card>
+          <Card
+            sx={{
+              borderRadius: 2.5,
+              "& .MuiCardContent-root": { p: { xs: 1.5, md: 2 }, "&:last-child": { pb: { xs: 1.5, md: 2 } } },
+            }}
+          >
             <CardContent>
-              <Typography fontWeight={700} mb={2}>
+              <Typography fontWeight={700} fontSize={{ xs: 13, md: 14 }} mb={1.25}>
                 Thông tin phiếu nhập
               </Typography>
 
-              <Stack spacing={2}>
+              <Stack spacing={1}>
                 <TextField
+                  size="small"
                   label="Nhà cung cấp"
                   value={supplier}
                   onChange={(event) => setSupplier(event.target.value)}
@@ -645,24 +651,26 @@ export default function InventoryImport() {
                 />
 
                 <TextField
+                  size="small"
                   label="Ghi chú"
                   value={note}
                   onChange={(event) => setNote(event.target.value)}
-                  multiline
-                  minRows={3}
                   fullWidth
+                  multiline
+                  minRows={1}
+                  maxRows={2}
                 />
 
-                <Divider />
+                <Divider sx={{ my: 0.25 }} />
 
-                <Stack direction="row" justifyContent="space-between">
-                  <Typography color="text.secondary">Tổng số lượng</Typography>
-                  <Typography fontWeight={700}>{totalQty}</Typography>
+                <Stack direction="row" justifyContent="space-between" alignItems="center">
+                  <Typography variant="caption" color="text.secondary">Tổng số lượng</Typography>
+                  <Typography fontWeight={700} fontSize={13}>{totalQty}</Typography>
                 </Stack>
 
-                <Stack direction="row" justifyContent="space-between">
-                  <Typography color="text.secondary">Tổng tiền hàng</Typography>
-                  <Typography fontWeight={700} color="primary.main">
+                <Stack direction="row" justifyContent="space-between" alignItems="center">
+                  <Typography variant="caption" color="text.secondary">Tổng tiền hàng</Typography>
+                  <Typography fontWeight={800} fontSize={14} color="primary.main">
                     {formatMoney(totalAmount)}
                   </Typography>
                 </Stack>
