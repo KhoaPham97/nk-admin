@@ -13,6 +13,10 @@ import {
   Grid,
   Divider,
   Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 
 import {
@@ -129,6 +133,7 @@ const ProfitAnalytics = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
+  const [selectedBatchDetail, setSelectedBatchDetail] = useState(null);
 
   // =====================================================
   // LOAD DATA
@@ -475,6 +480,7 @@ const ProfitAnalytics = () => {
         estimatedCost: false,
         orderCount: new Set(),
         products: new Set([String(batch.productTitle || "Sản phẩm")]),
+        details: [],
       });
     });
 
@@ -517,6 +523,7 @@ const ProfitAnalytics = () => {
         estimatedCost: false,
         orderCount: new Set(),
         products: new Set(),
+        details: [],
       };
 
       current.qty += qty;
@@ -525,6 +532,25 @@ const ProfitAnalytics = () => {
       current.products.add(
         String(item.productTitle || item.productCode || "Sản phẩm"),
       );
+
+      const hasCost = !missingCost && n(unitCost) > 0;
+      const lineCost = hasCost ? qty * n(unitCost) * CNY_VND_RATE : null;
+      current.details.push({
+        id: `${normalizeId(order._id)}-${normalizeId(item.productId)}-${current.details.length}`,
+        orderId: normalizeId(order._id),
+        orderCode: String(order.code || order.orderCode || normalizeId(order._id)),
+        orderDate: order.completedAt || order.completed_at || order.updated_at || order.created_at,
+        productTitle: String(item.productTitle || item.productCode || "Sản phẩm"),
+        productCode: String(item.productCode || ""),
+        variantName: String(item.variantName || ""),
+        qty,
+        revenue,
+        unitCostCny: hasCost ? n(unitCost) : null,
+        cost: lineCost,
+        profit: hasCost ? revenue - lineCost : null,
+        missingCost: !hasCost,
+        estimatedCost,
+      });
 
       if (missingCost || !(n(unitCost) > 0)) {
         current.missingCost = true;
@@ -1185,64 +1211,52 @@ const ProfitAnalytics = () => {
                     {/* BATCH DETAILS */}
 
                     <Stack spacing={1} mt={1}>
-                      <Stack direction="row" justifyContent="space-between">
-                        <Typography variant="body2" color="text.secondary">
-                          Số lượng đã bán
-                        </Typography>
+                      <Button
+                        fullWidth
+                        variant="text"
+                        onClick={() => setSelectedBatchDetail({ batch, metric: "qty" })}
+                        sx={{ justifyContent: "space-between", px: 0, color: "text.primary", textTransform: "none" }}
+                      >
+                        <Typography variant="body2" color="text.secondary">Số lượng đã bán · Xem chi tiết</Typography>
+                        <Typography fontWeight={700}>{batch.qty.toLocaleString("vi-VN")}</Typography>
+                      </Button>
 
-                        <Typography fontWeight={700}>
-                          {batch.qty.toLocaleString("vi-VN")}
-                        </Typography>
-                      </Stack>
+                      <Button
+                        fullWidth
+                        variant="text"
+                        onClick={() => setSelectedBatchDetail({ batch, metric: "revenue" })}
+                        sx={{ justifyContent: "space-between", px: 0, color: "text.primary", textTransform: "none" }}
+                      >
+                        <Typography variant="body2" color="text.secondary">Doanh thu · Xem chi tiết</Typography>
+                        <Typography fontWeight={700}>{money(batch.revenue)}</Typography>
+                      </Button>
 
-                      <Stack direction="row" justifyContent="space-between">
-                        <Typography variant="body2" color="text.secondary">
-                          Doanh thu
-                        </Typography>
-
-                        <Typography fontWeight={700}>
-                          {money(batch.revenue)}
-                        </Typography>
-                      </Stack>
-
-                      <Stack direction="row" justifyContent="space-between">
-                        <Typography variant="body2" color="text.secondary">
-                          Giá vốn
-                        </Typography>
-
-                        <Typography fontWeight={700}>
-                          {batch.missingCost
-                            ? "Chưa xác định"
-                            : money(batch.cost)}
-                        </Typography>
-                      </Stack>
+                      <Button
+                        fullWidth
+                        variant="text"
+                        onClick={() => setSelectedBatchDetail({ batch, metric: "cost" })}
+                        sx={{ justifyContent: "space-between", px: 0, color: "text.primary", textTransform: "none" }}
+                      >
+                        <Typography variant="body2" color="text.secondary">Giá vốn · Xem chi tiết</Typography>
+                        <Typography fontWeight={700}>{batch.missingCost ? "Chưa xác định" : money(batch.cost)}</Typography>
+                      </Button>
 
                       <Divider />
 
-                      <Stack
-                        direction="row"
-                        justifyContent="space-between"
-                        alignItems="center"
+                      <Button
+                        fullWidth
+                        variant="text"
+                        onClick={() => setSelectedBatchDetail({ batch, metric: "profit" })}
+                        sx={{ justifyContent: "space-between", px: 0, color: "text.primary", textTransform: "none" }}
                       >
-                        <Typography fontWeight={700}>
-                          {batch.estimatedCost ? "Lợi nhuận ước tính" : "Lợi nhuận"}
-                        </Typography>
-
+                        <Typography fontWeight={700}>{batch.estimatedCost ? "Lợi nhuận ước tính · Xem chi tiết" : "Lợi nhuận · Xem chi tiết"}</Typography>
                         <Typography
                           fontWeight={800}
-                          color={
-                            batch.missingCost
-                              ? "text.secondary"
-                              : batch.profit >= 0
-                                ? "success.main"
-                                : "error.main"
-                          }
+                          color={batch.missingCost ? "text.secondary" : batch.profit >= 0 ? "success.main" : "error.main"}
                         >
-                          {batch.missingCost
-                            ? "Chưa xác định"
-                            : money(batch.profit)}
+                          {batch.missingCost ? "Chưa xác định" : money(batch.profit)}
                         </Typography>
-                      </Stack>
+                      </Button>
 
                       <Stack direction="row" justifyContent="space-between">
                         <Typography variant="body2" color="text.secondary">
@@ -1281,6 +1295,76 @@ const ProfitAnalytics = () => {
         giá vốn của đơn chỉ dùng để ước tính và được đánh dấu riêng.
         Chưa phân bổ chiết khấu hoặc phí vận chuyển cấp đơn hàng vào từng lô.
       </Typography>
+      <Dialog
+        open={Boolean(selectedBatchDetail)}
+        onClose={() => setSelectedBatchDetail(null)}
+        fullWidth
+        maxWidth="md"
+      >
+        <DialogTitle sx={{ fontWeight: 800, pr: 6 }}>
+          Chi tiết {selectedBatchDetail?.batch?.batchCode || "lô nhập"}
+          <Typography variant="body2" color="text.secondary">
+            {selectedBatchDetail?.metric === "qty" ? "Các dòng hàng đã bán" :
+              selectedBatchDetail?.metric === "revenue" ? "Các dòng cấu thành doanh thu" :
+              selectedBatchDetail?.metric === "cost" ? "Các dòng cấu thành giá vốn" :
+              "Các dòng cấu thành lợi nhuận"}
+          </Typography>
+        </DialogTitle>
+        <DialogContent dividers>
+          {selectedBatchDetail?.batch?.details?.length ? (
+            <Stack spacing={1.5}>
+              {selectedBatchDetail.batch.details.map((detail) => (
+                <Card key={detail.id} variant="outlined" sx={{ borderRadius: 2 }}>
+                  <CardContent sx={{ p: 2, "&:last-child": { pb: 2 } }}>
+                    <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" spacing={1}>
+                      <Box sx={{ minWidth: 0 }}>
+                        <Typography fontWeight={800}>{detail.productTitle}</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {detail.productCode}{detail.variantName ? ` · ${detail.variantName}` : ""}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Đơn: {detail.orderCode} · {getDate(detail.orderDate)?.toLocaleDateString("vi-VN") || "Không rõ ngày"}
+                        </Typography>
+                      </Box>
+                      <Chip size="small" label={detail.missingCost ? "Thiếu giá vốn" : detail.estimatedCost ? "Giá vốn ước tính" : "Đã xác minh"} color={detail.missingCost || detail.estimatedCost ? "warning" : "success"} variant="outlined" />
+                    </Stack>
+                    <Divider sx={{ my: 1 }} />
+                    <Grid container spacing={1}>
+                      <Grid item xs={6} sm={3}>
+                        <Typography variant="caption" color="text.secondary">Số lượng</Typography>
+                        <Typography fontWeight={700}>{detail.qty.toLocaleString("vi-VN")}</Typography>
+                      </Grid>
+                      <Grid item xs={6} sm={3}>
+                        <Typography variant="caption" color="text.secondary">Doanh thu</Typography>
+                        <Typography fontWeight={700}>{money(detail.revenue)}</Typography>
+                      </Grid>
+                      <Grid item xs={6} sm={3}>
+                        <Typography variant="caption" color="text.secondary">Giá vốn / đơn vị</Typography>
+                        <Typography fontWeight={700}>{detail.unitCostCny === null ? "Chưa rõ" : `¥${detail.unitCostCny.toLocaleString("vi-VN")}`}</Typography>
+                      </Grid>
+                      <Grid item xs={6} sm={3}>
+                        <Typography variant="caption" color="text.secondary">Giá vốn dòng</Typography>
+                        <Typography fontWeight={700}>{detail.cost === null ? "Chưa xác định" : money(detail.cost)}</Typography>
+                      </Grid>
+                    </Grid>
+                    {selectedBatchDetail.metric === "profit" && (
+                      <Typography variant="body2" fontWeight={800} mt={1} color={detail.profit === null ? "text.secondary" : detail.profit >= 0 ? "success.main" : "error.main"}>
+                        Lợi nhuận dòng: {detail.profit === null ? "Chưa xác định" : money(detail.profit)}
+                      </Typography>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </Stack>
+          ) : (
+            <Alert severity="info">Lô này chưa có dòng bán hàng được phân bổ.</Alert>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setSelectedBatchDetail(null)}>Đóng</Button>
+        </DialogActions>
+      </Dialog>
+
     </Box>
   );
 };
