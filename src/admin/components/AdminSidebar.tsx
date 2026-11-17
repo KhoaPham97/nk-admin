@@ -304,10 +304,18 @@ const AdminSidebar = ({
 
             <List disablePadding>
               {group.items.map((item) => {
-                const active =
-                  item.path === "/admin" || item.path === "/admin/products"
-                    ? location.pathname === item.path
-                    : location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
+                // Only the most specific matching menu route is active.
+                // This prevents parent routes (e.g. /admin/orders) from
+                // being highlighted together with child routes.
+                const pathname = location.pathname.replace(/\/+$/, "") || "/";
+                const matchedMenuItems = menuGroups
+                  .flatMap((menuGroup) => menuGroup.items)
+                  .filter((menuItem) => {
+                    const menuPath = menuItem.path.replace(/\/+$/, "") || "/";
+                    return pathname === menuPath || pathname.startsWith(`${menuPath}/`);
+                  })
+                  .sort((a, b) => b.path.length - a.path.length);
+                const active = matchedMenuItems[0]?.path === item.path;
 
                 return (
                   <ListItemButton
