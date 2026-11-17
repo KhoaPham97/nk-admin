@@ -472,16 +472,45 @@ export default function InventoryBatchPage() {
 
     const oldQty = Number(adjustmentBatch.remainingQty || 0);
     const quantityUnchanged = newQty === oldQty;
+    const variantName = editVariantName.trim();
+    const variantCode = editVariantCode.trim();
+    const identityDiffersFromBatch =
+      variantName !== String(adjustmentBatch.variantName || "").trim() ||
+      variantCode !== String(adjustmentBatch.variantCode || "").trim();
+    const hasVariantChange = variantIdentityChanged || identityDiffersFromBatch;
 
-    if (quantityUnchanged && variantIdentityChanged) {
-      setAdjustmentBatch(null);
-      setAdjustmentQty("");
-      setAdjustmentNote("");
-      setEditVariantName("");
-      setEditVariantCode("");
-      setVariantIdentityChanged(false);
-      setSuccess("Đã lưu thay đổi Variant. Số lượng tồn được giữ nguyên.");
-      await load();
+    if (quantityUnchanged && hasVariantChange) {
+      if (Boolean(variantName) !== Boolean(variantCode)) {
+        setError("Vui lòng nhập cả tên và mã Variant.");
+        return;
+      }
+
+      try {
+        setSavingAdjustment(true);
+        setError("");
+        setSuccess("");
+
+        if (identityDiffersFromBatch) {
+          await axios.patch(
+            `${endpoint}/${adjustmentBatch._id}/variant-identity`,
+            { variantName, variantCode },
+            authConfig,
+          );
+        }
+
+        setAdjustmentBatch(null);
+        setAdjustmentQty("");
+        setAdjustmentNote("");
+        setEditVariantName("");
+        setEditVariantCode("");
+        setVariantIdentityChanged(false);
+        setSuccess("Đã lưu thay đổi Variant. Số lượng tồn được giữ nguyên.");
+        await load();
+      } catch (e) {
+        setError(e.response?.data?.message || "Không thể cập nhật Variant.");
+      } finally {
+        setSavingAdjustment(false);
+      }
       return;
     }
 
