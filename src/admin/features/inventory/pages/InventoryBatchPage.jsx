@@ -1414,7 +1414,7 @@ export default function InventoryBatchPage() {
               adjustmentQty === "" ||
               !Number.isInteger(Number(adjustmentQty)) ||
               Number(adjustmentQty) < 0 ||
-              !adjustmentNote.trim()
+              (!variantIdentityChanged && !adjustmentNote.trim())
             }
             startIcon={
               savingAdjustment ? (
