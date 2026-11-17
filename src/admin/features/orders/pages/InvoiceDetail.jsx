@@ -40,6 +40,19 @@ const formatMoney = (value) => {
   return Number(value || 0).toLocaleString("vi-VN") + " đ";
 };
 
+const resolveOrderItemImage = (item, index, order) => {
+  const directImage = item?.thumbnail || item?.image || item?.imageUrl || item?.image_url || item?.productImage || item?.product?.thumbnail;
+  const rawItems = order?.rawData?.item_list || order?.raw_data?.item_list || order?.shopeeRawData?.item_list || [];
+  const itemId = String(item?.itemId || item?.item_id || item?.shopeeItemId || "");
+  const rawItem = (itemId && rawItems.find((raw) => String(raw?.item_id || raw?.itemId || "") === itemId)) || rawItems[index];
+  const rawImage = rawItem?.image_info?.image_url || rawItem?.image?.image_url || rawItem?.image_url;
+  const value = directImage || rawImage;
+  if (!value || typeof value !== "string") return "";
+  const image = value.trim();
+  if (/^(https?:|data:|blob:)/i.test(image) || image.startsWith("/")) return image;
+  return `/images/${image.replace(/^images\//, "")}`;
+};
+
 const formatDate = (value) => {
   if (!value) return "-";
 
@@ -523,7 +536,7 @@ const InvoiceDetail = () => {
                         backgroundColor: "action.hover",
                       }}
                     >
-                      <TableCell width={50}>#</TableCell>
+                      <TableCell width={50}>#</TableCell>\n\n                      <TableCell align="center" width={88}>Hình ảnh</TableCell>
 
                       <TableCell>Sản phẩm</TableCell>
 
@@ -540,7 +553,7 @@ const InvoiceDetail = () => {
                   <TableBody>
                     {items.map((item, index) => (
                       <TableRow key={`${item.productId}-${index}`}>
-                        <TableCell>{index + 1}</TableCell>
+                        <TableCell>{index + 1}</TableCell>\n\n                        <TableCell align="center">\n                          {resolveOrderItemImage(item, index, order) ? (\n                            <Box component="img" src={resolveOrderItemImage(item, index, order)} alt={item.productTitle || "Hình ảnh sản phẩm"} loading="lazy" onError={(event) => { event.currentTarget.style.visibility = "hidden"; }} sx={{ width: 64, height: 64, objectFit: "contain", borderRadius: 1.5, border: "1px solid", borderColor: "divider", backgroundColor: "#fff" }} />\n                          ) : (\n                            <Box sx={{ width: 64, height: 64, mx: "auto", display: "grid", placeItems: "center", borderRadius: 1.5, border: "1px dashed", borderColor: "divider", color: "text.disabled", fontSize: 11 }}>Chưa có ảnh</Box>\n                          )}\n                        </TableCell>
 
                         <TableCell>
                           <Stack spacing={0.3}>
