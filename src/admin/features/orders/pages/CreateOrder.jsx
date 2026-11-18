@@ -569,7 +569,28 @@ const CreateOrder = () => {
           sm: 2,
           md: 3,
         },
-        pb: 4,
+        pb: { xs: 12, sm: 4 },
+        minWidth: 0,
+        "& .MuiCard-root": {
+          borderRadius: { xs: 2.5, sm: 3 },
+          borderColor: "#e2e8f0",
+          backgroundImage: "none",
+          boxShadow: "0 2px 12px rgba(15, 23, 42, 0.035)",
+          overflow: "hidden",
+        },
+        "& .MuiCardContent-root": {
+          p: { xs: 1.5, sm: 2.5 },
+          "&:last-child": { pb: { xs: 1.5, sm: 2.5 } },
+        },
+        "& .MuiOutlinedInput-root": {
+          borderRadius: 2,
+          backgroundColor: "#fff",
+        },
+        "& .MuiButton-root": {
+          borderRadius: 2,
+          textTransform: "none",
+          fontWeight: 700,
+        },
       }}
     >
       {/* =====================================================
@@ -591,12 +612,16 @@ const CreateOrder = () => {
           </IconButton>
 
           <Box>
-            <Typography variant="h5" fontWeight={700}>
-              Tạo hóa đơn
+            <Typography
+              variant="h5"
+              fontWeight={800}
+              sx={{ fontSize: { xs: 21, sm: 25 }, letterSpacing: "-0.4px", color: "#0f172a" }}
+            >
+              Tạo đơn hàng
             </Typography>
 
-            <Typography variant="body2" color="text.secondary">
-              Tạo đơn hàng mới cho khách hàng
+            <Typography variant="body2" color="text.secondary" sx={{ fontSize: 12.5 }}>
+              Chọn khách hàng, thêm sản phẩm và xác nhận thanh toán
             </Typography>
           </Box>
         </Stack>
@@ -614,16 +639,43 @@ const CreateOrder = () => {
           disabled={loadingOrder || items.length === 0}
           onClick={handleCreateOrder}
           sx={{
-            minWidth: 160,
-            fontWeight: 700,
+            minWidth: { xs: 128, sm: 160 },
+            minHeight: 42,
+            fontWeight: 800,
             borderRadius: 2,
+            boxShadow: "0 5px 14px rgba(25, 118, 210, 0.2)",
+            display: { xs: "none", sm: "inline-flex" },
           }}
         >
           {loadingOrder ? "Đang lưu..." : "Tạo hóa đơn"}
         </Button>
       </Box>
 
-      <Grid container spacing={2} alignItems="flex-start">
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          flexWrap: "wrap",
+          mb: 2,
+          px: 1.5,
+          py: 1.25,
+          borderRadius: 2.5,
+          background: "linear-gradient(110deg, #eff6ff 0%, #f8fbff 100%)",
+          border: "1px solid #dbeafe",
+        }}
+      >
+        <Chip size="small" color="primary" label={`${items.length} mặt hàng`} />
+        <Typography variant="body2" color="text.secondary">
+          {items.reduce((sum, item) => sum + getNumber(item.qty), 0)} sản phẩm
+        </Typography>
+        <Box sx={{ flex: 1 }} />
+        <Typography variant="body2" fontWeight={700} color="primary.main">
+          {formatMoney(totalAmount)}
+        </Typography>
+      </Box>
+
+      <Grid container spacing={{ xs: 1.5, sm: 2 }} alignItems="flex-start">
         {/* ===================================================
             LEFT
         =================================================== */}
@@ -1532,6 +1584,43 @@ const CreateOrder = () => {
           </Box>
         </Grid>
       </Grid>
+
+      {/* Thanh thao tác cố định trên mobile */}
+      <Box
+        sx={{
+          display: { xs: "flex", sm: "none" },
+          position: "fixed",
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 1200,
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 1.5,
+          px: 2,
+          py: 1.25,
+          bgcolor: "rgba(255,255,255,0.97)",
+          borderTop: "1px solid #e2e8f0",
+          boxShadow: "0 -6px 20px rgba(15,23,42,0.08)",
+          backdropFilter: "blur(12px)",
+        }}
+      >
+        <Box sx={{ minWidth: 0 }}>
+          <Typography variant="caption" color="text.secondary">Tổng thanh toán</Typography>
+          <Typography fontWeight={800} color="primary.main" sx={{ fontSize: 17, lineHeight: 1.25 }}>
+            {formatMoney(totalAmount)}
+          </Typography>
+        </Box>
+        <Button
+          variant="contained"
+          disabled={loadingOrder || items.length === 0}
+          onClick={handleCreateOrder}
+          startIcon={loadingOrder ? <CircularProgress size={17} color="inherit" /> : <Save />}
+          sx={{ minWidth: 145, minHeight: 44, boxShadow: "0 5px 14px rgba(25,118,210,.22)" }}
+        >
+          {loadingOrder ? "Đang lưu..." : "Tạo đơn hàng"}
+        </Button>
+      </Box>
     </Box>
   );
 };
