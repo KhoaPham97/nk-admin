@@ -230,6 +230,32 @@
 .admin-shell .MuiButton-outlinedPrimary,
 .admin-shell .MuiButton-textPrimary { color: var(--admin-primary) !important; }
 .admin-shell .MuiButton-outlinedPrimary { border-color: rgba(37,99,235,.45) !important; }
+
+/* Disabled controls: clearly inactive but still readable. */
+.admin-shell button:disabled,
+.admin-shell .MuiButton-root.Mui-disabled,
+.admin-shell .MuiIconButton-root.Mui-disabled,
+.admin-shell .MuiFab-root.Mui-disabled,
+.admin-shell .scw-primary:disabled,
+.admin-shell .sho-btn-primary:disabled,
+.admin-shell .sa-primary:disabled {
+  opacity: 1 !important;
+  color: #64748b !important;
+  background-color: #e2e8f0 !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: none !important;
+  cursor: not-allowed !important;
+}
+.admin-shell .MuiButton-outlined.Mui-disabled {
+  color: #64748b !important;
+  background-color: #f1f5f9 !important;
+  border: 1px solid #cbd5e1 !important;
+}
+.admin-shell .MuiButton-text.Mui-disabled,
+.admin-shell .MuiIconButton-root.Mui-disabled {
+  color: #94a3b8 !important;
+  background-color: #f1f5f9 !important;
+}
 .admin-shell .MuiCheckbox-root.Mui-checked,
 .admin-shell .MuiRadio-root.Mui-checked,
 .admin-shell .MuiSwitch-switchBase.Mui-checked { color: var(--admin-primary) !important; }
