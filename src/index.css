@@ -78,11 +78,6 @@
   border-radius: 9px;
   transition: background-color .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease;
 }
-.admin-shell button:focus-visible, .admin-shell a:focus-visible,
-.admin-shell input:focus-visible, .admin-shell textarea:focus-visible {
-  outline: 3px solid rgba(37,99,235,.18);
-  outline-offset: 2px;
-}
 /* Native selects already define their own focused border/ring per component.
    Avoid stacking the global orange outline on top of those local styles. */
 .admin-shell select:focus-visible {
