@@ -680,7 +680,7 @@ const CreateOrder = () => {
             LEFT
         =================================================== */}
         <Grid item xs={12} lg={8}>
-          <Stack spacing={2}>
+          <Stack spacing={{ xs: 1.25, sm: 1.75 }}>
             {/* CUSTOMER */}
             <Card
               elevation={0}
@@ -690,11 +690,11 @@ const CreateOrder = () => {
                 borderRadius: 2,
               }}
             >
-              <CardContent>
-                <Stack direction="row" alignItems="center" spacing={1} mb={2}>
-                  <PersonOutline />
+              <CardContent sx={{ p: { xs: 1.25, sm: 1.75 }, "&:last-child": { pb: { xs: 1.25, sm: 1.75 } } }}>
+                <Stack direction="row" alignItems="center" spacing={0.75} mb={1}>
+                  <PersonOutline sx={{ fontSize: 19 }} />
 
-                  <Typography fontWeight={700} fontSize={17}>
+                  <Typography fontWeight={700} fontSize={14.5}>
                     Khách hàng
                   </Typography>
                 </Stack>
@@ -1374,15 +1374,16 @@ const CreateOrder = () => {
                 borderRadius: 2,
               }}
             >
-              <CardContent>
-                <Typography fontWeight={700} mb={1.5}>
+              <CardContent sx={{ p: { xs: 1.25, sm: 1.75 }, "&:last-child": { pb: { xs: 1.25, sm: 1.75 } } }}>
+                <Typography fontWeight={700} fontSize={14} mb={0.75}>
                   Ghi chú
                 </Typography>
 
                 <TextField
                   fullWidth
                   multiline
-                  minRows={3}
+                  minRows={2}
+                  size="small"
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                   placeholder="Ghi chú cho đơn hàng..."
@@ -1414,13 +1415,13 @@ const CreateOrder = () => {
                 borderRadius: 2,
               }}
             >
-              <CardContent>
-                <Typography variant="h6" fontWeight={700} mb={2}>
+              <CardContent sx={{ p: { xs: 1.25, sm: 1.75 }, "&:last-child": { pb: { xs: 1.25, sm: 1.75 } } }}>
+                <Typography variant="subtitle1" fontWeight={800} fontSize={15} mb={1.25}>
                   Thanh toán
                 </Typography>
 
                 {/* SUBTOTAL */}
-                <Stack direction="row" justifyContent="space-between" mb={1.5}>
+                <Stack direction="row" justifyContent="space-between" mb={1}>
                   <Typography color="text.secondary">Tạm tính</Typography>
 
                   <Typography fontWeight={600}>
@@ -1439,7 +1440,8 @@ const CreateOrder = () => {
                     setDiscount(Math.max(0, Number(e.target.value) || 0))
                   }
                   inputProps={{ min: 0 }}
-                  sx={{ mb: 1.5 }}
+                  size="small"
+                  sx={{ mb: 1 }}
                 />
 
                 {/* SHIPPING */}
@@ -1453,23 +1455,24 @@ const CreateOrder = () => {
                     setShippingFee(Math.max(0, Number(e.target.value) || 0))
                   }
                   inputProps={{ min: 0 }}
-                  sx={{ mb: 2 }}
+                  size="small"
+                  sx={{ mb: 1.25 }}
                 />
 
-                <Divider sx={{ mb: 2 }} />
+                <Divider sx={{ mb: 1.25 }} />
 
                 {/* TOTAL */}
                 <Stack
                   direction="row"
                   justifyContent="space-between"
                   alignItems="center"
-                  mb={2}
+                  mb={1.25}
                 >
-                  <Typography fontWeight={700} fontSize={17}>
+                  <Typography fontWeight={700} fontSize={14}>
                     Tổng tiền
                   </Typography>
 
-                  <Typography fontWeight={800} fontSize={22}>
+                  <Typography fontWeight={800} fontSize={18}>
                     {formatMoney(totalAmount)}
                   </Typography>
                 </Stack>
@@ -1487,15 +1490,16 @@ const CreateOrder = () => {
                     min: 0,
                     max: totalAmount,
                   }}
-                  sx={{ mb: 2 }}
+                  size="small"
+                  sx={{ mb: 1.25 }}
                 />
 
                 {/* DEBT */}
                 <Paper
                   variant="outlined"
                   sx={{
-                    p: 1.5,
-                    mb: 2,
+                    p: 1,
+                    mb: 1.25,
                     borderRadius: 2,
                   }}
                 >
@@ -1506,7 +1510,7 @@ const CreateOrder = () => {
                   >
                     <Typography color="text.secondary">Còn nợ</Typography>
 
-                    <Typography fontWeight={800} fontSize={19}>
+                    <Typography fontWeight={800} fontSize={16}>
                       {formatMoney(debt)}
                     </Typography>
                   </Stack>
@@ -1519,7 +1523,8 @@ const CreateOrder = () => {
                   label="Phương thức thanh toán"
                   value={paymentMethod}
                   onChange={(e) => setPaymentMethod(e.target.value)}
-                  sx={{ mb: 2 }}
+                  size="small"
+                  sx={{ mb: 1.25 }}
                 >
                   <MenuItem value="cash">💵 Tiền mặt</MenuItem>
 
@@ -1533,7 +1538,7 @@ const CreateOrder = () => {
                 <Divider sx={{ mb: 2 }} />
 
                 {/* ITEM SUMMARY */}
-                <Stack spacing={1} mb={2}>
+                <Stack spacing={0.6} mb={1.25}>
                   <Stack direction="row" justifyContent="space-between">
                     <Typography variant="body2" color="text.secondary">
                       Số mặt hàng
@@ -1571,7 +1576,7 @@ const CreateOrder = () => {
                   disabled={loadingOrder || items.length === 0}
                   onClick={handleCreateOrder}
                   sx={{
-                    height: 52,
+                    height: 44,
                     borderRadius: 2,
                     fontSize: 16,
                     fontWeight: 800,
