@@ -11,10 +11,12 @@ export default function ShopeeDocuments({ selectedShopId }) {
  const [loading,setLoading]=useState(false); const [syncing,setSyncing]=useState(false);
  const [polling,setPolling]=useState(""); const [error,setError]=useState(""); const [notice,setNotice]=useState("");
  const [preview,setPreview]=useState(null); const [previewing,setPreviewing]=useState("");
+ const [chart,setChart]=useState(null); const [chartLoading,setChartLoading]=useState(false); const [chartError,setChartError]=useState("");
  const load=useCallback(async()=>{ if(!selectedShopId){setItems([]);return;} setLoading(true);setError("");try{const r=unwrap(await shopeeApi.getDocuments({shopId:selectedShopId}));setItems(Array.isArray(r.data)?r.data:Array.isArray(r)?r:[]);}catch(e){setError(e.message||"Không tải được danh sách chứng từ.");}finally{setLoading(false);}},[selectedShopId]);
- useEffect(()=>{load();},[load]);
- const sync=async()=>{setSyncing(true);setError("");setNotice("");try{const response=await shopeeApi.syncDocuments({shopId:selectedShopId,month});const payload=response?.data||response||{};const results=Array.isArray(payload.data)?payload.data:[];const failures=results.filter(x=>x.status==="failed");if(failures.length){setError(failures.map(x=>`${x.kind==="income_statement"?"Bảng kê PDF":"Báo cáo Excel"}: ${x.error||"Không tạo được"}`).join(" · "));}else{setNotice(payload.message||"Đã gửi yêu cầu Shopee.");}await load();}catch(e){setError(e.message||"Không tạo được báo cáo.");await load();}finally{setSyncing(false);}};
- const poll=async(doc)=>{setPolling(String(doc._id));setError("");try{await shopeeApi.pollDocument(doc._id,selectedShopId);await load();}catch(e){setError(e.message||"Không kiểm tra được trạng thái.");}finally{setPolling("");}};
+ const loadChart=useCallback(async()=>{if(!selectedShopId){setChart(null);return;}setChartLoading(true);setChartError("");try{const r=unwrap(await shopeeApi.getDocumentRevenueChart({shopId:selectedShopId}));setChart(r);}catch(e){setChartError(e.message||"Không tổng hợp được doanh thu.");}finally{setChartLoading(false);}},[selectedShopId]);
+ useEffect(()=>{load();loadChart();},[load,loadChart]);
+ const sync=async()=>{setSyncing(true);setError("");setNotice("");try{const response=await shopeeApi.syncDocuments({shopId:selectedShopId,month});const payload=response?.data||response||{};const results=Array.isArray(payload.data)?payload.data:[];const failures=results.filter(x=>x.status==="failed");if(failures.length){setError(failures.map(x=>`${x.kind==="income_statement"?"Bảng kê PDF":"Báo cáo Excel"}: ${x.error||"Không tạo được"}`).join(" · "));}else{setNotice(payload.message||"Đã gửi yêu cầu Shopee.");}await load();await loadChart();}catch(e){setError(e.message||"Không tạo được báo cáo.");await load();await loadChart();}finally{setSyncing(false);}};
+ const poll=async(doc)=>{setPolling(String(doc._id));setError("");try{await shopeeApi.pollDocument(doc._id,selectedShopId);await load();await loadChart();}catch(e){setError(e.message||"Không kiểm tra được trạng thái.");}finally{setPolling("");}};
  const download=async(doc)=>{try{const r=unwrap(await shopeeApi.getDocumentDownload(doc._id,selectedShopId));if(!r.url)throw new Error("Chưa có link tải.");window.open(r.url,"_blank","noopener,noreferrer");}catch(e){setError(e.message||"Không tải được file.");}};
  const view=async(doc)=>{setPreviewing(String(doc._id));setError("");try{const r=unwrap(await shopeeApi.getDocumentView(doc._id,selectedShopId));if(!r.htmlContent)throw new Error("Chứng từ chưa có bản xem HTML.");setPreview(r);}catch(e){setError(e.message||"Không mở được chứng từ.");}finally{setPreviewing("");}};
  return <div className="shopee-documents">
@@ -24,6 +26,24 @@ export default function ShopeeDocuments({ selectedShopId }) {
   <section className="sd-panel"><strong>Tạo báo cáo theo tháng</strong><p>Gửi hai yêu cầu: bảng kê thu nhập PDF và báo cáo chi tiết các khoản đã quyết toán dạng Excel (gói ZIP).</p>
    <div className="sd-controls"><label>Tháng<input type="month" value={month} max={latestCompleteMonth()} onChange={e=>setMonth(e.target.value)}/></label><button disabled={!selectedShopId||syncing||!month} onClick={sync}><UploadCloud size={16}/>{syncing?"Đang gửi...":"Tạo / đồng bộ chứng từ"}</button><button className="sd-secondary" disabled={loading} onClick={load}><RefreshCw size={16}/>{loading?"Đang tải":"Làm mới"}</button></div>
    <small className="sd-note">Báo cáo PDF phải đúng kỳ tháng theo giờ Việt Nam. Shopee thường cần thời gian xử lý; Render sẽ tự kiểm tra các yêu cầu đang chờ mỗi 2 phút.</small>
+  </section>
+  <section className="sd-panel sd-revenue-panel">
+   <div className="sd-list-head"><div><strong>Biểu đồ doanh thu tổng hợp Shopee</strong><p className="sd-chart-subtitle">Tổng hợp từ tất cả báo cáo thu nhập Excel đã đồng bộ trong gian hàng.</p></div><button className="sd-chart-refresh" disabled={chartLoading||!selectedShopId} onClick={loadChart}><RefreshCw size={14}/>{chartLoading?"Đang tính...":"Cập nhật"}</button></div>
+   {chartError&&<div className="sd-alert"><AlertCircle size={16}/>{chartError}</div>}
+   {chartLoading&&!chart?<div className="sd-empty">Đang đọc dữ liệu từ các chứng từ...</div>:chart&&<>
+    <div className="sd-kpis">
+     <div className="sd-kpi"><span>Tổng doanh thu đọc được</span><strong>{Number(chart.totalRevenue||0).toLocaleString("vi-VN")} ₫</strong></div>
+     <div className="sd-kpi"><span>Tháng có dữ liệu</span><strong>{chart.months?.length||0}</strong></div>
+     <div className="sd-kpi"><span>File đã phân tích</span><strong>{chart.parsedFiles||0}/{chart.detailedFiles||0}</strong></div>
+     <div className="sd-kpi"><span>Dòng giao dịch</span><strong>{(chart.months||[]).reduce((n,x)=>n+Number(x.transactions||0),0).toLocaleString("vi-VN")}</strong></div>
+    </div>
+    {chart.months?.length?<div className="sd-chart">
+     <div className="sd-chart-axis"><span>{Math.max(...chart.months.map(x=>Number(x.revenue)||0)).toLocaleString("vi-VN")} ₫</span><span>0 ₫</span></div>
+     <div className="sd-chart-bars">{chart.months.map(item=>{const max=Math.max(1,...chart.months.map(x=>Number(x.revenue)||0));const h=Math.max(3,(Number(item.revenue)||0)/max*100);return <div className="sd-chart-col" key={item.month} title={item.month+": "+Number(item.revenue||0).toLocaleString("vi-VN")+" ₫"}><strong>{Number(item.revenue||0).toLocaleString("vi-VN")} ₫</strong><div className="sd-chart-track"><div className="sd-chart-bar" style={{height:h+"%"}}/></div><span>{item.month}</span><small>{item.files} file · {item.transactions} dòng</small></div>;})}</div>
+    </div>:<div className="sd-empty">Chưa tìm thấy cột doanh thu phù hợp trong các báo cáo Excel đã lưu. Hãy mở chứng từ cũ bằng “Tạo bản xem” để trích xuất dữ liệu, hoặc đồng bộ lại báo cáo.</div>}
+    {!!chart.unparsedFiles?.length&&<div className="sd-unparsed"><strong>{chart.unparsedFiles.length} file chưa đọc được doanh thu</strong>{chart.unparsedFiles.map((x,i)=><small key={i}>{x.periodKey} · {x.fileName}: {x.reason}</small>)}</div>}
+    <small className="sd-note">Biểu đồ chỉ cộng dữ liệu từ báo cáo thu nhập chi tiết (Excel/ZIP), không cộng thêm PDF bảng kê tháng để tránh tính trùng. Đây là doanh thu nhận diện được từ cột dữ liệu trong file, chưa phải lợi nhuận sau phí.</small>
+   </>}
   </section>
   <section className="sd-panel"><div className="sd-list-head"><strong>Kho chứng từ</strong><span>{items.length} yêu cầu</span></div>
    {loading?<div className="sd-empty">Đang tải...</div>:!items.length?<div className="sd-empty">Chưa có báo cáo. Chọn tháng rồi bấm “Tạo / đồng bộ chứng từ”.</div>:
