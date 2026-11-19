@@ -397,6 +397,7 @@ export const shopeeApi = {
 
   // Shopee finance documents
   getDocuments: (params = {}) => get("/documents", withShopId(params)),
+  getDocumentRevenueChart: (params = {}) => get("/documents/revenue-chart", withShopId(params)),
   syncDocuments: (data = {}) => post("/documents/sync", data),
   pollDocument: (id, shopId) => post(`/documents/${encode(id)}/poll`, { shopId }),
   getDocumentDownload: (id, shopId) => get(`/documents/${encode(id)}/download`, { shopId }),
