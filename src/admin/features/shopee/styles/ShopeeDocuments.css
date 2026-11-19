@@ -45,3 +45,16 @@
 .sd-unparsed strong{font-size:11px}
 .sd-unparsed small{font-size:10px;line-height:1.4;overflow-wrap:anywhere}
 @media(max-width:640px){.sd-kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.sd-kpi{padding:10px}.sd-chart{min-height:220px;padding:12px 5px 7px}.sd-chart-track{height:145px}.sd-chart-bars{gap:8px}.sd-chart-col{min-width:72px}.sd-list-head{align-items:flex-start;gap:8px}.sd-chart-refresh{padding:7px 8px}}
+
+
+.sd-chart-compare-col{min-width:112px}
+.sd-chart-pair{display:flex;align-items:flex-end;justify-content:center;gap:5px;height:170px}
+.sd-chart-pair .sd-chart-track{height:100%;width:22px;max-width:22px;display:flex;align-items:flex-end}
+.sd-chart-pair .sd-chart-bar{background:linear-gradient(180deg,#55a0e8,#236fbd)}
+.sd-chart-pair .sd-chart-track-pdf .sd-chart-bar{background:linear-gradient(180deg,#a78bfa,#7352c7)}
+.sd-chart-legend{display:flex;flex-wrap:wrap;gap:14px;margin:12px 2px 0;color:#64748b;font-size:10px}
+.sd-chart-legend span{display:inline-flex;align-items:center;gap:6px}
+.sd-chart-legend i{display:inline-block;width:10px;height:10px;border-radius:3px}
+.sd-legend-excel{background:#327fc4}
+.sd-legend-pdf{background:#8564d2}
+@media(max-width:640px){.sd-chart-compare-col{min-width:108px}.sd-chart-pair{height:145px}.sd-chart-pair .sd-chart-track{width:19px;max-width:19px}}
