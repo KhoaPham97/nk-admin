@@ -28,21 +28,22 @@ export default function ShopeeDocuments({ selectedShopId }) {
    <small className="sd-note">Báo cáo PDF phải đúng kỳ tháng theo giờ Việt Nam. Shopee thường cần thời gian xử lý; Render sẽ tự kiểm tra các yêu cầu đang chờ mỗi 2 phút.</small>
   </section>
   <section className="sd-panel sd-revenue-panel">
-   <div className="sd-list-head"><div><strong>Biểu đồ doanh thu tổng hợp Shopee</strong><p className="sd-chart-subtitle">Tổng hợp từ tất cả báo cáo thu nhập Excel đã đồng bộ trong gian hàng.</p></div><button className="sd-chart-refresh" disabled={chartLoading||!selectedShopId} onClick={loadChart}><RefreshCw size={14}/>{chartLoading?"Đang tính...":"Cập nhật"}</button></div>
+   <div className="sd-list-head"><div><strong>Biểu đồ đối chiếu doanh thu Shopee</strong><p className="sd-chart-subtitle">Đối chiếu báo cáo chi tiết Excel/ZIP với bảng kê thu nhập PDF theo từng tháng.</p></div><button className="sd-chart-refresh" disabled={chartLoading||!selectedShopId} onClick={loadChart}><RefreshCw size={14}/>{chartLoading?"Đang tính...":"Cập nhật"}</button></div>
    {chartError&&<div className="sd-alert"><AlertCircle size={16}/>{chartError}</div>}
    {chartLoading&&!chart?<div className="sd-empty">Đang đọc dữ liệu từ các chứng từ...</div>:chart&&<>
     <div className="sd-kpis">
-     <div className="sd-kpi"><span>Tổng doanh thu đọc được</span><strong>{Number(chart.totalRevenue||0).toLocaleString("vi-VN")} ₫</strong></div>
-     <div className="sd-kpi"><span>Tháng có dữ liệu</span><strong>{chart.months?.length||0}</strong></div>
-     <div className="sd-kpi"><span>File đã phân tích</span><strong>{chart.parsedFiles||0}/{chart.detailedFiles||0}</strong></div>
-     <div className="sd-kpi"><span>Dòng giao dịch</span><strong>{(chart.months||[]).reduce((n,x)=>n+Number(x.transactions||0),0).toLocaleString("vi-VN")}</strong></div>
+     <div className="sd-kpi"><span>Tổng từ báo cáo Excel/ZIP</span><strong>{Number(chart.totalDetailedRevenue??chart.totalRevenue??0).toLocaleString("vi-VN")} ₫</strong></div>
+     <div className="sd-kpi"><span>Tổng từ bảng kê PDF</span><strong>{Number(chart.totalStatementRevenue||0).toLocaleString("vi-VN")} ₫</strong></div>
+     <div className="sd-kpi"><span>File Excel đã đọc</span><strong>{chart.parsedFiles||0}/{chart.detailedFiles||0}</strong></div>
+     <div className="sd-kpi"><span>File PDF đã đọc</span><strong>{chart.parsedStatementFiles||0}/{chart.statementFiles||0}</strong></div>
     </div>
-    {chart.months?.length?<div className="sd-chart">
-     <div className="sd-chart-axis"><span>{Math.max(...chart.months.map(x=>Number(x.revenue)||0)).toLocaleString("vi-VN")} ₫</span><span>0 ₫</span></div>
-     <div className="sd-chart-bars">{chart.months.map(item=>{const max=Math.max(1,...chart.months.map(x=>Number(x.revenue)||0));const h=Math.max(3,(Number(item.revenue)||0)/max*100);return <div className="sd-chart-col" key={item.month} title={item.month+": "+Number(item.revenue||0).toLocaleString("vi-VN")+" ₫"}><strong>{Number(item.revenue||0).toLocaleString("vi-VN")} ₫</strong><div className="sd-chart-track"><div className="sd-chart-bar" style={{height:h+"%"}}/></div><span>{item.month}</span><small>{item.files} file · {item.transactions} dòng</small></div>;})}</div>
-    </div>:<div className="sd-empty">Chưa tìm thấy cột doanh thu phù hợp trong các báo cáo Excel đã lưu. Hãy mở chứng từ cũ bằng “Tạo bản xem” để trích xuất dữ liệu, hoặc đồng bộ lại báo cáo.</div>}
-    {!!chart.unparsedFiles?.length&&<div className="sd-unparsed"><strong>{chart.unparsedFiles.length} file chưa đọc được doanh thu</strong>{chart.unparsedFiles.map((x,i)=><small key={i}>{x.periodKey} · {x.fileName}: {x.reason}</small>)}</div>}
-    <small className="sd-note">Biểu đồ chỉ cộng dữ liệu từ báo cáo thu nhập chi tiết (Excel/ZIP), không cộng thêm PDF bảng kê tháng để tránh tính trùng. Đây là doanh thu nhận diện được từ cột dữ liệu trong file, chưa phải lợi nhuận sau phí.</small>
+    {chart.months?.length?<div className="sd-chart sd-chart-compare">
+     <div className="sd-chart-axis"><span>{Math.max(1,...chart.months.flatMap(x=>[Number(x.detailedRevenue)||0,Number(x.statementRevenue)||0])).toLocaleString("vi-VN")} ₫</span><span>0 ₫</span></div>
+     <div className="sd-chart-bars">{chart.months.map(item=>{const max=Math.max(1,...chart.months.flatMap(x=>[Number(x.detailedRevenue)||0,Number(x.statementRevenue)||0]));const excel=Math.max(0,Number(item.detailedRevenue)||0);const pdf=Math.max(0,Number(item.statementRevenue)||0);return <div className="sd-chart-col sd-chart-compare-col" key={item.month} title={item.month}><div className="sd-chart-pair"><div className="sd-chart-track" title={"Excel/ZIP: "+excel.toLocaleString("vi-VN")+" ₫"}><div className="sd-chart-bar" style={{height:Math.max(excel?2:0,excel/max*100)+"%"}}/></div><div className="sd-chart-track sd-chart-track-pdf" title={"PDF: "+pdf.toLocaleString("vi-VN")+" ₫"}><div className="sd-chart-bar" style={{height:Math.max(pdf?2:0,pdf/max*100)+"%"}}/></div></div><span>{item.month}</span><small>Excel: {excel.toLocaleString("vi-VN")} ₫</small><small>PDF: {item.statementRevenue===null?"Chưa có":pdf.toLocaleString("vi-VN")+" ₫"}</small><small>{item.difference===null?"Chưa đối chiếu":"Lệch: "+Number(item.difference).toLocaleString("vi-VN")+" ₫"}</small></div>;})}</div>
+    </div>:<div className="sd-empty">Chưa đọc được doanh thu từ chứng từ. Hãy mở từng file bằng “Tạo bản xem” để hệ thống trích xuất lại dữ liệu.</div>}
+    <div className="sd-chart-legend"><span><i className="sd-legend-excel"/>Báo cáo chi tiết Excel/ZIP</span><span><i className="sd-legend-pdf"/>Bảng kê PDF</span></div>
+    {!!chart.unparsedFiles?.length&&<div className="sd-unparsed"><strong>{chart.unparsedFiles.length} file chưa đọc được doanh thu</strong>{chart.unparsedFiles.map((x,i)=><small key={i}>{x.kind==="income_statement"?"PDF":"Excel/ZIP"} · {x.periodKey} · {x.fileName}: {x.reason}</small>)}</div>}
+    <small className="sd-note">Hai nguồn được hiển thị và tính tổng riêng, không cộng gộp để tránh trùng doanh thu. Chênh lệch = Excel/ZIP trừ PDF. Nếu PDF là bản scan hoặc không trích xuất được chữ, cần OCR hoặc điều chỉnh bộ nhận diện theo mẫu chứng từ thực tế.</small>
    </>}
   </section>
   <section className="sd-panel"><div className="sd-list-head"><strong>Kho chứng từ</strong><span>{items.length} yêu cầu</span></div>
