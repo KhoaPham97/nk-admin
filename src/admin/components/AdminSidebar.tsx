@@ -34,6 +34,7 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import MoveToInboxIcon from "@mui/icons-material/MoveToInbox";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import ShoppingBagIcon from "@mui/icons-material/ShoppingBag";
+import AssessmentOutlinedIcon from "@mui/icons-material/AssessmentOutlined";
 import { useLocation, useNavigate } from "react-router-dom";
 import PriceChangeIcon from "@mui/icons-material/PriceChange";
 import { PackageSearch, Barcode } from "lucide-react";
@@ -68,6 +69,7 @@ const MENU_HELP: Record<string, string> = {
   "Lịch sử nhập kho": "Tra cứu các phiếu và lần nhập kho đã được ghi nhận.",
   "Lịch sử xuất kho": "Tra cứu lịch sử tăng giảm kho và các nghiệp vụ xuất/điều chỉnh tồn.",
   "Đơn hàng": "Theo dõi, lọc và xử lý đơn hàng nội bộ cùng trạng thái giao dịch.",
+  "Thống kê hủy & trả hàng": "Phân tích tỷ lệ đơn hủy và trả hàng theo tỉnh/thành phố, lọc theo ngày và nguồn đơn.",
   "Tạo đơn hàng": "Lập đơn bán hàng mới và chọn sản phẩm, số lượng, khách hàng.",
   "Danh sách khách hàng": "Quản lý thông tin và lịch sử giao dịch của khách hàng.",
   "Thống kê mua hàng": "Phân tích tần suất và giá trị mua hàng theo từng khách hàng.",
@@ -234,6 +236,11 @@ const AdminSidebar = ({
           label: "Tạo đơn hàng",
           icon: <AddShoppingCartIcon />,
           path: "/admin/orders/create",
+        },
+        {
+          label: "Thống kê hủy & trả hàng",
+          icon: <AssessmentOutlinedIcon />,
+          path: "/admin/order-outcomes",
         },
       ],
     },
