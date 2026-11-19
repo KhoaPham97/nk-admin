@@ -400,6 +400,7 @@ export const shopeeApi = {
   syncDocuments: (data = {}) => post("/documents/sync", data),
   pollDocument: (id, shopId) => post(`/documents/${encode(id)}/poll`, { shopId }),
   getDocumentDownload: (id, shopId) => get(`/documents/${encode(id)}/download`, { shopId }),
+  getDocumentView: (id, shopId) => get(`/documents/${encode(id)}/view`, { shopId }),
 
   // =====================================================
   // SHOPEE REVIEW MANAGEMENT
