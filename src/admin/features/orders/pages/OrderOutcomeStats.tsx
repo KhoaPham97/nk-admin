@@ -1,12 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import {
-  Alert, Box, Button, Card, CardContent, Chip, CircularProgress, FormControl,
-  Grid, InputLabel, MenuItem, Select, Stack, TextField, Typography
+  Alert, Box, Button, Card, CardContent, Chip, CircularProgress,
+  Grid, Stack, TextField, Typography
 } from "@mui/material";
 import { Refresh, TrendingDown, Replay, ReceiptLong } from "@mui/icons-material";
 import {
-  Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip,
+  Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip,
   XAxis, YAxis
 } from "recharts";
 import { BASE_URL } from "../../../../api";
@@ -27,7 +27,6 @@ export default function OrderOutcomeStats() {
   };
   const [fromDate, setFromDate] = useState(toInput(firstDay));
   const [toDate, setToDate] = useState(toInput(today));
-  const [source, setSource] = useState("all");
   const [data, setData] = useState({ totals: {}, provinces: [], cancellationRate: 0, returnRate: 0 });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -37,7 +36,7 @@ export default function OrderOutcomeStats() {
     setError("");
     try {
       const response = await axios.get(API_URL, {
-        params: { fromDate, toDate, source },
+        params: { fromDate, toDate },
         headers: { Authorization: `Bearer ${getToken()}` },
       });
       setData(response.data?.data || { totals: {}, provinces: [] });
@@ -46,7 +45,7 @@ export default function OrderOutcomeStats() {
     } finally {
       setLoading(false);
     }
-  }, [fromDate, toDate, source]);
+  }, [fromDate, toDate]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -97,7 +96,7 @@ export default function OrderOutcomeStats() {
         <Box>
           <Typography variant="h5" fontWeight={800} color="#172033">Thống kê hủy & trả hàng</Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: .5 }}>
-            So sánh tỷ lệ hủy và trả hàng theo tỉnh/thành phố, tính trên tổng đơn của từng tỉnh
+            Thống kê riêng đơn Shopee theo tỉnh/thành phố, tính tỷ lệ trên tổng đơn của từng tỉnh
           </Typography>
         </Box>
         <Button startIcon={<Refresh />} variant="outlined" onClick={load} disabled={loading}>Làm mới</Button>
@@ -110,14 +109,6 @@ export default function OrderOutcomeStats() {
               onChange={(e) => setFromDate(e.target.value)} InputLabelProps={{ shrink: true }} fullWidth />
             <TextField size="small" label="Đến ngày" type="date" value={toDate}
               onChange={(e) => setToDate(e.target.value)} InputLabelProps={{ shrink: true }} fullWidth />
-            <FormControl size="small" fullWidth>
-              <InputLabel>Nguồn đơn</InputLabel>
-              <Select value={source} label="Nguồn đơn" onChange={(e) => setSource(e.target.value)}>
-                <MenuItem value="all">Tất cả nguồn</MenuItem>
-                <MenuItem value="shopee">Shopee</MenuItem>
-                <MenuItem value="internal">Đơn nội bộ</MenuItem>
-              </Select>
-            </FormControl>
             <Button variant="contained" onClick={load} disabled={loading} sx={{ minWidth: 110 }}>Áp dụng</Button>
           </Stack>
         </CardContent>
@@ -127,7 +118,7 @@ export default function OrderOutcomeStats() {
       {loading && <Box sx={{ display: "flex", justifyContent: "center", py: 3 }}><CircularProgress size={28} /></Box>}
 
       <Grid container spacing={2} sx={{ mb: 2.5 }}>
-        <Grid item xs={6} md={3}><Summary title="Tổng đơn hàng" value={number(data.totals.totalOrders)} detail="Trong khoảng thời gian lọc" icon={<ReceiptLong />} color="#2563eb" /></Grid>
+        <Grid item xs={6} md={3}><Summary title="Tổng đơn Shopee" value={number(data.totals.totalOrders)} detail="Trong khoảng thời gian lọc" icon={<ReceiptLong />} color="#2563eb" /></Grid>
         <Grid item xs={6} md={3}><Summary title="Đơn hủy" value={number(data.totals.cancelledOrders)} detail={`Tỷ lệ ${percent(data.cancellationRate)}`} icon={<TrendingDown />} color="#dc6b35" /></Grid>
         <Grid item xs={6} md={3}><Summary title="Đơn trả hàng" value={number(data.totals.returnedOrders)} detail={`Tỷ lệ ${percent(data.returnRate)}`} icon={<Replay />} color="#7c3aed" /></Grid>
         <Grid item xs={6} md={3}><Summary title="Tỉnh/thành có đơn" value={number(data.provinces.length)} detail="Đã nhận diện từ địa chỉ giao hàng" icon={<ReceiptLong />} color="#0f9b76" /></Grid>
