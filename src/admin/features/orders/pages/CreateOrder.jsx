@@ -219,11 +219,17 @@ const CreateOrder = () => {
       );
 
       if (variant) {
-        return getNumber(variant.qty);
+        return Math.max(
+          0,
+          getNumber(variant.qty) - getNumber(variant.reservedQty),
+        );
       }
     }
 
-    return getNumber(selectedProduct.qty);
+    return Math.max(
+      0,
+      getNumber(selectedProduct.qty) - getNumber(selectedProduct.reservedQty),
+    );
   }, [selectedProduct, selectedVariant, variants]);
 
   // =========================================================
@@ -256,7 +262,7 @@ const CreateOrder = () => {
     const nextQty = getNumber(quantity) + currentPackageQuantity;
     if (nextQty > currentStock) {
       alert(
-        `Không đủ tồn kho: 1 kiện có ${currentPackageQuantity} cái, hiện còn ${currentStock} cái.`,
+        `Không đủ số lượng khả dụng: 1 kiện có ${currentPackageQuantity} cái, hiện chỉ còn ${currentStock} cái.`,
       );
       return;
     }
@@ -285,7 +291,7 @@ const CreateOrder = () => {
     }
 
     if (qty > currentStock) {
-      alert(`Sản phẩm chỉ còn ${currentStock}`);
+      alert(`Sản phẩm chỉ còn ${currentStock} cái khả dụng.`);
       return;
     }
 
@@ -327,7 +333,7 @@ const CreateOrder = () => {
       const newQty = newItems[existingIndex].qty + qty;
 
       if (newQty > currentStock) {
-        alert(`Sản phẩm chỉ còn ${currentStock}`);
+        alert(`Sản phẩm chỉ còn ${currentStock} cái khả dụng.`);
         return;
       }
 
@@ -406,7 +412,7 @@ const CreateOrder = () => {
       }
 
       if (newQty > item.stock) {
-        alert(`Sản phẩm chỉ còn ${item.stock}`);
+        alert(`Sản phẩm chỉ còn ${item.stock} cái khả dụng.`);
         return prev;
       }
 
@@ -976,7 +982,7 @@ const CreateOrder = () => {
                           number = 0;
                         }
 
-                        // Không vượt quá tồn kho
+                        // Không vượt quá số lượng khả dụng
                         if (currentStock > 0) {
                           number = Math.min(number, currentStock);
                         }
@@ -1079,7 +1085,7 @@ const CreateOrder = () => {
 
                         <Chip
                           size="small"
-                          label={`Còn ${currentStock}`}
+                          label={`Khả dụng ${currentStock}`}
                           color={currentStock > 0 ? "success" : "error"}
                         />
                       </Stack>
