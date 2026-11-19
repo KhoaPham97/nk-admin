@@ -24,3 +24,24 @@
 .sd-preview-head button{display:grid;place-items:center;width:36px;height:36px;border:0;border-radius:8px;background:#edf3fa;color:#334155;cursor:pointer;flex:none}
 .sd-preview-frame{border:0;width:100%;height:100%;background:#eef2f7;flex:1;min-height:0}
 @media(max-width:640px){.sd-preview-backdrop{padding:0}.sd-preview-modal{width:100%;height:100%;border-radius:0}.sd-preview-head{padding:10px 12px}}
+
+.sd-chart-subtitle{font-size:11px;color:#7b8798;margin:4px 0 0}
+.sd-chart-refresh{display:inline-flex;align-items:center;gap:6px;border:0;border-radius:8px;background:#edf3fa;color:#315b85;padding:8px 10px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap}
+.sd-chart-refresh:disabled{opacity:.55;cursor:not-allowed}
+.sd-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:14px 0}
+.sd-kpi{min-width:0;padding:12px;border:1px solid #e7edf4;border-radius:10px;background:#f8fafc}
+.sd-kpi span{display:block;font-size:10px;color:#748197;margin-bottom:6px}
+.sd-kpi strong{display:block;font-size:clamp(15px,2vw,21px);line-height:1.25;color:#183b61;overflow-wrap:anywhere}
+.sd-chart{display:flex;gap:10px;min-height:250px;padding:15px 8px 8px;border:1px solid #e8edf3;border-radius:11px;background:linear-gradient(180deg,#fbfdff,#fff)}
+.sd-chart-axis{display:flex;flex-direction:column;justify-content:space-between;padding:0 0 38px;color:#8491a3;font-size:9px;writing-mode:vertical-rl;transform:rotate(180deg)}
+.sd-chart-bars{display:flex;align-items:stretch;gap:12px;overflow-x:auto;flex:1;min-width:0}
+.sd-chart-col{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px;flex:1;min-width:76px;max-width:150px;text-align:center}
+.sd-chart-col>strong{font-size:9px;color:#42566e;font-weight:650;white-space:nowrap}
+.sd-chart-track{height:170px;width:min(42px,70%);display:flex;align-items:flex-end;border-radius:7px 7px 0 0;background:#edf3fa;overflow:hidden}
+.sd-chart-bar{width:100%;min-height:3px;border-radius:7px 7px 0 0;background:linear-gradient(180deg,#5aa4ed,#236fbd)}
+.sd-chart-col>span{font-size:11px;font-weight:750;color:#344b65}
+.sd-chart-col>small{font-size:9px;color:#8290a3;white-space:nowrap}
+.sd-unparsed{display:grid;gap:5px;margin-top:12px;padding:10px 12px;border-radius:9px;background:#fff8e9;color:#855d17}
+.sd-unparsed strong{font-size:11px}
+.sd-unparsed small{font-size:10px;line-height:1.4;overflow-wrap:anywhere}
+@media(max-width:640px){.sd-kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.sd-kpi{padding:10px}.sd-chart{min-height:220px;padding:12px 5px 7px}.sd-chart-track{height:145px}.sd-chart-bars{gap:8px}.sd-chart-col{min-width:72px}.sd-list-head{align-items:flex-start;gap:8px}.sd-chart-refresh{padding:7px 8px}}
