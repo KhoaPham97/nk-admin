@@ -75,12 +75,13 @@ export default function OrderOutcomeStats() {
     <Card elevation={0} sx={{ border: "1px solid #e5eaf2", borderRadius: 3, height: "100%" }}>
       <CardContent sx={{ p: { xs: 1.5, md: 2.5 } }}>
         <Typography fontWeight={800} sx={{ mb: 2 }}>{title}</Typography>
-        {rows.length ? <Box sx={{ width: "100%", height: 330 }}>
+        {rows.length ? <Box sx={{ width: "100%", height: { xs: Math.max(300, rows.length * 42), md: 360 } }}>
           <ResponsiveContainer>
-            <BarChart data={rows} layout="vertical" margin={{ left: 8, right: 24, top: 4, bottom: 4 }}>
+            <BarChart data={rows} layout="vertical" margin={{ left: 4, right: 22, top: 4, bottom: 4 }}>
               <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-              <XAxis type="number" unit="%" tick={{ fontSize: 11 }} />
-              <YAxis type="category" dataKey="province" width={105} tick={{ fontSize: 11 }} />
+              <XAxis type="number" unit="%" tick={{ fontSize: 10 }} />
+              <YAxis type="category" dataKey="province" width={145} interval={0}
+                tick={{ fontSize: 10, fill: "#263449" }} tickMargin={8} />
               <Tooltip formatter={(value) => percent(value)} />
               <Bar dataKey={dataKey} name="Tỷ lệ" fill={color} radius={[0, 5, 5, 0]} />
             </BarChart>
@@ -132,11 +133,38 @@ export default function OrderOutcomeStats() {
       <Card elevation={0} sx={{ border: "1px solid #e5eaf2", borderRadius: 3 }}>
         <CardContent sx={{ p: { xs: 1.5, md: 2.5 } }}>
           <Typography fontWeight={800} sx={{ mb: 1.5 }}>Chi tiết theo tỉnh/thành phố</Typography>
-          <Box sx={{ overflowX: "auto" }}>
-            <Box component="table" sx={{ width: "100%", minWidth: 620, borderCollapse: "collapse", "& th,& td": { p: 1.3, textAlign: "left", borderBottom: "1px solid #edf0f5", fontSize: 13 }, "& th": { color: "text.secondary", fontWeight: 700, whiteSpace: "nowrap" } }}>
+
+          {/* Mobile: show each province as a full-width card so names are never clipped. */}
+          <Stack spacing={1} sx={{ display: { xs: "flex", md: "none" } }}>
+            {data.provinces.map((row) => (
+              <Box key={row.province} sx={{ p: 1.5, border: "1px solid #e8edf4", borderRadius: 2, bgcolor: "#fff" }}>
+                <Typography fontWeight={800} color="#172033" sx={{ mb: 1, overflowWrap: "anywhere" }}>
+                  {row.province || "Chưa xác định tỉnh/thành"}
+                </Typography>
+                <Grid container spacing={1}>
+                  <Grid item xs={6}>
+                    <Typography variant="caption" color="text.secondary">Tổng đơn</Typography>
+                    <Typography fontWeight={700}>{number(row.totalOrders)}</Typography>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Typography variant="caption" color="text.secondary">Đơn hủy</Typography>
+                    <Typography fontWeight={700}>{number(row.cancelledOrders)} · {percent(row.cancellationRate)}</Typography>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Typography variant="caption" color="text.secondary">Đơn trả hàng</Typography>
+                    <Typography fontWeight={700}>{number(row.returnedOrders)} · {percent(row.returnRate)}</Typography>
+                  </Grid>
+                </Grid>
+              </Box>
+            ))}
+          </Stack>
+
+          {/* Desktop: retain the detailed table. */}
+          <Box sx={{ display: { xs: "none", md: "block" }, overflowX: "auto" }}>
+            <Box component="table" sx={{ width: "100%", borderCollapse: "collapse", "& th,& td": { p: 1.3, textAlign: "left", borderBottom: "1px solid #edf0f5", fontSize: 13 }, "& th": { color: "text.secondary", fontWeight: 700, whiteSpace: "nowrap" } }}>
               <thead><tr><th>Tỉnh/thành</th><th>Tổng đơn</th><th>Đơn hủy</th><th>Tỷ lệ hủy</th><th>Đơn trả</th><th>Tỷ lệ trả</th></tr></thead>
               <tbody>{data.provinces.map((row) => <tr key={row.province}>
-                <td><b>{row.province}</b></td><td>{number(row.totalOrders)}</td><td>{number(row.cancelledOrders)}</td>
+                <td><b>{row.province || "Chưa xác định"}</b></td><td>{number(row.totalOrders)}</td><td>{number(row.cancelledOrders)}</td>
                 <td><Chip size="small" label={percent(row.cancellationRate)} color={row.cancellationRate >= 10 ? "warning" : "default"} /></td>
                 <td>{number(row.returnedOrders)}</td><td><Chip size="small" label={percent(row.returnRate)} color={row.returnRate >= 5 ? "secondary" : "default"} /></td>
               </tr>)}</tbody>
