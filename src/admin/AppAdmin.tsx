@@ -16,6 +16,7 @@ import CustomerDetail from "./features/customers/pages/CustomerDetail";
 
 import CreateOrder from "./features/orders/pages/CreateOrder";
 import Orders from "./features/orders/pages/Orders";
+import OrderOutcomeStats from "./features/orders/pages/OrderOutcomeStats";
 import InvoiceDetail from "./features/orders/pages/InvoiceDetail";
 import Inventory from "./features/inventory/pages/Inventory";
 import InventoryImport from "./features/inventory/pages/InventoryImport";
@@ -83,6 +84,7 @@ export default function BasicExample() {
               ORDERS
           ======================================== */}
           <Route path="orders" element={<Orders />} />
+          <Route path="order-outcomes" element={<OrderOutcomeStats />} />
           <Route path="orders/create" element={<CreateOrder />} />
           {/* ========================================
               INVOICE
