@@ -84,7 +84,6 @@ export default function ShopeeOrders() {
   const [shops, setShops] = useState([]);
 
   const [loading, setLoading] = useState(false);
-  const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState("");
 
   const [shopId, setShopId] = useState("");
@@ -293,27 +292,6 @@ export default function ShopeeOrders() {
   }, [orders]);
 
   // =====================================================
-  // MANUAL SYNC
-  // =====================================================
-
-  const handleSync = async () => {
-    setSyncing(true);
-    setError("");
-
-    try {
-      await shopeeApi.syncOrders({
-        shopId: shopId || undefined,
-      });
-
-      await loadOrders();
-    } catch (err) {
-      setError(err.message || "Đồng bộ đơn thất bại");
-    } finally {
-      setSyncing(false);
-    }
-  };
-
-  // =====================================================
   // ORDER DETAIL
   // =====================================================
 
@@ -404,7 +382,7 @@ export default function ShopeeOrders() {
         <div>
           <h2>Quản lý đơn hàng Shopee</h2>
 
-          <p>Đồng bộ đơn hàng và quản lý xuất kho Nhật Khang Bike</p>
+          <p>Danh sách đơn Shopee và trạng thái xử lý kho được cập nhật từ trang Đồng bộ & giữ hàng</p>
 
           {/* SOCKET STATUS */}
           <div
@@ -442,13 +420,6 @@ export default function ShopeeOrders() {
           </div>
         </div>
 
-        <button
-          className="sho-btn sho-btn-primary"
-          onClick={handleSync}
-          disabled={syncing}
-        >
-          {syncing ? "Đang đồng bộ..." : "↻ Đồng bộ Shopee"}
-        </button>
       </div>
 
       {/* ERROR */}
