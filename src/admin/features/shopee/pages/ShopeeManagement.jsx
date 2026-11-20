@@ -17,6 +17,7 @@ import {
   MessageCircle,
   Package,
   Printer,
+  Activity,
 } from "lucide-react";
 
 import { shopeeApi } from "../services/shopeeApi";
@@ -34,6 +35,7 @@ import ShopeeProducts from "../components/ShopeeProducts";
 import ShopeeCustomWaybill from "../components/ShopeeCustomWaybill";
 import ShopeeChat from "../components/ShopeeChat";
 import ShopeeDocuments from "../components/ShopeeDocuments";
+import ShopeeOrderSyncMonitor from "../components/ShopeeOrderSyncMonitor";
 import "../styles/shopee-management.css";
 
 const MENU_ITEMS = [
@@ -48,6 +50,12 @@ const MENU_ITEMS = [
     label: "Đơn hàng",
     description: "Đồng bộ và quản lý đơn",
     icon: ShoppingCart,
+  },
+  {
+    id: "sync-monitor",
+    label: "Đồng bộ & giữ hàng",
+    description: "Theo dõi tiến trình tự động 5 phút và nhật ký giữ kho",
+    icon: Activity,
   },
   {
     id: "waybill",
@@ -317,6 +325,9 @@ export default function ShopeeManagement() {
 
       case "orders":
         return <ShopeeOrders {...commonProps} />;
+
+      case "sync-monitor":
+        return <ShopeeOrderSyncMonitor {...commonProps} />;
 
       case "mappings":
         return <ShopeeSkuMappings {...commonProps} />;
