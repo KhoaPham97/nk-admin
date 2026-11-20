@@ -1,0 +1,55 @@
+.som-page{display:flex;flex-direction:column;gap:16px;color:#172033;min-width:0}
+.som-header{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.som-eyebrow{display:flex;align-items:center;gap:7px;color:#2563eb;font-size:11px;font-weight:800;letter-spacing:.08em}
+.som-header h2{font-size:22px;margin:7px 0 4px;font-weight:800}
+.som-header p,.som-panel-heading p{margin:0;color:#64748b;font-size:13px}
+.som-actions{display:flex;gap:8px;flex-wrap:wrap}
+.som-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid #dbe3ef;border-radius:9px;padding:9px 13px;font-weight:700;font-size:13px;cursor:pointer;background:#fff;color:#334155}
+.som-button:disabled{opacity:.55;cursor:not-allowed}
+.som-button-primary{background:#2563eb;border-color:#2563eb;color:white}
+.som-status-card,.som-panel,.som-summary-grid article{background:#fff;border:1px solid #e5eaf2;border-radius:13px;box-shadow:0 2px 8px rgba(15,23,42,.035)}
+.som-status-card{padding:16px}
+.som-status-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.som-status-title{display:flex;align-items:center;gap:11px}
+.som-status-title strong{display:block;font-size:15px}
+.som-status-title small,.som-summary-grid span{display:block;color:#64748b;font-size:12px;margin-top:4px}
+.som-dot,.som-pulse{width:10px;height:10px;border-radius:50%;background:#16a34a;flex:none}
+.som-pulse{background:#2563eb;box-shadow:0 0 0 5px #dbeafe;animation:somPulse 1.5s infinite}
+@keyframes somPulse{50%{box-shadow:0 0 0 9px rgba(37,99,235,0)}}
+.som-pill{display:inline-flex;align-items:center;border-radius:99px;padding:5px 9px;background:#eff6ff;color:#1d4ed8;font-size:10px;font-weight:800;white-space:nowrap}
+.som-pill.is-running{background:#dbeafe;color:#1d4ed8}
+.som-pill.status-success{background:#dcfce7;color:#166534}.som-pill.status-partial{background:#fef3c7;color:#92400e}.som-pill.status-failed{background:#fee2e2;color:#991b1b}.som-pill.status-skipped{background:#f1f5f9;color:#475569}
+.som-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:18px;padding-top:15px;border-top:1px solid #edf0f5}
+.som-metrics small,.som-summary-grid small{display:block;color:#64748b;font-size:11px}
+.som-metrics strong{display:block;font-size:14px;margin-top:6px;overflow-wrap:anywhere}
+.som-live-note{display:flex;align-items:center;gap:8px;color:#2563eb;font-size:12px;margin-top:13px}
+.som-summary-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.som-summary-grid article{padding:14px;min-width:0}
+.som-summary-grid strong{display:block;font-size:19px;margin-top:7px;overflow-wrap:anywhere}
+.som-summary-grid span{white-space:normal;overflow-wrap:anywhere}
+.som-columns{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,.9fr);gap:14px;align-items:start}
+.som-panel{padding:15px;min-width:0}
+.som-panel-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:13px}
+.som-panel-heading h3{font-size:15px;margin:0 0 4px}
+.som-text-button{border:0;background:transparent;color:#2563eb;font-size:12px;font-weight:700;cursor:pointer}
+.som-search{height:38px;display:flex;align-items:center;gap:8px;padding:0 10px;border:1px solid #e2e8f0;border-radius:8px;color:#94a3b8;margin-bottom:10px}
+.som-search input{border:0;outline:0;width:100%;min-width:0;font-size:13px;background:transparent;color:#172033}
+.som-order-list,.som-history-list{display:flex;flex-direction:column}
+.som-order-row,.som-history-row{display:flex;align-items:center;gap:10px;padding:11px 2px;border-bottom:1px solid #f0f2f6;min-width:0}
+.som-order-row:last-child,.som-history-row:last-child{border-bottom:0}
+.som-order-icon{width:30px;height:30px;display:grid;place-items:center;border-radius:8px;background:#eff6ff;color:#2563eb;flex:none}
+.som-order-main{flex:1;min-width:0}
+.som-order-main strong,.som-history-row strong{display:block;font-size:12px;overflow-wrap:anywhere}
+.som-order-main small,.som-history-row small{display:block;color:#64748b;font-size:11px;margin-top:4px}
+.som-order-error{display:block;color:#b91c1c;font-size:11px;margin-top:4px;overflow-wrap:anywhere}
+.som-action-tag{font-size:10px;font-weight:800;border-radius:99px;padding:5px 7px;white-space:nowrap;background:#f1f5f9;color:#475569}
+.som-action-tag.action-reserved{background:#dcfce7;color:#166534}.som-action-tag.action-error{background:#fee2e2;color:#991b1b}.som-action-tag.action-unmapped{background:#fef3c7;color:#92400e}.som-action-tag.action-deducted{background:#dbeafe;color:#1d4ed8}
+.som-history-row{width:100%;justify-content:space-between;text-align:left;border-top:0;border-left:0;border-right:0;background:transparent;cursor:pointer}
+.som-history-row:hover{background:#f8fafc}
+.som-history-result{text-align:right;flex:none}
+.som-empty{padding:28px 12px;text-align:center;color:#94a3b8;font-size:13px}
+.som-alert{display:flex;align-items:center;gap:8px;background:#fff1f2;color:#be123c;border:1px solid #fecdd3;border-radius:9px;padding:10px 12px;font-size:13px}
+.som-detail-foot{font-size:11px;color:#64748b;overflow-wrap:anywhere}
+.som-spin{animation:somRotate 1s linear infinite}@keyframes somRotate{to{transform:rotate(360deg)}}
+@media(max-width:900px){.som-columns{grid-template-columns:1fr}.som-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.som-header h2{font-size:19px}.som-actions{width:100%}.som-button{flex:1}.som-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.som-summary-grid{gap:8px}.som-summary-grid article{padding:11px}.som-summary-grid strong{font-size:17px}.som-order-row{align-items:flex-start;flex-wrap:wrap}.som-action-tag{margin-left:40px}.som-status-top{align-items:flex-start}}
