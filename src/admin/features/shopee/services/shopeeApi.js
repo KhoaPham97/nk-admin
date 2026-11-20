@@ -271,6 +271,12 @@ export const shopeeApi = {
 
   getSyncStatus: () => get("/sync/status"),
 
+  // Theo dõi lịch sử và tiến trình đồng bộ đơn hàng tự động 5 phút/lần.
+  getOrderSyncStatus: () => get("/sync-runs/status"),
+  getOrderSyncHistory: (params = {}) => get("/sync-runs/history", params),
+  getOrderSyncRun: (id) => get(`/sync-runs/${encode(id)}`),
+  runOrderSyncNow: () => post("/sync-runs/run"),
+
   updateOrderStatus: (orderSn, data = {}) =>
     put(`/orders/${encode(orderSn)}/status`, data),
 
