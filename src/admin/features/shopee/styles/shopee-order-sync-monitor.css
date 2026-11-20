@@ -53,3 +53,5 @@
 .som-spin{animation:somRotate 1s linear infinite}@keyframes somRotate{to{transform:rotate(360deg)}}
 @media(max-width:900px){.som-columns{grid-template-columns:1fr}.som-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.som-header h2{font-size:19px}.som-actions{width:100%}.som-button{flex:1}.som-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.som-summary-grid{gap:8px}.som-summary-grid article{padding:11px}.som-summary-grid strong{font-size:17px}.som-order-row{align-items:flex-start;flex-wrap:wrap}.som-action-tag{margin-left:40px}.som-status-top{align-items:flex-start}}
+
+.som-order-note{display:block;color:#64748b;font-size:11px;margin-top:4px;overflow-wrap:anywhere}
