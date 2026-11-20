@@ -112,8 +112,6 @@ export default function ShopeeOrderSyncMonitor() {
   };
 
   const closeDetail = () => setSelectedRun(null);
-  const currentRun = selectedRun || activeRun;
-  const orderRows = selectedRun?.orders || liveOrders;
 
   return (
     <section className="som-page">
@@ -148,7 +146,7 @@ export default function ShopeeOrderSyncMonitor() {
         </div>
         <div className="som-metrics">
           <div><small>Lần chạy gần nhất</small><strong>{formatDate(activeRun?.startedAt || lastRun?.startedAt)}</strong></div>
-          <div><small>Đơn đã kiểm tra trong lượt này</small><strong>{number(liveOrders.length)}</strong></div>
+          <div><small>Đơn đã kiểm tra trong lượt này</small><strong>{number(activeRun?.processedOrders || liveOrders.length)}</strong></div>
           <div><small>Đơn giữ hàng trong lượt này</small><strong>{number(liveOrders.filter((item) => item.action === "reserved").length)}</strong></div>
           <div><small>Lỗi trong lượt này</small><strong>{number(liveOrders.filter((item) => item.action === "error").length)}</strong></div>
         </div>
