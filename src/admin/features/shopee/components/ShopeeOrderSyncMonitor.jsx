@@ -191,7 +191,7 @@ export default function ShopeeOrderSyncMonitor() {
           </div>
         </div>
       </div>
-      {currentRun && selectedRun && <div className="som-detail-foot">Lượt đồng bộ {selectedRun._id} · {number(selectedRun.orders?.length)} đơn được ghi nhật ký.</div>}
+      {selectedRun && <div className="som-detail-foot">Lượt đồng bộ {selectedRun._id} · {number(selectedRun.orders?.length)} đơn được ghi nhật ký.</div>}
     </section>
   );
 }
