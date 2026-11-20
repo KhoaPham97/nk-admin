@@ -144,8 +144,8 @@ export default function ShopeeOrderSyncMonitor() {
             <span className={activeRun ? "som-pulse" : "som-dot"} />
             <div><strong>{activeRun ? "Đang đồng bộ Shopee" : scheduleEnabled ? "Lịch tự động 5 phút/lần" : "Tự động đồng bộ đang tắt"}</strong><small>Giờ Việt Nam · Asia/Ho_Chi_Minh</small></div>
           </div>
-          <span className={activeRun ? "som-pill is-running" : "som-pill"}>
-            {activeRun ? "ĐANG CHẠY" : "THEO LỊCH"}
+          <span className={activeRun ? "som-pill is-running" : scheduleEnabled ? "som-pill" : "som-pill status-failed"}>
+            {activeRun ? "ĐANG CHẠY" : scheduleEnabled ? "THEO LỊCH" : "ĐANG TẮT"}
           </span>
         </div>
         <div className="som-metrics">
