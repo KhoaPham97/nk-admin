@@ -75,6 +75,8 @@ export default function ShopeeOrderSyncMonitor() {
 
   const activeRun = status?.running || null;
   const lastRun = status?.latest || history.find((run) => run.status !== "running") || null;
+  const nextScheduledRun = new Date(Math.ceil(Date.now() / 300000) * 300000);
+  const scheduleEnabled = status?.backgroundJobsEnabled !== false;
   const liveOrders = Array.isArray(activeRun?.orders) ? activeRun.orders : [];
   const displayedOrders = useMemo(() => {
     const source = selectedRun?.orders || liveOrders;
@@ -140,7 +142,7 @@ export default function ShopeeOrderSyncMonitor() {
         <div className="som-status-top">
           <div className="som-status-title">
             <span className={activeRun ? "som-pulse" : "som-dot"} />
-            <div><strong>{activeRun ? "Đang đồng bộ Shopee" : "Lịch tự động 5 phút/lần"}</strong><small>Giờ Việt Nam · Asia/Ho_Chi_Minh</small></div>
+            <div><strong>{activeRun ? "Đang đồng bộ Shopee" : scheduleEnabled ? "Lịch tự động 5 phút/lần" : "Tự động đồng bộ đang tắt"}</strong><small>Giờ Việt Nam · Asia/Ho_Chi_Minh</small></div>
           </div>
           <span className={activeRun ? "som-pill is-running" : "som-pill"}>
             {activeRun ? "ĐANG CHẠY" : "THEO LỊCH"}
@@ -152,7 +154,7 @@ export default function ShopeeOrderSyncMonitor() {
           <div><small>Đơn giữ hàng trong lượt này</small><strong>{number(liveOrders.filter((item) => item.action === "reserved").length)}</strong></div>
           <div><small>Lỗi trong lượt này</small><strong>{number(liveOrders.filter((item) => item.action === "error").length)}</strong></div>
         </div>
-        {activeRun && <div className="som-live-note"><LoaderCircle size={15} className="som-spin" /> Tiến trình đang được cập nhật tự động mỗi 10 giây.</div>}
+        {activeRun ? <div className="som-live-note"><LoaderCircle size={15} className="som-spin" /> Tiến trình đang được cập nhật tự động mỗi 10 giây.</div> : scheduleEnabled ? <div className="som-live-note"><Clock3 size={15} /> Lượt tự động tiếp theo dự kiến: {formatDate(nextScheduledRun)}</div> : <div className="som-alert"><AlertCircle size={16} /> Background jobs đang tắt trên backend này. Kiểm tra cấu hình deployment chính.</div>}
       </div>
 
       <div className="som-summary-grid">
