@@ -151,8 +151,8 @@ export default function ShopeeOrderSyncMonitor() {
         <div className="som-metrics">
           <div><small>Lần chạy gần nhất</small><strong>{formatDate(activeRun?.startedAt || lastRun?.startedAt)}</strong></div>
           <div><small>Đơn đã kiểm tra trong lượt này</small><strong>{number(activeRun?.processedOrders || liveOrders.length)}</strong></div>
-          <div><small>Đơn giữ hàng trong lượt này</small><strong>{number(liveOrders.filter((item) => item.action === "reserved").length)}</strong></div>
-          <div><small>Lỗi trong lượt này</small><strong>{number(liveOrders.filter((item) => item.action === "error").length)}</strong></div>
+          <div><small>Đơn giữ hàng trong lượt này</small><strong>{number(activeRun?.reserved ?? liveOrders.filter((item) => item.action === "reserved").length)}</strong></div>
+          <div><small>Lỗi trong lượt này</small><strong>{number(activeRun?.errorCount ?? liveOrders.filter((item) => item.action === "error").length)}</strong></div>
         </div>
         {activeRun ? <div className="som-live-note"><LoaderCircle size={15} className="som-spin" /> Tiến trình đang được cập nhật tự động mỗi 10 giây.</div> : scheduleEnabled ? <div className="som-live-note"><Clock3 size={15} /> Lượt tự động tiếp theo dự kiến: {formatDate(nextScheduledRun)}</div> : <div className="som-alert"><AlertCircle size={16} /> Background jobs đang tắt trên backend này. Kiểm tra cấu hình deployment chính.</div>}
       </div>
