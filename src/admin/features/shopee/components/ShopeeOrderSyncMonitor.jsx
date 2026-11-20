@@ -32,6 +32,8 @@ const ACTION_LABELS = {
   error: "Lỗi xử lý",
 };
 
+const STOCK_STATUS_LABELS = { pending: "Chờ giữ kho", unmapped: "Thiếu ánh xạ SKU", ready: "Đã giữ đủ", partially_deducted: "Xuất một phần", deducted: "Đã xuất kho", blocked: "Bị chặn" };
+
 const STATUS_LABELS = {
   running: "Đang chạy",
   success: "Thành công",
