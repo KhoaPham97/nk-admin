@@ -227,8 +227,6 @@ export const shopeeApi = {
   // ORDER MANAGEMENT
   // ---------------------------------------------------
 
-  syncOrders: (data = {}) => post("/orders/sync", data),
-
   getOrders: (params = {}) => get("/orders", withShopId(params)),
 
   getOrderDetail: (orderSn, params = {}) =>
