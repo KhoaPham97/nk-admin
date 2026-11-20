@@ -75,7 +75,7 @@ export default function ShopeeOrderSyncMonitor() {
 
   const activeRun = status?.running || null;
   const lastRun = status?.latest || history.find((run) => run.status !== "running") || null;
-  const nextScheduledRun = new Date(Math.ceil(Date.now() / 300000) * 300000);
+  const nextScheduledRun = new Date((Math.floor(Date.now() / 300000) + 1) * 300000);
   const scheduleEnabled = status?.backgroundJobsEnabled !== false;
   const liveOrders = Array.isArray(activeRun?.orders) ? activeRun.orders : [];
   const displayedOrders = useMemo(() => {
@@ -174,8 +174,8 @@ export default function ShopeeOrderSyncMonitor() {
             <div className="som-order-list">
               {displayedOrders.map((item, index) => <div className="som-order-row" key={item.orderSn + index}>
                 <div className="som-order-icon">{item.action === "error" ? <XCircle size={17}/> : item.action === "reserved" ? <CheckCircle2 size={17}/> : <Clock3 size={17}/>}</div>
-                <div className="som-order-main"><strong>{item.orderSn || "Đơn không có mã"}</strong><small>{item.orderStatus || "—"} · {formatDate(item.processedAt)}</small>{item.message && <span className="som-order-error">{item.message}</span>}</div>
-                <span className={"som-action-tag action-" + item.action}>{ACTION_LABELS[item.action] || item.action}</span>
+                <div className="som-order-main"><strong>{item.orderSn || "Đơn không có mã"}</strong><small>{item.orderStatus || "—"} · {STOCK_STATUS_LABELS[item.stockStatus] || "Chưa rõ trạng thái kho"} · {formatDate(item.processedAt)}</small>{item.message && <span className={item.action === "error" ? "som-order-error" : "som-order-note"}>{item.message}</span>}</div>
+                <span className={"som-action-tag action-" + item.action}>{item.action === "reserved" ? `Đã giữ +${number(item.reservedAdded)}` : (ACTION_LABELS[item.action] || item.action)}</span>
               </div>)}
             </div>
           }
