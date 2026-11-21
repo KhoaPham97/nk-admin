@@ -1,9 +1,5 @@
 // API dùng chung cho 3 môi trường: Local, Render và Cloudflare Workers.
-const LOCAL_API_URL = "http://localhost:3001/api";
-const RENDER_API_URL = "https://nkbike.onrender.com/api";
-// Cloudflare FE currently uses the production Express API on Render.
-// The separate Cloudflare Worker endpoint is not the Express API deployment.
-const CLOUDFLARE_API_URL = RENDER_API_URL;
+const CLOUDFLARE_API_URL = "https://nkbike.phamdangkhoa0403.workers.dev/api";
 
 const hostname =
   typeof window !== "undefined" ? window.location.hostname.toLowerCase() : "";
@@ -27,11 +23,9 @@ const configuredApiUrl =
 
 const normalizeApiUrl = (url) => String(url).trim().replace(/\/+$/, "");
 
-const detectedApiUrl = isLocalhost
-  ? LOCAL_API_URL
-  : isCloudflarePages || isCloudflareWorkers
-    ? CLOUDFLARE_API_URL
-    : RENDER_API_URL;
+// All frontends (including local development) use the Cloudflare API by default.
+// Set VITE_API_URL to the Render API only when an intentional rollback is needed.
+const detectedApiUrl = CLOUDFLARE_API_URL;
 
 export const BASE_URL = normalizeApiUrl(configuredApiUrl || detectedApiUrl);
 
