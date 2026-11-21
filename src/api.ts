@@ -1,22 +1,6 @@
 // API dùng chung cho 3 môi trường: Local, Render và Cloudflare Workers.
 const CLOUDFLARE_API_URL = "https://nkbike.phamdangkhoa0403.workers.dev/api";
 
-const hostname =
-  typeof window !== "undefined" ? window.location.hostname.toLowerCase() : "";
-
-const isLocalhost =
-  hostname === "localhost" ||
-  hostname === "127.0.0.1" ||
-  hostname === "::1";
-
-const isCloudflarePages =
-  hostname === "nk-admin.phamdangkhoa0403.workers.dev" ||
-  hostname.endsWith(".pages.dev");
-
-const isCloudflareWorkers =
-  hostname === "nkbike.phamdangkhoa0403.workers.dev" ||
-  hostname.endsWith(".workers.dev");
-
 // Cho phép ghi đè bằng biến môi trường khi cần kiểm thử riêng.
 const configuredApiUrl =
   import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
